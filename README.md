@@ -126,10 +126,10 @@ There should be ".BMP" files in the directory that are used as glyph textures. E
 
 Each ".BMP" file should have a corresponding ".JSON" file with the same name. The ".JSON" file should have the following structure:
 
-```json
+``` js
 {
-  "Glyph": "S",   <- the character that will be represented by the corresponding texture
-  "Kerning": {    <- spacing
+  "Glyph": "S",   // <- the character that will be represented by the corresponding texture
+  "Kerning": {    // <- spacing
     "Left": 2,
     "Right": 3,
     "Vertical": 4

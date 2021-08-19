@@ -133,10 +133,10 @@ W katalogu powinny znaleźć się pliki ".BMP", które będą służyć jako tek
 
 Każdy plik ".BMP" powinien mieć również plik ".JSON" o tej samej nazwie. Plik ".JSON" powinien zawierać taki obiekt:
 
-```json
+``` js
 {
-  "Glyph": "S",   <- Znak, który reprezentuje dana tekstura
-  "Kerning": {    <- Odstępy od znaku
+  "Glyph": "S",   // <- Znak, który reprezentuje dana tekstura
+  "Kerning": {    // <- Odstępy od znaku
     "Left": 2,
     "Right": 3,
     "Vertical": 4
