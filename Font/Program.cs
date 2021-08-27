@@ -109,11 +109,7 @@ namespace Font {
                 // Create an blank SRD File
                 SrdFile srdFile = new SrdFile();
 
-                // Create one, large image which will contain all glyphs
-                // Game will load this image even if it's width isn't 4096
-                // but I encountered a glyph alignment problem when using lower value
-                // TODO: Investigate that or add a padding to glyphs
-                Image<Rgba32> masterImage = new Image<Rgba32>( 4096, 1 );
+                Image<Rgba32> masterImage = new Image<Rgba32>( 1, 1 );
                 
                 // Fill the master image with black pixels
                 // ! Note: black pixels are replaced with transparent pixels later
@@ -180,30 +176,30 @@ namespace Font {
                         }
 
                         // Move glyph to next row if 4096 limit is exceeded
-                        if ( masterX + glyphImage.Width >= 4096 ) {
+                        if ( masterX + glyphImage.Width + 2 >= 4096 ) {
                             masterX = 0;
                             masterY += masterMaxY;
                             masterMaxY = 0;
                         }
 
                         // Change width of master image to fit next glyph
-                        if ( masterX + glyphImage.Width > masterImage.Width ) {
+                        if ( masterX + glyphImage.Width + 2 > masterImage.Width ) {
                             masterImage.Mutate( i => i.Resize( 
                                 new ResizeOptions() {
-                                    Size = new Size( masterX + glyphImage.Width, masterImage.Height ),
+                                    Size = new Size( masterX + glyphImage.Width + 2, masterImage.Height ),
                                     TargetRectangle = new Rectangle( 0, 0, masterImage.Width, masterImage.Height ),
                                     Mode = ResizeMode.Manual
                                 }
                             ) );
                         }
 
-                        masterMaxY = Math.Max( masterMaxY, glyphImage.Height );
+                        masterMaxY = Math.Max( masterMaxY, glyphImage.Height + 2 );
 
                         // Change height of master image to fit next row of glyphs
-                        if ( masterY + glyphImage.Height > masterImage.Height ) {
+                        if ( masterY + glyphImage.Height + 2 > masterImage.Height ) {
                             masterImage.Mutate( i => i.Resize( 
                                 new ResizeOptions() {
-                                    Size = new Size( masterImage.Width, masterY + glyphImage.Height ),
+                                    Size = new Size( masterImage.Width, masterY + glyphImage.Height + 2 ),
                                     TargetRectangle = new Rectangle( 0, 0, masterImage.Width, masterImage.Height ),
                                     Mode = ResizeMode.Manual
                                 }
@@ -213,13 +209,13 @@ namespace Font {
                         // Add glyph to master image
                         masterImage.Mutate( i => i.DrawImage( 
                             glyphImage, 
-                            new Point( masterX, masterY ), 
+                            new Point( masterX + 1, masterY + 1 ), 
                             1f 
                         ) );
 
                         glyphInfo.position = new short[ 2 ];
-                        glyphInfo.position[ 0 ] = ( short ) masterX;
-                        glyphInfo.position[ 1 ] = ( short ) masterY;
+                        glyphInfo.position[ 0 ] = ( short ) ( masterX + 1 );
+                        glyphInfo.position[ 1 ] = ( short ) ( masterY + 1 );
 
                         glyphInfo.size = new byte[ 2 ];
                         glyphInfo.size[ 0 ] = (byte) ( glyphImage.Width );
@@ -229,7 +225,7 @@ namespace Font {
 
                         glyphList.Add( glyphIndex, glyphInfo );
 
-                        masterX += glyphImage.Width;
+                        masterX += glyphImage.Width + 2;
                     }
                 }
                 
