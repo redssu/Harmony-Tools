@@ -52,9 +52,11 @@ If the parameter ```--unregister``` is set, the tool will remove previously crea
 
 Tool usage:
 
-```stx (--unpack|--pack) [--delete-original] file_path```
+```stx (--unpack|--pack) file_path [--delete-original] [--pause-after-error]```
 
 If the parameter ``` --delete-original``` is set, the original file will be deleted afterwards.
+
+If ```--pause-after-error``` parameter is set - the tool will wait for user interaction before exiting if any error occurred.
 
 If you are packing a ".TXT" into ".STX" and the file name ends with ".STX.TXT", the tool will only remove the ".TXT" suffix from the name. 
 
@@ -65,11 +67,13 @@ If you are packing a ".TXT" into ".STX" and the file name ends with ".STX.TXT", 
 
 Tool Usage:
 
-```spc (--unpack|--pack) [--delete-original] object_path```
+```spc (--unpack|--pack) object_path [--delete-original] [--pause-after-error]```
 
 ```object_path``` should be a path to the directory if you are trying to pack or a file if you are trying to unpack.
 
 If ```--delete-original ``` is set, the original object will be deleted afterwards.
+
+If ```--pause-after-error``` parameter is set - the tool will wait for user interaction before exiting if any error occurred.
 
 When unpacking an SPC archive, the tool will create a directory with the same name as the archive with the ".decompressed" suffix.
 
@@ -84,11 +88,13 @@ When packing a directory into an SPC archive, the tool will remove the ".decompr
 
 Tool Usage:
 
-```srd (--unpack|--pack) [--delete-original] object_path```
+```srd (--unpack|--pack) object_path [--delete-original] [--pause-after-error]```
 
 ```object_path``` should be path to the directory containing the textures that will replace those inside the SRD archive or the path to a SRD Archive meant for unpacking.
 
 If the parameter ``` --delete-original``` is set, the original object will be deleted afterwards.
+
+If ```--pause-after-error``` parameter is set - the tool will wait for user interaction before exiting if any error occurred.
 
 Note that this tool will extract only textures from an SRD archive.
 
@@ -105,13 +111,15 @@ When packing an directory into an SRD archive, the tool will only replace textur
 
 Tool Usage:
 
-```font (--unpack|--pack) [--gen-debug-image] object_path```
+```font (--unpack|--pack) object_path [--gen-debug-image] [--pause-after-error]```
 
 **PACKING**
 
 ```object_path``` should be a path to the directory
 
 If ```--gen-debug-image``` parameter is set when packing, the tool will create a file with the same name as the directory, adding ``` __DEBUG_IMAGE``` to it. This file will contain the texture which is made of all glyphs.
+
+If ```--pause-after-error``` parameter is set - the tool will wait for user interaction before exiting if any error occurred.
 
 The directory that will be packed into the font file must contain the file ``` __font_info.json```, which contains a JSON object with the following properties:
 
@@ -144,6 +152,8 @@ Each ".BMP" file should have a corresponding ".JSON" file with the same name. Th
 ```object_path``` should be a path to a ".STX" or ".SRD" file
 
 The tool will create a directory based on the name of ```object_path```, adding ".decompressed_font" to the end of the file name.
+
+If ```--pause-after-error``` parameter is set - the tool will wait for user interaction before exiting if any error occurred.
 
 The directory will contain files in a specific schema, described in the **PACKING** section.
 

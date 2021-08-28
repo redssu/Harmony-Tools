@@ -36,17 +36,20 @@ namespace Font {
     }
 
     class Program {
+        public const string USAGE_MESSAGE = "Usage: Font (--pack | --unpack) input_file [--gen-debug-image] [--pause-after-error]";
+
         static void Main( string[] args ) {
             Encoding.RegisterProvider( CodePagesEncodingProvider.Instance );
 
             if ( args.Length < 1 ) {
-                Console.WriteLine( "Usage: Font (--pack | --unpack) [--gen-debug-image] input_file" );
+                Console.WriteLine( USAGE_MESSAGE );
                 return;
             }
 
             string filePath = string.Empty;
             bool wantToPack = true;
             bool genDebugImage = false;
+            bool pauseAfterError = false;
 
             foreach ( string arg in args ) {
                 if ( arg.ToLower() == "--pack" ) {
@@ -58,8 +61,12 @@ namespace Font {
                 else if ( arg.ToLower() == "--gen-debug-image" ) {
                     genDebugImage = true;
                 }
+                else if ( arg.ToLower() == "--pause-after-error" ) {
+                    pauseAfterError = true;
+                }
                 else if ( arg.StartsWith( "--" ) || arg.StartsWith( "-" ) ) {
                     Console.WriteLine( "Error: Unknown argument: " + arg );
+                    Utils.WaitForEnter( pauseAfterError );
                     return;
                 }
                 else {
@@ -69,13 +76,14 @@ namespace Font {
 
             if ( filePath == string.Empty ) {
                 Console.WriteLine( "Error: No target file specified" );
-                Console.WriteLine( "Usage: Font (--pack | --unpack) input_file" );
-
+                Console.WriteLine( USAGE_MESSAGE );
+                Utils.WaitForEnter( pauseAfterError );
                 return;
             }
 
             if ( !File.Exists( filePath ) && !Directory.Exists( filePath ) ) {
                 Console.WriteLine( "Error: File or directory not found: " + filePath );
+                Utils.WaitForEnter( pauseAfterError );
                 return;
             }
 
@@ -84,6 +92,7 @@ namespace Font {
             if ( fileAttributes.HasFlag( FileAttributes.Directory ) ^ wantToPack ) {
                 Console.WriteLine( "Error: Target file or directory is not supported with this operation" );
                 Console.WriteLine( "Tip: It means that you want to unpack a directory or pack a file" );
+                Utils.WaitForEnter( pauseAfterError );
                 return;
             }
 
@@ -95,6 +104,7 @@ namespace Font {
                 
                 if ( !File.Exists( fontInfoPath ) ) {
                     Console.WriteLine( "Error: Font info file not found: " + fontInfoPath );
+                    Utils.WaitForEnter( pauseAfterError );
                     return;
                 }
 
@@ -131,6 +141,8 @@ namespace Font {
                 // Iterate through each file and add it to the image
                 uint fileIndex = 0;
 
+                bool hasErrorOccurred = false;
+
                 foreach ( string file in targetFiles ) {
                     if ( file.EndsWith( ".json" ) ) {
                         continue;
@@ -144,6 +156,7 @@ namespace Font {
 
                         if ( glyphList.ContainsKey( glyphIndex ) ) {
                             Console.WriteLine( "Error: Duplicate glyph ID: " + glyphIndexPadded );
+                            hasErrorOccurred = true;
                             continue;
                         }
 
@@ -151,6 +164,7 @@ namespace Font {
 
                         if ( !File.Exists( infoFilePath ) ) {
                             Console.WriteLine( "Error: Glyph info file not found: " + infoFilePath );
+                            hasErrorOccurred = true;
                             continue;
                         }
 
@@ -172,6 +186,7 @@ namespace Font {
 
                         if ( glyphImage.Width > 255 || glyphImage.Height > 255 ) {
                             Console.WriteLine( "Error: Glyph image is too large (max dimensions: 255x255): " + file );
+                            hasErrorOccurred = true;
                             continue;
                         }
 
@@ -451,10 +466,18 @@ namespace Font {
                     newSrdName = newSrdName + ".srd";
                 }
 
+                Console.WriteLine( "Trying to save an SRD archive.." );
+
                 srdFile.Save( newSrdName, newFilesPath + ".srdi", newFilesPath + ".srdv" );
+
+                Console.WriteLine( "Done!" );
 
                 if ( genDebugImage ) {
                     dummyImage.SaveAsPng( newFilesPath + "__DEBUG_IMAGE.png" );
+                }
+
+                if ( hasErrorOccurred ) {
+                    Utils.WaitForEnter( pauseAfterError );
                 }
             }   
             else {
@@ -467,6 +490,7 @@ namespace Font {
 
                 if ( !fileInfo.Exists ) {
                     Console.WriteLine( "Error: File not found: " + filePath );
+                    Utils.WaitForEnter( pauseAfterError );
                     return;
                 }
 
@@ -489,6 +513,7 @@ namespace Font {
 
                 if ( !File.Exists( SrdvName ) ) {
                     Console.WriteLine( "Error: Could not find the corresponding SRDV file: " + SrdvName );
+                    Utils.WaitForEnter( pauseAfterError );
                     return;
                 }
 
@@ -598,11 +623,13 @@ namespace Font {
                 
                 if ( !foundFont ) {
                     Console.WriteLine( "Error: Font block not found" );
+                    Utils.WaitForEnter( pauseAfterError );
                     return;
                 }
 
-
                 Directory.CreateDirectory( outputDir );
+
+                hasErrorOccurred = false;
 
                 foreach ( Block block in srdFile.Blocks ) {
                     if ( block is TxrBlock txr && block.Children[ 0 ] is RsiBlock rsi ) {
@@ -670,6 +697,7 @@ namespace Font {
                         }
                         else if ( txr.Swizzle != 1 ) {
                             Console.WriteLine( "Error: Resource is swizzled" );
+                            hasErrorOccurred = true;
                         }
 
                         int mipWidth = (int) Math.Max( 1, displayWidth );
@@ -746,6 +774,8 @@ namespace Font {
                                     break;
 
                                 default:
+                                    Console.WriteLine( "Error: Cannot save " + mipmapName + ": Unknown texture format" );
+                                    hasErrorOccured = true;
                                     break;
                             }
 
@@ -780,6 +810,10 @@ namespace Font {
 
                         File.WriteAllText( outputDir + Path.DirectorySeparatorChar + "__font_info.json", fontInfoJsonString );
                     }
+                }
+
+                if ( hasErrorOccured ) {
+                    Utils.WaitForEnter( pauseAfterError );
                 }
             }            
         }

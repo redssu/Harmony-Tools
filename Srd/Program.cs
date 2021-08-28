@@ -16,17 +16,20 @@ using System.Text.RegularExpressions;
 
 namespace Srd {
     class Program {
+        public const string USAGE_MESSAGE = "Usage: Srd (--pack | --unpack) input_file [--delete-original] [--pause-after-error]";
+
         static void Main( string[] args ) {
             Encoding.RegisterProvider( CodePagesEncodingProvider.Instance );
 
-            if ( args.Length < 2 ) {
-                Console.WriteLine( "Usage: Srd (--pack | --unpack) [--delete-original] input_file" );
+            if ( args.Length < 1 ) {
+                Console.WriteLine( USAGE_MESSAGE );
                 return;
             }
 
             string filePath = string.Empty;
             bool wantToPack = true;
             bool deleteOriginal = false;
+            bool pauseAfterError = false;
 
             foreach ( string arg in args ) {
                 if ( arg.ToLower() == "--pack" ) {
@@ -38,8 +41,12 @@ namespace Srd {
                 else if ( arg.ToLower() == "--delete-original" ) {
                     deleteOriginal = true;
                 }
+                else if ( arg.ToLower() == "--pause-after-error" ) {
+                    pauseAfterError = true;
+                }
                 else if ( arg.StartsWith( "--" ) ) {
                     Console.WriteLine( "Error: Unknown argument: " + arg );
+                    Utils.WaitForEnter( pauseAfterError );
                     return;
                 }
                 else {
@@ -49,13 +56,14 @@ namespace Srd {
 
             if ( filePath == string.Empty ) {
                 Console.WriteLine( "Error: No target file specified" );
-                Console.WriteLine( "Usage: Srd (--pack | --unpack) [--delete-original] input_file" );
-
+                Console.WriteLine( USAGE_MESSAGE );
+                Utils.WaitForEnter( pauseAfterError );
                 return;
             }
 
             if ( !File.Exists( filePath ) && !Directory.Exists( filePath ) ) {
                 Console.WriteLine( "Error: File or directory not found: " + filePath );
+                Utils.WaitForEnter( pauseAfterError );
                 return;
             }
 
@@ -64,6 +72,7 @@ namespace Srd {
             if ( fileAttributes.HasFlag( FileAttributes.Directory ) ^ wantToPack ) {
                 Console.WriteLine( "Error: Target file or directory is not supported with this operation" );
                 Console.WriteLine( "Tip: It means that you want to unpack a directory or pack a file" );
+                Utils.WaitForEnter( pauseAfterError );
                 return;
             }
 
@@ -78,6 +87,7 @@ namespace Srd {
                 
                 if ( !targetFiles.Contains( prefix + "_.srd" ) ) {
                     Console.WriteLine( "Error: No _.srd file found in target directory" );
+                    Utils.WaitForEnter( pauseAfterError );
                     return;
                 }
 
@@ -91,6 +101,8 @@ namespace Srd {
 
                 SrdFile srdFile = new SrdFile();
                 srdFile.Load( SrdName, SrdiName, SrdvName );
+
+                bool hasErrorOccured = false;
                 
                 foreach ( string file in targetFiles ) { 
                     if ( file.EndsWith( "_.srdv" ) || file.EndsWith(  "_.srdi" ) || file.EndsWith( "_.srd" ) ) {
@@ -103,14 +115,15 @@ namespace Srd {
                     Image<Rgba32> texture = Image.Load<Rgba32>( textureStream );
 
                     if ( texture == null ) {
-                        Console.WriteLine( $"Error: Could not load texture '{textureName}'." );
-                        return;
+                        Console.WriteLine( "Error: Could not load texture " + textureName );
+                        hasErrorOccured = true;
+                        continue;
                     }
 
                     List<byte> pixelData = new List<byte>();
                     for ( int y = 0; y < texture.Height; ++y ) {
                         for ( int x = 0; x < texture.Width; ++x ) {
-                            pixelData.AddRange(BitConverter.GetBytes(texture[x, y].Rgba));
+                            pixelData.AddRange( BitConverter.GetBytes( texture[ x, y ].Rgba ) );
                         }
                     }
 
@@ -145,7 +158,8 @@ namespace Srd {
                     }
 
                     if ( !foundTexture ) {
-                        Console.WriteLine( $"Error: Could not find texture '{textureName}' in SRD file" );
+                        Console.WriteLine( "Error: Could not replace texture " + textureName + ": Texture with that name not found in SRD Archive" );
+                        hasErrorOccured = true;
                     }
                 }
 
@@ -165,13 +179,22 @@ namespace Srd {
                     newSrdName = newSrdName + ".srd";
                 }
 
+                Console.WriteLine( "Textures successfully swapped - saving the SRD archive" );
+
                 srdFile.Save( newSrdName, newFilesPath + ".srdi", newFilesPath + ".srdv" );
+
+                Console.WriteLine( "SRD archive successfully saved" );
+
+                if ( hasErrorOccured ) {
+                    Utils.WaitForEnter( pauseAfterError );
+                }
             }
             else {
                 FileInfo fileInfo = new FileInfo( filePath );
 
                 if ( !fileInfo.Exists ) {
                     Console.WriteLine( "Error: File not found: " + filePath );
+                    Utils.WaitForEnter( pauseAfterError );
                     return;
                 }
 
@@ -213,6 +236,8 @@ namespace Srd {
                 SrdFile srdFile = new SrdFile();
                 srdFile.Load( SrdName, SrdiName, SrdvName );
                 
+                bool hasErrorOccured = false;
+
                 // Extract Textures
                 foreach ( Block block in srdFile.Blocks ) {
                     if ( block is TxrBlock txr && block.Children[ 0 ] is RsiBlock rsi ) {
@@ -279,7 +304,8 @@ namespace Srd {
                             inputImageData = ImportExportHelper.PS4UnSwizzle( inputImageData, displayWidth, displayHeight, 8 );
                         }
                         else if ( txr.Swizzle != 1 ) {
-                            Console.WriteLine( $"Error: Resource is swizzled." );
+                            Console.WriteLine( "Warning: Resource is swizzled" );
+                            hasErrorOccured = true;
                         }
 
                         int mipWidth = (int) Math.Max( 1, displayWidth );
@@ -334,7 +360,7 @@ namespace Srd {
 
                         using FileStream fs = new FileStream( fileInfo.FullName + ".decompressed" + Path.DirectorySeparatorChar + mipmapName, FileMode.Create );
                         
-                        switch (mipmapExtension) {
+                        switch ( mipmapExtension ) {
                             case ".png":
                                 image.SaveAsPng(fs);
                                 break;
@@ -348,12 +374,18 @@ namespace Srd {
                                 break;
 
                             default:
+                                Console.WriteLine( "Error: Cannot save " + mipmapName + ": Unknown texture format" );
+                                hasErrorOccured = true;
                                 break;
                         }
 
                         fs.Flush();
                         image.Dispose();
                     }
+                }
+
+                if ( hasErrorOccured ) {
+                    Utils.WaitForEnter( pauseAfterError );
                 }
             }
         }

@@ -107,7 +107,7 @@ namespace ExplorerExtension {
                     UnpackSTXItem.SetValue( "Icon", installationPath + @"\Harmony-Tools-Unpack-STX-Icon.ico" );
 
                     RegistryKey UnpackSTXCommand = UnpackSTXItem.CreateSubKey( "command" );
-                    UnpackSTXCommand.SetValue( "", installationPath + "\\HTStx.exe --unpack \"%1\"" + ( deleteOriginal ? " --delete-original" : "" ) );
+                    UnpackSTXCommand.SetValue( "", installationPath + "\\HTStx.exe --unpack \"%1\" --pause-after-error " + ( deleteOriginal ? " --delete-original" : "" ) );
 
                     // Pack TXT file
                     RegistryKey PackSTXItem = HarmonyToolsShell.CreateSubKey( "2_PackSTX" );
@@ -116,7 +116,7 @@ namespace ExplorerExtension {
                     PackSTXItem.SetValue( "CommandFlags", (uint) 0x40, RegistryValueKind.DWord );
 
                     RegistryKey PackSTXCommand = PackSTXItem.CreateSubKey( "command" );
-                    PackSTXCommand.SetValue( "", installationPath + "\\HTStx.exe --pack \"%1\"" + ( deleteOriginal ? " --delete-original" : "" ) );
+                    PackSTXCommand.SetValue( "", installationPath + "\\HTStx.exe --pack \"%1\" --pause-after-error " + ( deleteOriginal ? " --delete-original" : "" ) );
 
                     // SPC
                     RegistryKey UnpackSPCItem = HarmonyToolsShell.CreateSubKey( "3_UnpackSPC" );
@@ -124,7 +124,7 @@ namespace ExplorerExtension {
                     UnpackSPCItem.SetValue( "Icon", installationPath + @"\Harmony-Tools-Unpack-Icon.ico" );
 
                     RegistryKey UnpackSPCCommand = UnpackSPCItem.CreateSubKey( "command" );
-                    UnpackSPCCommand.SetValue( "", installationPath + "\\HTSpc.exe --unpack \"%1\"" + ( deleteOriginal ? " --delete-original" : "" ) );
+                    UnpackSPCCommand.SetValue( "", installationPath + "\\HTSpc.exe --unpack \"%1\" --pause-after-error " + ( deleteOriginal ? " --delete-original" : "" ) );
 
                     // SRD
                     RegistryKey UnpackSRDItem = HarmonyToolsShell.CreateSubKey( "4_UnpackSRD" );
@@ -132,7 +132,7 @@ namespace ExplorerExtension {
                     UnpackSRDItem.SetValue( "Icon", installationPath + @"\Harmony-Tools-Unpack-Icon.ico" );
 
                     RegistryKey UnpackSRDCommand = UnpackSRDItem.CreateSubKey( "command" );
-                    UnpackSRDCommand.SetValue( "", installationPath + "\\HTSrd.exe --unpack \"%1\"" + ( deleteOriginal ? " --delete-original" : "" ) );
+                    UnpackSRDCommand.SetValue( "", installationPath + "\\HTSrd.exe --unpack \"%1\" --pause-after-error " + ( deleteOriginal ? " --delete-original" : "" ) );
 
                     // Fonts
                     RegistryKey UnpackFontsItem = HarmonyToolsShell.CreateSubKey( "5_UnpackFonts" );
@@ -140,7 +140,7 @@ namespace ExplorerExtension {
                     UnpackFontsItem.SetValue( "Icon", installationPath + @"\Harmony-Tools-Unpack-Icon.ico" );
 
                     RegistryKey UnpackFontsCommand = UnpackFontsItem.CreateSubKey( "command" );
-                    UnpackFontsCommand.SetValue( "", installationPath + "\\HTFont.exe --unpack \"%1\"" );
+                    UnpackFontsCommand.SetValue( "", installationPath + "\\HTFont.exe --unpack \"%1\" --pause-after-error" );
                 }
                 catch ( System.UnauthorizedAccessException ) {
                     Console.WriteLine( "Error: You don't have permission to register the context menu." );
@@ -169,7 +169,7 @@ namespace ExplorerExtension {
                     PackSPCItem.SetValue( "Icon", installationPath + @"\Harmony-Tools-Pack-Icon.ico" );
 
                     RegistryKey PackSPCCommand = PackSPCItem.CreateSubKey( "command" );
-                    PackSPCCommand.SetValue( "", installationPath + "\\HTSpc.exe --pack \"%1\"" + ( deleteOriginal ? " --delete-original" : "" ) );
+                    PackSPCCommand.SetValue( "", installationPath + "\\HTSpc.exe --pack \"%1\" --pause-after-error " + ( deleteOriginal ? " --delete-original" : "" ) );
 
                     // SRD
                     RegistryKey PackSRDItem = HarmonyToolsShell.CreateSubKey( "PackSRD" );
@@ -177,7 +177,7 @@ namespace ExplorerExtension {
                     PackSRDItem.SetValue( "Icon", installationPath + @"\Harmony-Tools-Pack-Icon.ico" );
 
                     RegistryKey PackSRDCommand = PackSRDItem.CreateSubKey( "command" );
-                    PackSRDCommand.SetValue( "", installationPath + "\\HTSrd.exe --pack \"%1\"" + ( deleteOriginal ? " --delete-original" : "" ) );
+                    PackSRDCommand.SetValue( "", installationPath + "\\HTSrd.exe --pack \"%1\" --pause-after-error " + ( deleteOriginal ? " --delete-original" : "" ) );
 
                     // Fonts
                     RegistryKey PackFontsItem = HarmonyToolsShell.CreateSubKey( "PackFonts" );
@@ -185,7 +185,7 @@ namespace ExplorerExtension {
                     PackFontsItem.SetValue( "Icon", installationPath + @"\Harmony-Tools-Pack-Icon.ico" );
 
                     RegistryKey PackFontsCommand = PackFontsItem.CreateSubKey( "command" );
-                    PackFontsCommand.SetValue( "", installationPath + "\\HTFont.exe --pack \"%1\"" );
+                    PackFontsCommand.SetValue( "", installationPath + "\\HTFont.exe --pack \"%1\" --pause-after-error" );
                 }
                 catch ( System.UnauthorizedAccessException ) {
                     Console.WriteLine( "Error: You don't have permission to register the context menu." );

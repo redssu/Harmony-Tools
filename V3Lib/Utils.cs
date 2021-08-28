@@ -84,5 +84,12 @@ namespace V3Lib
                 Convert.ToByte( ( y >> 4 ) & 0xFF ) 
             };
         }
+
+        public static void WaitForEnter ( pauseAfterError ) {
+            if ( pauseAfterError ) {
+                Console.WriteLine( "Press <Enter> to close this window" );
+                while ( Console.ReadKey().Key != ConsoleKey.Enter ) {}
+            }
+        }
     }
 }

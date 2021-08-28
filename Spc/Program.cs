@@ -16,17 +16,20 @@ namespace Spc {
     }
 
     class Program {
+        public const string USAGE_MESSAGE = "Usage: Spc (--pack | --unpack) input_file [--delete-original] [--pause-after-error]";
+
         static void Main( string[] args ) {
             Encoding.RegisterProvider( CodePagesEncodingProvider.Instance );
 
             if ( args.Length < 1 ) {
-                Console.WriteLine( "Usage: Spc (--pack | --unpack) [--delete-original] input_file" );
+                Console.WriteLine( USAGE_MESSAGE );
                 return;
             }
 
             string filePath = string.Empty;
             bool wantToPack = true;
             bool deleteOriginal = false;
+            bool pauseAfterError = false;
 
             foreach ( string arg in args ) {
                 if ( arg.ToLower() == "--pack" ) {
@@ -38,8 +41,12 @@ namespace Spc {
                 else if ( arg.ToLower() == "--delete-original" ) {
                     deleteOriginal = true;
                 }
+                else if ( arg.ToLower() == "--pause-after-error" ) {
+                    pauseAfterError = true;
+                }
                 else if ( arg.StartsWith( "--" ) ) {
                     Console.WriteLine( "Error: Unknown argument: " + arg );
+                    Utils.WaitForEnter( pauseAfterError );
                     return;
                 }
                 else {
@@ -49,13 +56,14 @@ namespace Spc {
 
             if ( filePath == string.Empty ) {
                 Console.WriteLine( "Error: No target file specified" );
-                Console.WriteLine( "Usage: Spc (--pack | --unpack) [--delete-original] input_file" );
-
+                Console.WriteLine( USAGE_MESSAGE );
+                Utils.WaitForEnter( pauseAfterError );
                 return;
             }
 
             if ( !File.Exists( filePath ) && !Directory.Exists( filePath ) ) {
                 Console.WriteLine( "Error: File or directory not found: " + filePath );
+                Utils.WaitForEnter( pauseAfterError );
                 return;
             }
 
@@ -64,6 +72,7 @@ namespace Spc {
             if ( fileAttributes.HasFlag( FileAttributes.Directory ) ^ wantToPack ) {
                 Console.WriteLine( "Error: Target file or directory is not supported with this operation" );
                 Console.WriteLine( "Tip: It means that you want to unpack a directory or pack a file" );
+                Utils.WaitForEnter( pauseAfterError );
                 return;
             }
 
@@ -72,6 +81,7 @@ namespace Spc {
 
                 if ( !File.Exists( infoFilePath ) ) {
                     Console.WriteLine( "Error: No __spc_info.json file found." );
+                    Utils.WaitForEnter( pauseAfterError );
                     return;
                 }
 
@@ -107,17 +117,26 @@ namespace Spc {
                 spcFile.Save( filePath );
 
                 if ( deleteOriginal ) {
+                    bool hasErrorOccurred = false;
+
                     try {
                         Directory.Delete( originalPath );
                     }
                     catch ( IOException ) {
+                        hasErrorOccurred = true;
                         Console.WriteLine( "Error: Could not delete original directory: " + originalPath + ": Target resource is used by other process" );
                     }
                     catch ( SecurityException ) { 
+                        hasErrorOccurred = true;
                         Console.WriteLine( "Error: Could not delete original directory: " + originalPath + ": Access Denied" );
                     }
                     catch ( UnauthorizedAccessException ) {
+                        hasErrorOccurred = true;
                         Console.WriteLine( "Error: Could not delete original directory: " + originalPath + ": Target resource is a directory" );
+                    }
+
+                    if ( hasErrorOccurred ) {
+                        Utils.WaitForEnter( pauseAfterError );
                     }
                 }
             }
@@ -126,6 +145,7 @@ namespace Spc {
 
                 if ( !fileInfo.Exists ) {
                     Console.WriteLine( "Error: File not found: " + filePath );
+                    Utils.WaitForEnter( pauseAfterError );
                     return;
                 }
 
@@ -153,17 +173,26 @@ namespace Spc {
                 File.WriteAllText( directoryBasePath + ".decompressed" + Path.DirectorySeparatorChar + "__spc_info.json", jsonString );
 
                 if ( deleteOriginal ) {
+                    bool hasErrorOccurred = false;
+
                     try {
                         fileInfo.Delete();
                     }
                     catch ( IOException ) {
+                        hasErrorOccurred = true;
                         Console.WriteLine( "Error: Could not delete original file: " + fileInfo.FullName + ": Target resource is used by other process" );
                     }
                     catch ( SecurityException ) { 
+                        hasErrorOccurred = true;
                         Console.WriteLine( "Error: Could not delete original file: " + fileInfo.FullName + ": Access Denied" );
                     }
                     catch ( UnauthorizedAccessException ) {
+                        hasErrorOccurred = true;
                         Console.WriteLine( "Error: Could not delete original file: " + fileInfo.FullName + ": Target resource is a directory" );
+                    }
+
+                    if ( hasErrorOccurred ) {
+                        Utils.WaitForEnter( pauseAfterError );
                     }
                 }
             }

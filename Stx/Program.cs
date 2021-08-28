@@ -6,15 +6,18 @@ using V3Lib.Stx;
 
 namespace Stx {
     class Program {
+        public const string USAGE_MESSAGE = "Usage: Stx (--pack | --unpack) input_file [--delete-original] [--pause-after-error]";
+
         static void Main( string[] args ) {
             if ( args.Length < 1 ) {
-                Console.WriteLine( "Usage: Stx (--pack | --unpack) [--delete-original] input_file" );
+                Console.WriteLine( USAGE_MESSAGE );
                 return;
             }
 
             string filePath = string.Empty;
             bool wantToPack = true;
             bool deleteOriginal = false;
+            bool pauseAfterError = false;
 
             foreach ( string arg in args ) {
                 if ( arg.ToLower() == "--pack" ) {
@@ -26,8 +29,12 @@ namespace Stx {
                 else if ( arg.ToLower() == "--delete-original" ) {
                     deleteOriginal = true;
                 }
+                else if ( arg.ToLower() == "--pause-after-error" ) {
+                    pauseAfterError = true;
+                }
                 else if ( arg.StartsWith( "--" ) ) {
                     Console.WriteLine( "Error: Unknown argument: " + arg );
+                    Utils.WaitForEnter( pauseAfterError );
                     return;
                 }
                 else {
@@ -37,8 +44,8 @@ namespace Stx {
 
             if ( filePath == string.Empty ) {
                 Console.WriteLine( "Error: No target file specified" );
-                Console.WriteLine( "Usage: Stx (--pack | --unpack) [--delete-original] input_file" );
-
+                Console.WriteLine( USAGE_MESSAGE );
+                Utils.WaitForEnter( pauseAfterError );
                 return;
             }
 
@@ -46,6 +53,7 @@ namespace Stx {
 
             if ( !fileInfo.Exists ) {
                 Console.WriteLine( "Error: File not found: " + filePath );
+                Utils.WaitForEnter( pauseAfterError );
                 return;
             }
 
@@ -97,17 +105,26 @@ namespace Stx {
             }
 
             if ( deleteOriginal ) {
+                bool hasErrorOccurred = false;
+
                 try {
                     fileInfo.Delete();
                 }
                 catch ( IOException ) {
+                    hasErrorOccurred = true;
                     Console.WriteLine( "Error: Could not delete original file: " + fileInfo.FullName + ": Target resource is used by other process" );
                 }
                 catch ( SecurityException ) { 
+                    hasErrorOccurred = true;
                     Console.WriteLine( "Error: Could not delete original file: " + fileInfo.FullName + ": Access Denied" );
                 }
                 catch ( UnauthorizedAccessException ) {
+                    hasErrorOccurred = true;
                     Console.WriteLine( "Error: Could not delete original file: " + fileInfo.FullName + ": Target resource is a directory" );
+                }
+
+                if ( hasErrorOccurred ) {
+                    Utils.WaitForEnter( pauseAfterError );
                 }
             }
         }

@@ -55,9 +55,11 @@ Te narzędzie rozpakowuje plik ".STX" do formatu ".TXT", bądź pakuje plik ".TX
 
 Użycie:
 
-```stx (--unpack|--pack) [--delete-original] file_path```
+```stx (--unpack|--pack) file_path [--delete-original] [--pause-after-error]```
 
 Jeżeli parametr  ``` --delete-original``` jest ustawiony, oryginalny plik zostanie usunięty.
+
+Jeżeli parametr ```--pause-after-error``` jest ustawiony - narzędzie będzie czekać na interakcję użytkownika jeśli wystąpi jakiś błąd zanim zakończy działanie.
 
 Jeżeli pakujesz plik ".TXT" do pliku ".STX" i jego nazwa kończy się na ".STX.TXT", narzędzie usunie tylko końcówkę ".TXT" z nazwy,  by brzmiała jak oryginalny plik.
 
@@ -69,11 +71,13 @@ Archiwa SPC są archiwami ogólnego przeznaczenia, które zawierają w sobie inn
 
 Użycie:
 
-```spc (--unpack|--pack) [--delete-original] object_path```
+```spc (--unpack|--pack) object_path [--delete-original] [--pause-after-error]```
 
 ```object_path``` powinien być ścieżką do katalogu, jeśli próbujesz stworzyć nowe archiwum SPC lub ścieżką do archiwum SPC przeznaczonego do rozpakowania.
 
 Jeżeli parametr  ``` --delete-original``` jest ustawiony, oryginalny katalog lub archiwum zostaną usunięte.
+
+Jeżeli parametr ```--pause-after-error``` jest ustawiony - narzędzie będzie czekać na interakcję użytkownika jeśli wystąpi jakiś błąd zanim zakończy działanie.
 
 Gdy rozpakowujesz archiwum SPC, narzędzie stworzy katalog z nazwą taką samą, jak archiwum, lecz z dopiskiem ".decompressed".
 
@@ -89,11 +93,13 @@ Archiwa SRD przechowują głównie pliki związane z teksturami, bądź modelami
 
 Użycie:
 
-```srd (--unpack|--pack) [--delete-original] object_path```
+```srd (--unpack|--pack) object_path [--delete-original] [--pause-after-error]```
 
 ```object_path``` powinien być ścieżką do katalogu zawierającego tekstury do podmiany w oryginalnym archiwum SRD lub ścieżką do archiwum SRD przeznaczonego do rozpakowania.
 
 Jeżeli parametr  ``` --delete-original``` jest ustawiony, oryginalny katalog lub archiwum zostaną usunięte.
+
+Jeżeli parametr ```--pause-after-error``` jest ustawiony - narzędzie będzie czekać na interakcję użytkownika jeśli wystąpi jakiś błąd zanim zakończy działanie.
 
 Gdy rozpakowujesz archiwum SRD, narzędzie stworzy katalog zawierający tekstury, o takiej samej nazwie co archiwum, lecz z dopiskiem ".decompressed"
 
@@ -112,13 +118,15 @@ Po pakowaniu do archiwum SRD, narzędzie nazwie je tak jak katalog, z tą różn
 
 Użycie:
 
-```font (--unpack|--pack) [--gen-debug-image] object_path```
+```font (--unpack|--pack) object_path [--gen-debug-image] [--pause-after-error]```
 
 **PAKOWANIE CZCIONKI**
 
 ```object_path``` powinien być ścieżką do katalogu.
 
 Jeżeli parametr ```--gen-debug-image``` jest ustawiony - narzędzie utworzy dodatkowy plik z dopiskiem ```__DEBUG_IMAGE```, który jest teksturą zawierającą wszystkie znaki po ich połączeniu w całość.
+
+Jeżeli parametr ```--pause-after-error``` jest ustawiony - narzędzie będzie czekać na interakcję użytkownika jeśli wystąpi jakiś błąd zanim zakończy działanie.
 
 Katalog, który zostanie zapakowany do pliku czcionki, musi zawierać w sobie plik ```__font_info.json```, który zawiera obiekt JSON z następującymi właściwościami:
 
@@ -149,6 +157,8 @@ Każdy plik ".BMP" powinien mieć również plik ".JSON" o tej samej nazwie. Pli
 **ROZPAKOWYWANIE**
 
 ```object_path``` powinien być ścieżką do pliku ".SRD" lub ".STX"
+
+Jeżeli parametr ```--pause-after-error``` jest ustawiony - narzędzie będzie czekać na interakcję użytkownika jeśli wystąpi jakiś błąd zanim zakończy działanie.
 
 Narzędzie utworzy katalog o takiej samej nazwie, co plik wejściowy, dodając ".decompressed_font" na końcu jego nazwy.
 
