@@ -85,7 +85,7 @@ namespace V3Lib
             };
         }
 
-        public static void WaitForEnter ( pauseAfterError ) {
+        public static void WaitForEnter ( bool pauseAfterError ) {
             if ( pauseAfterError ) {
                 Console.WriteLine( "Press <Enter> to close this window" );
                 while ( Console.ReadKey().Key != ConsoleKey.Enter ) {}

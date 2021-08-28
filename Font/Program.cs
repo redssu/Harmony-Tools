@@ -629,7 +629,7 @@ namespace Font {
 
                 Directory.CreateDirectory( outputDir );
 
-                hasErrorOccurred = false;
+                bool hasErrorOccurred = false;
 
                 foreach ( Block block in srdFile.Blocks ) {
                     if ( block is TxrBlock txr && block.Children[ 0 ] is RsiBlock rsi ) {
@@ -775,7 +775,7 @@ namespace Font {
 
                                 default:
                                     Console.WriteLine( "Error: Cannot save " + mipmapName + ": Unknown texture format" );
-                                    hasErrorOccured = true;
+                                    hasErrorOccurred = true;
                                     break;
                             }
 
@@ -812,7 +812,7 @@ namespace Font {
                     }
                 }
 
-                if ( hasErrorOccured ) {
+                if ( hasErrorOccurred ) {
                     Utils.WaitForEnter( pauseAfterError );
                 }
             }            

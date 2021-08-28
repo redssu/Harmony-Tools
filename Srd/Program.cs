@@ -1,4 +1,5 @@
 using System;
+using System.Security;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -102,7 +103,7 @@ namespace Srd {
                 SrdFile srdFile = new SrdFile();
                 srdFile.Load( SrdName, SrdiName, SrdvName );
 
-                bool hasErrorOccured = false;
+                bool hasErrorOccurred = false;
                 
                 foreach ( string file in targetFiles ) { 
                     if ( file.EndsWith( "_.srdv" ) || file.EndsWith(  "_.srdi" ) || file.EndsWith( "_.srd" ) ) {
@@ -116,7 +117,7 @@ namespace Srd {
 
                     if ( texture == null ) {
                         Console.WriteLine( "Error: Could not load texture " + textureName );
-                        hasErrorOccured = true;
+                        hasErrorOccurred = true;
                         continue;
                     }
 
@@ -159,7 +160,7 @@ namespace Srd {
 
                     if ( !foundTexture ) {
                         Console.WriteLine( "Error: Could not replace texture " + textureName + ": Texture with that name not found in SRD Archive" );
-                        hasErrorOccured = true;
+                        hasErrorOccurred = true;
                     }
                 }
 
@@ -185,7 +186,25 @@ namespace Srd {
 
                 Console.WriteLine( "SRD archive successfully saved" );
 
-                if ( hasErrorOccured ) {
+                if ( deleteOriginal ) {
+                    try {
+                        Directory.Delete( filePath );
+                    }
+                    catch ( IOException ) {
+                        hasErrorOccurred = true;
+                        Console.WriteLine( "Error: Could not delete original directory " + filePath + ": Target resource is used by other process" );
+                    }
+                    catch ( SecurityException ) { 
+                        hasErrorOccurred = true;
+                        Console.WriteLine( "Error: Could not delete original directory " + filePath + ": Access Denied" );
+                    }
+                    catch ( UnauthorizedAccessException ) {
+                        hasErrorOccurred = true;
+                        Console.WriteLine( "Error: Could not delete original directory " + filePath + ": Target resource is a file" );
+                    }
+                }
+
+                if ( hasErrorOccurred ) {
                     Utils.WaitForEnter( pauseAfterError );
                 }
             }
@@ -236,7 +255,7 @@ namespace Srd {
                 SrdFile srdFile = new SrdFile();
                 srdFile.Load( SrdName, SrdiName, SrdvName );
                 
-                bool hasErrorOccured = false;
+                bool hasErrorOccurred = false;
 
                 // Extract Textures
                 foreach ( Block block in srdFile.Blocks ) {
@@ -305,7 +324,7 @@ namespace Srd {
                         }
                         else if ( txr.Swizzle != 1 ) {
                             Console.WriteLine( "Warning: Resource is swizzled" );
-                            hasErrorOccured = true;
+                            hasErrorOccurred = true;
                         }
 
                         int mipWidth = (int) Math.Max( 1, displayWidth );
@@ -375,7 +394,7 @@ namespace Srd {
 
                             default:
                                 Console.WriteLine( "Error: Cannot save " + mipmapName + ": Unknown texture format" );
-                                hasErrorOccured = true;
+                                hasErrorOccurred = true;
                                 break;
                         }
 
@@ -384,7 +403,27 @@ namespace Srd {
                     }
                 }
 
-                if ( hasErrorOccured ) {
+                if ( deleteOriginal ) {
+                    try {
+                        File.Delete( SrdName );
+                        File.Delete( SrdiName );
+                        File.Delete( SrdvName );
+                    }
+                    catch ( IOException ) {
+                        hasErrorOccurred = true;
+                        Console.WriteLine( "Error: Could not delete original files: Target resources are used by other process" );
+                    }
+                    catch ( SecurityException ) { 
+                        hasErrorOccurred = true;
+                        Console.WriteLine( "Error: Could not delete original files: Access Denied" );
+                    }
+                    catch ( UnauthorizedAccessException ) {
+                        hasErrorOccurred = true;
+                        Console.WriteLine( "Error: Could not delete original files: Target resources are directories" );
+                    }
+                }
+
+                if ( hasErrorOccurred ) {
                     Utils.WaitForEnter( pauseAfterError );
                 }
             }
