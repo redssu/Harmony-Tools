@@ -27,6 +27,16 @@ namespace V3Lib.Srd
             using BinaryWriter writer = new BinaryWriter(new FileStream(srdPath, FileMode.Create));
             WriteBlocks(writer, Blocks, srdiPath, srdvPath);
             writer.Flush();
+
+            // Check if they have any content in it and if not, delete them
+            // ! game crashes if there is a .SRDI file with no content
+            if ( File.Exists( srdiPath ) && ( new FileInfo( srdiPath ) ).Length == 0 ) {
+                File.Delete( srdiPath );
+            }
+
+            if ( File.Exists( srdvPath ) && ( new FileInfo( srdvPath ) ).Length == 0 ) {
+                File.Delete( srdvPath );
+            }
         }
 
         public static List<Block> ReadBlocks(BinaryReader reader, string srdiPath, string srdvPath)
@@ -45,10 +55,10 @@ namespace V3Lib.Srd
                     "$TXI" => new TxiBlock(),
                     "$TXR" => new TxrBlock(),
                     "$VTX" => new VtxBlock(),
-                    "$MSH" => new MshBlock(),
-                    "$MAT" => new MatBlock(),
-                    "$SCN" => new ScnBlock(),
-                    "$SKL" => new SklBlock(),
+                    // "$MSH" => new MshBlock(),
+                    // "$MAT" => new MatBlock(),
+                    // "$SCN" => new ScnBlock(),
+                    // "$SKL" => new SklBlock(),
                     "$CT0" => new Ct0Block(),
                     _ => new UnknownBlock(),
                 };
