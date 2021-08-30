@@ -50,7 +50,11 @@ If the parameter ```--unregister``` is set, the tool will remove previously crea
 
 ### STX
 
-Tool usage:
+STX files moslty contain character dialogs or fonts.
+
+This tool extracts a ".STX" file to ".TXT" format, or packs a ".TXT" file to ".STX" format. To convert fonts, see the **FONT** tool section.
+
+Tool Usage:
 
 ```stx (--unpack|--pack) file_path [--delete-original] [--pause-after-error]```
 
@@ -61,9 +65,28 @@ If ```--pause-after-error``` parameter is set - the tool will wait for user inte
 If you are packing a ".TXT" into ".STX" and the file name ends with ".STX.TXT", the tool will only remove the ".TXT" suffix from the name. 
 
 
+### DAT
+
+DAT files contain data formatted in form of table, typically used in mini-games or class trials.
+
+**Warning**: Some DAT files don't contain tables and cannot be opened by this tool. Such files are mostly located in the "wrd_data" folder.
+
+This tool extracts a ".DAT" file to ".CSV" format, or packs a ".CSV" file to ".DAT" format. ".CSV" files can be easily opened by Office Excel or LibreOffice Calc.
+
+Tool Usage:
+
+```dat (--unpack|--pack) file_path [--delete-original] [--pause-after-error]```
+
+If the parameter ``` --delete-original``` is set, the original file will be deleted afterwards.
+
+If ```--pause-after-error``` parameter is set - the tool will wait for user interaction before exiting if any error occurred.
+
+If you are packing a ".CSV" into ".DAT" and the file name ends with ".DAT.CSV", the tool will only remove the ".CSV" suffix from the name. 
 
 
 ### SPC
+
+SPC archives are general purpose archives that contain other files, for example ".STX" or ".SRD". They can be compared to the well-known ZIP archives.
 
 Tool Usage:
 
@@ -82,9 +105,9 @@ When packing a directory into an SPC archive, the tool will remove the ".decompr
 **Warning**: Do not modify the ```__spc_info.json``` file inside the created directory. It's crucial to packing the file back to SPC Archive.
 
 
-
-
 ### SRD
+
+The SRD archives store files related to textures or game models. This tool only allows you to extract and replace textures.
 
 Tool Usage:
 
@@ -103,8 +126,6 @@ When unpacking an SRD archive, the tool will create a directory with the same na
 When packing an directory into an SRD archive, the tool will only replace textures that exist in ```_.srd``` file (which is a copy of original ".SRD" file). This tool does not support advanced compression used by Danganronpa V3 devs, so you should replace only textures that are absolutely necessary for replacement. Replacing all textures leads to huge ".SRD" file size. In order to replace only some textures - delete other textures from the tool generated directory so that they are not replaced during the operation. The tool will remove ".decompressed" suffix from directory name and create a ".SRD" file based on directory name.
 
 **Warning**: Do not remove the ```_.srd``` and ```_.srdi``` (if exists) or ```_.srdv``` (if exists). Without them the directory cannot be converted back into SRD file.
-
-
 
 
 ### FONT

@@ -61,8 +61,26 @@ Jeżeli parametr  ``` --delete-original``` jest ustawiony, oryginalny plik zosta
 
 Jeżeli parametr ```--pause-after-error``` jest ustawiony - narzędzie będzie czekać na interakcję użytkownika jeśli wystąpi jakiś błąd zanim zakończy działanie.
 
-Jeżeli pakujesz plik ".TXT" do pliku ".STX" i jego nazwa kończy się na ".STX.TXT", narzędzie usunie tylko końcówkę ".TXT" z nazwy,  by brzmiała jak oryginalny plik.
+Jeżeli pakujesz plik ".TXT" do pliku ".STX" i jego nazwa kończy się na ".STX.TXT", narzędzie usunie tylko końcówkę ".TXT" z nazwy, by brzmiała jak oryginalny plik.
 
+
+### DAT
+
+Pliki DAT zawierają dane sformatowane w formie tabeli, zazwyczaj używane w minigrach lub rozprawach.
+
+**Uwaga**: Niektóre pliki DAT nie zawierają danych w formie tabeli, przez co nie mogą być otwarte. Takie pliki głównie znajdują się w folderze "wrd_data".
+
+Te narzędzie rozpakowuje plik ".DAT" do formatu ".CSV", bądź pakuje plik ".CSV" do formatu ".DAT". Pliki ".CSV" najłatwiej otworzyć programem Office Excel lub LibreOffice Calc.
+
+Użycie:
+
+```dat (--unpack|--pack) file_path [--delete-original] [--pause-after-error]```
+
+Jeżeli parametr  ``` --delete-original``` jest ustawiony, oryginalny plik zostanie usunięty.
+
+Jeżeli parametr ```--pause-after-error``` jest ustawiony - narzędzie będzie czekać na interakcję użytkownika jeśli wystąpi jakiś błąd zanim zakończy działanie.
+
+Jeżeli pakujesz plik ".CSV" do pliku ".DAT" i jego nazwa kończy się na ".DAT.CSV", narzędzie usunie tylko końcówkę ".CSV" z nazwy, by brzmiała jak oryginalny plik.
 
 
 ### SPC
@@ -89,7 +107,7 @@ Gdy pakujesz katalog do postaci archiwum SPC, narzędzie analogicznie usunie dop
 
 ### SRD
 
-Archiwa SRD przechowują głównie pliki związane z teksturami, bądź modelami gry. Narzędzie te pozwala tylko na wypakowywanie tekstur.
+Archiwa SRD przechowują głównie pliki związane z teksturami, bądź modelami gry. Narzędzie te pozwala tylko na wypakowywanie i zamianę tekstur.
 
 Użycie:
 
