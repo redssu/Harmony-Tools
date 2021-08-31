@@ -59,7 +59,7 @@ namespace Stx {
             }
 
             if ( wantToPack ) {
-                StxFile stx = new StxFile();
+                StxFile stxFile = new StxFile();
 
                 using StreamReader reader = new StreamReader( fileInfo.FullName );
 
@@ -77,24 +77,24 @@ namespace Stx {
                             table.Add( line.Replace( @"\n", "\n" ).Replace( @"\r", "\r" ) );
                         }
 
-                        stx.StringTables.Add( new StringTable( table, 8 ) );
+                        stxFile.StringTables.Add( new StringTable( table, 8 ) );
                     }
                 }
 
                 if ( fileInfo.FullName.ToLower().EndsWith( ".stx.txt" ) ) {
-                    stx.Save( fileInfo.FullName.Substring( 0, fileInfo.FullName.Length - 4 ) );
+                    stxFile.Save( fileInfo.FullName.Substring( 0, fileInfo.FullName.Length - 4 ) );
                 }
                 else {
-                    stx.Save( fileInfo.FullName.Replace( fileInfo.Extension, "" ) + ".stx" );
+                    stxFile.Save( fileInfo.FullName + ".stx" );
                 }
             }
             else {
-                StxFile stx = new StxFile();
-                stx.Load( fileInfo.FullName );
+                StxFile stxFile = new StxFile();
+                stxFile.Load( fileInfo.FullName );
                 
                 using StreamWriter writer = new StreamWriter( fileInfo.FullName + ".txt", false );
 
-                foreach ( var table in stx.StringTables ) {
+                foreach ( var table in stxFile.StringTables ) {
                     writer.WriteLine( "{" );
 
                     foreach ( string line in table.Strings ) {
@@ -103,6 +103,8 @@ namespace Stx {
 
                     writer.WriteLine( "}" );
                 }
+
+                writer.Close();
             }
 
             if ( deleteOriginal ) {
