@@ -83,6 +83,23 @@ Jeżeli parametr ```--pause-after-error``` jest ustawiony - narzędzie będzie c
 Jeżeli pakujesz plik ".CSV" do pliku ".DAT" i jego nazwa kończy się na ".DAT.CSV", narzędzie usunie tylko końcówkę ".CSV" z nazwy, by brzmiała jak oryginalny plik.
 
 
+### WRD
+
+Pliki WRD zawierają skrypty gry, z nich można wyczytać, kto mówi w danych liniach w pliku STX.
+
+**Notka**: Pakowanie plików WRD nie jest obecnie możliwe.
+
+Użycie:
+
+```wrd --unpack file_path [--translate] [--delete-original] [--pause-after-error]```
+
+Jeżeli parametr ```--translate``` jest ustawiony, nazwy kodów operacji są tłumaczone na bardziej zrozumiałe.
+
+Jeżeli parametr  ```--delete-original``` jest ustawiony, oryginalny plik zostanie usunięty.
+
+Jeżeli parametr ```--pause-after-error``` jest ustawiony - narzędzie będzie czekać na interakcję użytkownika jeśli wystąpi jakiś błąd zanim zakończy działanie.
+
+
 ### SPC
 
 Archiwa SPC są archiwami ogólnego przeznaczenia, które zawierają w sobie inne pliki, na przykład ".STX" lub ".SRD". Można je porównać do znanych Archiw ZIP.

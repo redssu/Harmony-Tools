@@ -10,6 +10,8 @@ namespace ExplorerExtension {
                 "EN", new Dictionary<string, string>() {  
                     { "UnpackSTXName", "Unpack STX file" },
                     { "UnpackDATName", "Unpack DAT file" },
+                    { "UnpackWRDName", "Unpack WRD file" },
+                    { "UnpackWRDTranslateName", "Unpack WRD file with translation" },
                     { "UnpackSPCName", "Unpack SPC archive" },
                     { "UnpackSRDName", "Unpack SRD archive (only textures)" },
                     { "UnpackFontsName", "Unpack font file" },
@@ -25,6 +27,8 @@ namespace ExplorerExtension {
                 "PL", new Dictionary<string, string>() {
                     { "UnpackSTXName", "Rozpakuj plik STX" },
                     { "UnpackDATName", "Rozpakuj plik DAT" },
+                    { "UnpackWRDName", "Rozpakuj plik WRD" },
+                    { "UnpackWRDTranslateName", "Rozpakuj plik WRD z tlumaczeniem nazw" },
                     { "UnpackSPCName", "Rozpakuj archiwum SPC" },
                     { "UnpackSRDName", "Rozpakuj archiwum SRD (tylko tekstury)" },
                     { "UnpackFontsName", "Rozpakuj plik czcionki" },
@@ -139,8 +143,25 @@ namespace ExplorerExtension {
                     RegistryKey PackDATCommand = PackDATItem.CreateSubKey( "command" );
                     PackDATCommand.SetValue( "", installationPath + "\\HTDat.exe --pack \"%1\" --pause-after-error " + ( deleteOriginal ? " --delete-original" : "" ) );
 
+                    // Unpack WRD file
+                    RegistryKey UnpackWRDItem = HarmonyToolsShell.CreateSubKey( "5_UnpackWRD" );
+                    UnpackWRDItem.SetValue( "MUIVerb", texts[ language ][ "UnpackWRDName" ] );
+                    UnpackWRDItem.SetValue( "Icon", installationPath + @"\Harmony-Tools-Unpack-File-Icon.ico" );
+
+                    RegistryKey UnpackWRDCommand = UnpackWRDItem.CreateSubKey( "command" );
+                    UnpackWRDCommand.SetValue( "", installationPath + "\\HTWrd.exe --unpack \"%1\" --pause-after-error " + ( deleteOriginal ? " --delete-original" : "" ) );
+
+                    // Unpack WRD file with Opcode translation
+                    RegistryKey UnpackWRDTranslateItem = HarmonyToolsShell.CreateSubKey( "6_UnpackWRDTranslate" );
+                    UnpackWRDTranslateItem.SetValue( "MUIVerb", texts[ language ][ "UnpackWRDTranslateName" ] );
+                    UnpackWRDTranslateItem.SetValue( "Icon", installationPath + @"\Harmony-Tools-Unpack-File-Icon.ico" );
+                    UnpackWRDTranslateItem.SetValue( "CommandFlags", (uint) 0x40, RegistryValueKind.DWord );
+
+                    RegistryKey UnpackWRDTranslateCommand = UnpackWRDTranslateItem.CreateSubKey( "command" );
+                    UnpackWRDTranslateCommand.SetValue( "", installationPath + "\\HTWrd.exe --unpack \"%1\" --pause-after-error --translate " + ( deleteOriginal ? " --delete-original" : "" ) );
+
                     // SPC
-                    RegistryKey UnpackSPCItem = HarmonyToolsShell.CreateSubKey( "5_UnpackSPC" );
+                    RegistryKey UnpackSPCItem = HarmonyToolsShell.CreateSubKey( "7_UnpackSPC" );
                     UnpackSPCItem.SetValue( "MUIVerb", texts[ language ][ "UnpackSPCName" ] );
                     UnpackSPCItem.SetValue( "Icon", installationPath + @"\Harmony-Tools-Unpack-Icon.ico" );
 
@@ -148,7 +169,7 @@ namespace ExplorerExtension {
                     UnpackSPCCommand.SetValue( "", installationPath + "\\HTSpc.exe --unpack \"%1\" --pause-after-error " + ( deleteOriginal ? " --delete-original" : "" ) );
 
                     // SRD
-                    RegistryKey UnpackSRDItem = HarmonyToolsShell.CreateSubKey( "6_UnpackSRD" );
+                    RegistryKey UnpackSRDItem = HarmonyToolsShell.CreateSubKey( "8_UnpackSRD" );
                     UnpackSRDItem.SetValue( "MUIVerb", texts[ language ][ "UnpackSRDName" ] );
                     UnpackSRDItem.SetValue( "Icon", installationPath + @"\Harmony-Tools-Unpack-Icon.ico" );
 
@@ -156,7 +177,7 @@ namespace ExplorerExtension {
                     UnpackSRDCommand.SetValue( "", installationPath + "\\HTSrd.exe --unpack \"%1\" --pause-after-error " + ( deleteOriginal ? " --delete-original" : "" ) );
 
                     // Fonts
-                    RegistryKey UnpackFontsItem = HarmonyToolsShell.CreateSubKey( "7_UnpackFonts" );
+                    RegistryKey UnpackFontsItem = HarmonyToolsShell.CreateSubKey( "9_UnpackFonts" );
                     UnpackFontsItem.SetValue( "MUIVerb", texts[ language ][ "UnpackFontsName" ] );
                     UnpackFontsItem.SetValue( "Icon", installationPath + @"\Harmony-Tools-Unpack-Icon.ico" );
 

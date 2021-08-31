@@ -84,6 +84,23 @@ If ```--pause-after-error``` parameter is set - the tool will wait for user inte
 If you are packing a ".CSV" into ".DAT" and the file name ends with ".DAT.CSV", the tool will only remove the ".CSV" suffix from the name. 
 
 
+### WRD
+
+WRD files contain game scripts, from which you can read who is speaking in the diffrent lines of STX file.
+
+**Note**: Packing a WRD file is not currently supported.
+
+Tool Usage:
+
+```wrd --unpack file_path [--translate] [--delete-original] [--pause-after-error]```
+
+If the parameter ```--translate``` is set, the Opcodes will be translated to a more readable sentences.
+
+If the parameter ```--delete-original``` is set, the original file will be deleted afterwards.
+
+If ```--pause-after-error``` parameter is set - the tool will wait for user interaction before exiting if any error occurred.
+
+
 ### SPC
 
 SPC archives are general purpose archives that contain other files, for example ".STX" or ".SRD". They can be compared to the well-known ZIP archives.
