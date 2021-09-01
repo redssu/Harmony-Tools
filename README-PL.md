@@ -6,7 +6,7 @@ Wszystkie narzędzia są nieinteraktywne i mogą być używane za pomocą twojeg
 
 Znajdziesz tutaj też jedno narzędzie "Explorer-Extension", które po uruchomieniu dodaje nową listę do menu kontekstowego, zawierającą skróty do reszty narzędzi, przez co można używać ich szybciej i łatwiej. Explorer-Extension wspiera obecnie tylko system Windows.
 
-## Installation
+## Instalacja
 
 W każdej wypuszczonej wersji będę umieszczał archiwum ZIP z programem ```Installer.exe``` i katalogiem ```bin``` w środku. Po uruchomieniu instalator skopiuje wszystkie pliki z katalogu ```bin``` do katalogu ```%ProgramFiles%\HarmonyTools``` i doda również tę ścieżkę do Zmiennych Środowiskowych, po to, by można było używać tych narzędzi w każdym katalogu za pomocą terminala. Zauważ, że wszystkie narzędzia w katalogu ```bin``` mają przedrostek "HT" - dodałem to w razie gdyby powstały konflikty nazw z innymi programami, a więc używając na przykład narzędzia ```Stx``` powinno wpisywać się ```HTStx```.
 
@@ -20,14 +20,14 @@ Po instalacji zaleca się zarejestrowanie nowego Menu Kontekstowego za pomocą E
 Wszelkie Pull Requesty są mile widziane. Dopiero zaczynam pisanie programów w C#, więc w kodzie na pewno znajdą się rzeczy, które można poprawić.
 
 
-## Notes
+## Notki
 
 Większość tych narzędzi to po prostu nakładki na narzędzia stworzone przez [CapitanSwag](https://github.com/jpmac26) - moje narzędzia nie powstałyby, gdyby nie jego ciężka praca. Moim celem natomiast było stworzenie zestawu narzędzi, które będą przyjazne w obsłudze dla tłumaczy oraz które nie będą wymagały wpisywania komend, więc przerobiłem kod [DRV3-Sharp](https://github.com/jpmac26/DRV3-Sharp) w ten sposób, by usunąć z nich interaktywność.
 
 Repozytorium stworzone przez [EDDxample](https://github.com/EDDxample) ([Ultimate-DRv3-Toolset](https://github.com/EDDxample/ultimate-drv3-toolset)) było dla mnie kopalnią wiedzy, jeśli chodzi o pliki z czcionkami, bez nich nie napisałbym programu pakującego czcionki.
 
 
-## Usage
+## Użycie
 
 ### EXPLORER-EXTENSION
 
