@@ -225,6 +225,12 @@ namespace V3Lib.Dat
 
                             value = (ushort)utf16Strings.IndexOf(splitVal[i]);
                         }
+                        else if ( type == "f32" ) {
+                            value = Convert.ChangeType( float.Parse(splitVal[i]), DataTypes[type] );
+                        }
+                        else if ( type == "f64" ) {
+                            value = Convert.ChangeType( double.Parse(splitVal[i]), DataTypes[type] );
+                        }
                         else
                         {
                             // This is only needed to convert the data to a numeric type
