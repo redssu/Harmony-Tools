@@ -166,6 +166,8 @@ Jeżeli parametr ```--pause-after-error``` jest ustawiony - narzędzie będzie c
 Katalog, który zostanie zapakowany do pliku czcionki, musi zawierać w sobie plik ```__font_info.json```, który zawiera obiekt JSON z następującymi właściwościami:
 
 - "FontName" - które zawiera nazwę użytej czcionki, w postaci tekstu. Na przykład: "ComicSans.otf". Jest to właściwość czysto informacyjna, ale jest wymagana.
+- "Charset" - zawiera znaki, które znajdują się w czcionce. Przy pakowaniu czcionki możesz tu wpisać cokolwiek, skrypt wykryje znaki automatycznie.
+- "ScaleFlag" - specjalna wartość z oryginalnego pliku czcionki, która wpływa na jej skalowanie w grze
 - "Resources" - które zawiera listę zasobów. Lista powinna zawierać dwa ciągi znaków:
   - "font_table"
   - Oraz nazwę pliku tekstury. Można ją znaleźć wypakowując plik czcionki za pomocą narzędzia SRD (na przykład: "db_font00_US_win.bmp")

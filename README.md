@@ -162,11 +162,13 @@ If ```--pause-after-error``` parameter is set - the tool will wait for user inte
 The directory that will be packed into the font file must contain the file ``` __font_info.json```, which contains a JSON object with the following properties:
 
 - "FontName" - contains the name of the used font in the form of a string. For example: "ComicSans.otf" - This is for informational purposes only, but is required
+- "Charset" - charset which is used in this font. When packing a font - you can write everything you want to, the tool will replace it based on glyph files
+- "ScaleFlag" - this is a magic value from original font file
 - "Resources" -Provides a list of resources in the form of a list. This list should contain two strings;
   - "font_table"
   - The name of the font texture, which can be found when extracting the font file with the SRD tool
 
-The file `` __font_info.json`` is generated automatically after unpacking the correct font file. You can use this as a reference.
+The file `` __font_info.json`` is generated automatically after unpacking the correct font file. You can use this as a reference or just use the same file.
 
 There should be ".BMP" files in the directory that are used as glyph textures. Each ".BMP" file should contain only one glyph. They should be named as increasing numbers (e.g .: ```0000.bmp```, ```0001.bmp``` etc.). Numbers should be padded with zeros to match the length of the largest number (so if there is a file ```127.bmp``` there should be two zeros before each one-digit name and one zero before each of the two-digit name).
 

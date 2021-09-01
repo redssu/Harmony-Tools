@@ -32,7 +32,6 @@ namespace Font {
         public string FontName { get; set; }
         public string Charset { get; set; }
         public uint ScaleFlag { get; set; }
-        public uint BitFlagCount { get; set; }
         public List<string> Resources { get; set; }
     }
 
@@ -531,7 +530,6 @@ namespace Font {
                 string fontName = string.Empty;
                 GlyphInfo[] glyphList = new GlyphInfo[ 1 ];
 
-                uint bitFlagCount = 0;
                 uint scaleFlag = 0;
 
                 foreach ( Block block in srdFile.Blocks ) {
@@ -547,7 +545,7 @@ namespace Font {
                         foundFont = true;
         
                         uint unknown44 = fontReader.ReadUInt32();
-                        bitFlagCount = fontReader.ReadUInt32() / 8;
+                        uint bitFlagCount = fontReader.ReadUInt32() / 8;
                         uint fontNameLength = fontReader.ReadUInt32();
                         uint fontNamePtr = fontReader.ReadUInt32();
                         uint charCount = fontReader.ReadUInt32();
@@ -805,7 +803,6 @@ namespace Font {
                             FontName = fontName,
                             Charset = charset,
                             ScaleFlag = scaleFlag,
-                            BitFlagCount = bitFlagCount,
                             Resources = rsi.ResourceStringList
                         };
 
