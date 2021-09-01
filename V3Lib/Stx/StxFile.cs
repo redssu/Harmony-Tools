@@ -7,10 +7,10 @@ namespace V3Lib.Stx
 {
     public class StringTable
     {
-        public List<string> Strings;
+        public Dictionary<uint, string> Strings;
         public uint Unknown;
 
-        public StringTable(List<string> strings, uint unknown)
+        public StringTable(Dictionary<uint, string> strings, uint unknown)
         {
             Strings = strings;
             Unknown = unknown;
@@ -54,6 +54,7 @@ namespace V3Lib.Stx
             uint tableOffset = reader.ReadUInt32();
 
             var tableInfo = new List<(uint Unknown, uint StringCount)>();    // unknown, stringCount
+
             for (int t = 0; t < tableCount; ++t)
             {
                 tableInfo.Add((reader.ReadUInt32(), reader.ReadUInt32()));
@@ -64,7 +65,7 @@ namespace V3Lib.Stx
             reader.BaseStream.Seek(tableOffset, SeekOrigin.Begin);
             foreach (var (Unknown, StringCount) in tableInfo)
             {
-                List<string> strings = new List<string>();
+                Dictionary<uint, string> strings = new Dictionary<uint, string>();
 
                 for (int s = 0; s < StringCount; ++s)
                 {
@@ -74,13 +75,13 @@ namespace V3Lib.Stx
                     long returnPos = reader.BaseStream.Position;
 
                     reader.BaseStream.Seek(stringOffset, SeekOrigin.Begin);
-
-                    // C# does not include a way to read null-terminated strings, so we'll have to do it manually.
-                    strings.Add(Utils.ReadNullTerminatedString(reader, Encoding.Unicode));
                     
-                    if (stringId != (strings.Count - 1)) { 
-                        throw new InvalidDataException($"String #{s} has a reported ID of {stringId}, this list is not sorted correctly!");
-                    }
+                    // C# does not include a way to read null-terminated strings, so we'll have to do it manually.
+                    strings.Add( stringId, Utils.ReadNullTerminatedString( reader, Encoding.Unicode ) );
+                    
+                    // if (stringId != (strings.Count - 1)) { 
+                    //     throw new InvalidDataException($"String #{s} has a reported ID of {stringId}, this list is not sorted correctly!");
+                    // }
 
                     reader.BaseStream.Seek(returnPos, SeekOrigin.Begin);
                 }
@@ -126,13 +127,13 @@ namespace V3Lib.Stx
             {
                 uint strId = 0;
                 List<(int, string)> writtenStrings = new();
-                foreach (string str in table.Strings)
+                foreach (KeyValuePair<uint, string> kvp in table.Strings)
                 {
                     // De-duplicate strings by re-using offsets
                     int foundOffset = -1;
                     foreach (var (offset, text) in writtenStrings)
                     {
-                        if (text == str)
+                        if (text == kvp.Value)
                         {
                             foundOffset = offset;
                             break;
@@ -151,7 +152,7 @@ namespace V3Lib.Stx
                     }
 
                     writer.BaseStream.Seek(infoPairPos, SeekOrigin.Begin);
-                    writer.Write(strId++);
+                    writer.Write(kvp.Key);
                     writer.Write((uint)strPos);
                     writer.BaseStream.Seek(latestPos, SeekOrigin.Begin);
 
@@ -161,7 +162,7 @@ namespace V3Lib.Stx
                     // Write string data if there are no existing duplicates
                     if (foundOffset < 0)
                     {
-                        byte[] strData = Encoding.Unicode.GetBytes(str);
+                        byte[] strData = Encoding.Unicode.GetBytes(kvp.Value);
                         writer.Write(strData);
                         writer.Write((ushort)0);
                     }

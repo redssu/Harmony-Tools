@@ -65,16 +65,38 @@ namespace Stx {
 
                 while ( reader != null && !reader.EndOfStream ) { 
                     if ( reader.ReadLine().StartsWith( "{" ) ) {
-                        List<string> table = new List<string>();
+                        Dictionary<uint, string> table = new Dictionary<uint, string>();
 
                         while ( true ) {
                             string line = reader.ReadLine();
 
+                            uint key = 0;
+                            string value = string.Empty;
+                            
                             if ( line == null || line.StartsWith( "}" ) ) {
                                 break;
                             }
 
-                            table.Add( line.Replace( @"\n", "\n" ).Replace( @"\r", "\r" ) );
+                            if ( line.StartsWith( ":" ) ) {
+                                string[] parts = line.Split( ':' );
+
+                                if ( parts.Length > 2 ) {
+                                    key = Convert.ToUInt32( parts[ 1 ] );
+                                    value = parts[ 2 ];
+                                }
+                                else {
+                                    Console.WriteLine( "Error: No key/value pair found in line: " + line );
+                                    Utils.WaitForEnter( pauseAfterError );
+                                    return;
+                                }
+                            }
+                            else {
+                                Console.WriteLine( "Error: No key/value pair found in line: " + line );
+                                Utils.WaitForEnter( pauseAfterError );
+                                return;
+                            }
+
+                            table.Add( key, value.Replace( @"\n", "\n" ).Replace( @"\r", "\r" ) );
                         }
 
                         stxFile.StringTables.Add( new StringTable( table, 8 ) );
@@ -97,8 +119,8 @@ namespace Stx {
                 foreach ( var table in stxFile.StringTables ) {
                     writer.WriteLine( "{" );
 
-                    foreach ( string line in table.Strings ) {
-                        writer.WriteLine( line.Replace( "\n", @"\n" ).Replace( "\r", @"\r" ) );
+                    foreach ( KeyValuePair<uint, string> kvp in table.Strings ) {
+                        writer.WriteLine( ":" + kvp.Key + ":" + kvp.Value.Replace( "\n", @"\n" ).Replace( "\r", @"\r" ) );
                     }
 
                     writer.WriteLine( "}" );
