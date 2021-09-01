@@ -77,18 +77,24 @@ namespace Stx {
                                 break;
                             }
 
-                            if ( line.StartsWith( ":" ) ) {
-                                string[] parts = line.Split( ':' );
+                            if ( line.StartsWith( "[" ) ) {                                
+                                int index = line.IndexOf( "]" );
 
-                                if ( parts.Length > 2 ) {
-                                    key = Convert.ToUInt32( parts[ 1 ] );
-                                    value = parts[ 2 ];
-                                }
-                                else {
-                                    Console.WriteLine( "Error: No key/value pair found in line: " + line );
+                                if ( index == -1 ) {
+                                    Console.WriteLine( "Error: No key/value pair found in line: " + line ); 
                                     Utils.WaitForEnter( pauseAfterError );
                                     return;
                                 }
+
+                                try { 
+                                    key = Convert.ToUInt32( line.Substring( 1, index - 1 ) );
+                                }
+                                catch ( Exception ) {
+                                    Console.WriteLine( "Error: Invalid key in line: " + line ); 
+                                    Utils.WaitForEnter( pauseAfterError );
+                                }
+                                
+                                value = index + 1 < line.Length ? line.Substring( index + 1 ).TrimStart( ' ' ) : string.Empty;
                             }
                             else {
                                 Console.WriteLine( "Error: No key/value pair found in line: " + line );
@@ -120,7 +126,7 @@ namespace Stx {
                     writer.WriteLine( "{" );
 
                     foreach ( KeyValuePair<uint, string> kvp in table.Strings ) {
-                        writer.WriteLine( ":" + kvp.Key + ":" + kvp.Value.Replace( "\n", @"\n" ).Replace( "\r", @"\r" ) );
+                        writer.WriteLine( "[" + kvp.Key + "] " + kvp.Value.Replace( "\n", @"\n" ).Replace( "\r", @"\r" ) );
                     }
 
                     writer.WriteLine( "}" );
