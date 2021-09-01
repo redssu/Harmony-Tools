@@ -31,6 +31,7 @@ namespace Font {
     class FontInfoJson {
         public string FontName { get; set; }
         public string Charset { get; set; }
+        public uint ScaleFlag { get; set; }
         public uint BitFlagCount { get; set; }
         public List<string> Resources { get; set; }
     }
@@ -113,6 +114,7 @@ namespace Font {
 
                 string fontName = fontInfo.FontName;
                 string charset = string.Empty; // We will reconstruct it from subimages
+                uint scaleFlag = fontInfo.ScaleFlag;
                 uint bitFlagCount = 65375;
                 List<string> fontResources = fontInfo.Resources;
 
@@ -332,7 +334,7 @@ namespace Font {
                 writer.Write( (uint) charset.Length ); // char count
 
                 writer.Seek( 0x24, SeekOrigin.Begin );
-                writer.Write( (uint) 0x28002F ); // unknown
+                writer.Write( (uint) scaleFlag ); // scale flag?
 
                 writer.Seek( 0x1C, SeekOrigin.Begin );
                 writer.Write( (uint) 0x2C ); // bit flags pointer
@@ -530,6 +532,7 @@ namespace Font {
                 GlyphInfo[] glyphList = new GlyphInfo[ 1 ];
 
                 uint bitFlagCount = 0;
+                uint scaleFlag = 0;
 
                 foreach ( Block block in srdFile.Blocks ) {
                     if ( block is TxrBlock txr && block.Children[ 0 ] is RsiBlock rsi ) {
@@ -551,7 +554,7 @@ namespace Font {
                         uint bbListPtr = fontReader.ReadUInt32();
                         uint firstTablePtr = fontReader.ReadUInt32();
                         uint secondTablePtr = fontReader.ReadUInt32();
-                        uint unknown64 = fontReader.ReadUInt32();
+                        scaleFlag = fontReader.ReadUInt32(); // it somehow depends on scale of font in-game
                         uint fontNamePtrsPtr = fontReader.ReadUInt32();
 
                         // parse the big flags
@@ -801,6 +804,7 @@ namespace Font {
                         FontInfoJson fontInfoJson = new FontInfoJson {
                             FontName = fontName,
                             Charset = charset,
+                            ScaleFlag = scaleFlag,
                             BitFlagCount = bitFlagCount,
                             Resources = rsi.ResourceStringList
                         };
