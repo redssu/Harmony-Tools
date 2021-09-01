@@ -109,7 +109,7 @@ namespace V3Lib.Wrd
                     switch (argType)
                     {
                         case 0: // Plaintext parameter
-                            args.Add(parameters[arg]);
+                            args.Add( arg < parameters.Count ? parameters[arg] : string.Empty );
                             break;
 
                         case 1: // Raw number
@@ -118,7 +118,7 @@ namespace V3Lib.Wrd
                             break;
 
                         case 3: // Label name
-                            args.Add(labelNames[arg]);
+                            args.Add( arg < labelNames.Count ? labelNames[arg] : string.Empty );
                             break;
                     }
 
