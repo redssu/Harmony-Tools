@@ -16,11 +16,21 @@ namespace ExplorerExtension {
                     { "UnpackSRDName", "Unpack SRD archive (only textures)" },
                     { "UnpackFontsName", "Unpack font file" },
 
+                    { "UnpackAllSTXName", "Unpack All STX files" },
+                    { "UnpackAllDATName", "Unpack All DAT files" },
+                    { "UnpackAllWRDName", "Unpack All WRD files" },
+                    { "UnpackAllSPCName", "Unpack All SPC archives" },
+                    { "UnpackAllSRDName", "Unpack All SRD archives" },
+
                     { "PackSTXName", "Pack this file to STX file" },
                     { "PackDATName", "Pack this file to DAT file" },
                     { "PackSPCName", "Pack this directory to SPC Archive" },
                     { "PackSRDName", "Pack this directory to SRD Archive" },
-                    { "PackFontsName", "Pack this directory to font file" }
+                    { "PackFontsName", "Pack this directory to font file" },
+
+                    { "PackAllSTXName", "Pack TXT files as STX files" },
+                    { "PackAllDATName", "Pack CSV files as DAT files" },
+                    { "PackAllSPCName", "Pack .decompressed directories as SPC archives" }
                 }
             },
             {
@@ -33,11 +43,21 @@ namespace ExplorerExtension {
                     { "UnpackSRDName", "Rozpakuj archiwum SRD (tylko tekstury)" },
                     { "UnpackFontsName", "Rozpakuj plik czcionki" },
 
+                    { "UnpackAllSTXName", "Rozpakuj wszystkie pliki STX" },
+                    { "UnpackAllDATName", "Rozpakuj wszystkie pliki DAT" },
+                    { "UnpackAllWRDName", "Rozpakuj wszystkie pliki WRD" },
+                    { "UnpackAllSPCName", "Rozpakuj wszystkie archiwa SPC" },
+                    { "UnpackAllSRDName", "Rozpakuj wszystkie archiwa SRD" },
+
                     { "PackSTXName", "Spakuj ten plik jako plik STX" },
                     { "PackDATName", "Spakuj ten plik jako plik DAT" },
                     { "PackSPCName", "Spakuj ten katalog jako archiwum SPC" },
                     { "PackSRDName", "Spakuj ten katalog jako archiwum SRD" },
-                    { "PackFontsName", "Spakuj ten katalog jako plik czcionki" }
+                    { "PackFontsName", "Spakuj ten katalog jako plik czcionki" },
+
+                    { "PackAllSTXName", "Spakuj pliki TXT jako STX" },
+                    { "PackAllDATName", "Spakuj pliki CSV jako DAT" },
+                    { "PackAllSPCName", "Spakuj foldery .decompressed jako archiwa SPC" }
                 }
             }
 
@@ -104,6 +124,7 @@ namespace ExplorerExtension {
                     RegistryKey HarmonyTools = Registry.ClassesRoot.CreateSubKey( @"*\shell\HarmonyTools" );
                     HarmonyTools.SetValue( "Icon", installationPath + @"\Harmony-Tools-Icon.ico" );
                     HarmonyTools.SetValue( "MUIVerb", "Harmony Tools" );
+                    HarmonyTools.SetValue( "Position", "Top" );
                     HarmonyTools.SetValue( "subcommands", "" );
 
                     RegistryKey HarmonyToolsShell = HarmonyTools.CreateSubKey( "shell" );
@@ -200,13 +221,14 @@ namespace ExplorerExtension {
 
                     HarmonyTools.SetValue( "Icon", installationPath + @"\Harmony-Tools-Icon.ico" );
                     HarmonyTools.SetValue( "MUIVerb", "Harmony Tools" );
+                    HarmonyTools.SetValue( "Position", "Top" );
                     HarmonyTools.SetValue( "subcommands", "" );
 
                     RegistryKey HarmonyToolsShell = HarmonyTools.CreateSubKey( "shell" );
 
                     // Context submenu items
                     // SPC
-                    RegistryKey PackSPCItem = HarmonyToolsShell.CreateSubKey( "PackSPC" );
+                    RegistryKey PackSPCItem = HarmonyToolsShell.CreateSubKey( "1_PackSPC" );
                     PackSPCItem.SetValue( "MUIVerb", texts[ language ][ "PackSPCName" ] );
                     PackSPCItem.SetValue( "Icon", installationPath + @"\Harmony-Tools-Pack-Icon.ico" );
 
@@ -214,7 +236,7 @@ namespace ExplorerExtension {
                     PackSPCCommand.SetValue( "", installationPath + "\\HTSpc.exe --pack \"%1\" --pause-after-error " + ( deleteOriginal ? " --delete-original" : "" ) );
 
                     // SRD
-                    RegistryKey PackSRDItem = HarmonyToolsShell.CreateSubKey( "PackSRD" );
+                    RegistryKey PackSRDItem = HarmonyToolsShell.CreateSubKey( "2_PackSRD" );
                     PackSRDItem.SetValue( "MUIVerb", texts[ language ][ "PackSRDName" ] );
                     PackSRDItem.SetValue( "Icon", installationPath + @"\Harmony-Tools-Pack-Icon.ico" );
 
@@ -222,7 +244,7 @@ namespace ExplorerExtension {
                     PackSRDCommand.SetValue( "", installationPath + "\\HTSrd.exe --pack \"%1\" --pause-after-error " + ( deleteOriginal ? " --delete-original" : "" ) );
 
                     // Fonts
-                    RegistryKey PackFontsItem = HarmonyToolsShell.CreateSubKey( "PackFonts" );
+                    RegistryKey PackFontsItem = HarmonyToolsShell.CreateSubKey( "3_PackFonts" );
                     PackFontsItem.SetValue( "MUIVerb", texts[ language ][ "PackFontsName" ] );
                     PackFontsItem.SetValue( "Icon", installationPath + @"\Harmony-Tools-Pack-Icon.ico" );
 
@@ -232,11 +254,101 @@ namespace ExplorerExtension {
                 catch ( System.UnauthorizedAccessException ) {
                     Console.WriteLine( "Error: You don't have permission to register the context menu." );
                     Console.WriteLine( "Tip: Try to run this program as administrator" );
+                    Console.WriteLine( "Press <Enter> to close this window" );
+                    while ( Console.ReadKey().Key != ConsoleKey.Enter ) {}
                     return;
                 }
             }
             else {
                 Console.WriteLine( "Warning: Context menu for directories already exists" );
+            }
+
+            if ( !doesKeyExists( @"Directory\Background\shell\HarmonyTools" ) ) {
+                try {
+                    RegistryKey HarmonyTools = Registry.ClassesRoot.CreateSubKey( @"Directory\Background\shell\HarmonyTools" );
+
+                    HarmonyTools.SetValue( "Icon", installationPath + @"\Harmony-Tools-Icon.ico" );
+                    HarmonyTools.SetValue( "MUIVerb", "Harmony Tools" );
+                    HarmonyTools.SetValue( "Position", "Top" );
+                    HarmonyTools.SetValue( "subcommands", "" );
+
+                    RegistryKey HarmonyToolsShell = HarmonyTools.CreateSubKey( "shell" );
+
+                    // Unpack All STX
+                    RegistryKey UnpackAllSTXItem = HarmonyToolsShell.CreateSubKey( "1_UnpackAllSTX" );
+                    UnpackAllSTXItem.SetValue( "MUIVerb", texts[ language ][ "UnpackAllSTXName" ] );
+                    UnpackAllSTXItem.SetValue( "Icon", installationPath + @"\Harmony-Tools-Unpack-File-Icon.ico" );
+
+                    RegistryKey UnpackAllSTXCommand = UnpackAllSTXItem.CreateSubKey( "command" );
+                    UnpackAllSTXCommand.SetValue( "", installationPath + "\\ConvertAll.exe --unpack --format=STX \"%1\" --pause-after-error " + ( deleteOriginal ? " --delete-original" : "" ) );
+
+                    // Unpack All DAT
+                    RegistryKey UnpackAllDATItem = HarmonyToolsShell.CreateSubKey( "2_UnpackAllDAT" );
+                    UnpackAllDATItem.SetValue( "MUIVerb", texts[ language ][ "UnpackAllDATName" ] );
+                    UnpackAllDATItem.SetValue( "Icon", installationPath + @"\Harmony-Tools-Unpack-File-Icon.ico" );
+
+                    RegistryKey UnpackAllDATCommand = UnpackAllDATItem.CreateSubKey( "command" );
+                    UnpackAllDATCommand.SetValue( "", installationPath + "\\ConvertAll.exe --unpack -format=DAT \"%1\" --pause-after-error " + ( deleteOriginal ? " --delete-original" : "" ) );
+
+                    // Unpack All SPC
+                    RegistryKey UnpackAllSPCItem = HarmonyToolsShell.CreateSubKey( "3_UnpackAllSPC" );
+                    UnpackAllSPCItem.SetValue( "MUIVerb", texts[ language ][ "UnpackAllSPCName" ] );
+                    UnpackAllSPCItem.SetValue( "Icon", installationPath + @"\Harmony-Tools-Unpack-Icon.ico" );
+
+                    RegistryKey UnpackAllSPCCommand = UnpackAllSPCItem.CreateSubKey( "command" );
+                    UnpackAllSPCCommand.SetValue( "", installationPath + "\\ConvertAll.exe --unpack --format=SPC \"%1\" --pause-after-error " + ( deleteOriginal ? " --delete-original" : "" ) );
+
+                    // Unpack All SRD
+                    RegistryKey UnpackAllSRDItem = HarmonyToolsShell.CreateSubKey( "4_UnpackAllSRD" );
+                    UnpackAllSRDItem.SetValue( "MUIVerb", texts[ language ][ "UnpackAllSRDName" ] );
+                    UnpackAllSRDItem.SetValue( "Icon", installationPath + @"\Harmony-Tools-Unpack-Icon.ico" );
+
+                    RegistryKey UnpackAllSRDCommand = UnpackAllSRDItem.CreateSubKey( "command" );
+                    UnpackAllSRDCommand.SetValue( "", installationPath + "\\ConvertAll.exe --unpack --format=SRD \"%1\" --pause-after-error " + ( deleteOriginal ? " --delete-original" : "" ) );
+
+                    // Unpack All WRD
+                    RegistryKey UnpackAllWRDItem = HarmonyToolsShell.CreateSubKey( "5_UnpackAllWRD" );
+                    UnpackAllWRDItem.SetValue( "MUIVerb", texts[ language ][ "UnpackAllWRDName" ] );
+                    UnpackAllWRDItem.SetValue( "Icon", installationPath + @"\Harmony-Tools-Unpack-File-Icon.ico" );
+                    UnpackAllWRDItem.SetValue( "CommandFlags", (uint) 0x40, RegistryValueKind.DWord );
+
+                    RegistryKey UnpackAllWRDCommand = UnpackAllWRDItem.CreateSubKey( "command" );
+                    UnpackAllWRDCommand.SetValue( "", installationPath + "\\ConvertAll.exe --unpack --format=WRD \"%1\" --pause-after-error " + ( deleteOriginal ? " --delete-original" : "" ) );
+                
+                    // Pack All STX
+                    RegistryKey PackAllSTXItem = HarmonyToolsShell.CreateSubKey( "6_PackAllSTX" );
+                    PackAllSTXItem.SetValue( "MUIVerb", texts[ language ][ "PackAllSTXName" ] );
+                    PackAllSTXItem.SetValue( "Icon", installationPath + @"\Harmony-Tools-Pack-File-Icon.ico" );
+
+                    RegistryKey PackAllSTXCommand = PackAllSTXItem.CreateSubKey( "command" );
+                    PackAllSTXCommand.SetValue( "", installationPath + "\\ConvertAll.exe --pack --format=STX \"%1\" --pause-after-error " + ( deleteOriginal ? " --delete-original" : "" ) );
+
+                    // Pack All DAT
+                    RegistryKey PackAllDATItem = HarmonyToolsShell.CreateSubKey( "7_PackAllDAT" );
+                    PackAllDATItem.SetValue( "MUIVerb", texts[ language ][ "PackAllDATName" ] );
+                    PackAllDATItem.SetValue( "Icon", installationPath + @"\Harmony-Tools-Pack-File-Icon.ico" );
+
+                    RegistryKey PackAllDATCommand = PackAllDATItem.CreateSubKey( "command" );
+                    PackAllDATCommand.SetValue( "", installationPath + "\\ConvertAll.exe --pack --format=DAT \"%1\" --pause-after-error " + ( deleteOriginal ? " --delete-original" : "" ) );
+
+                    // Pack All SPC
+                    RegistryKey PackAllSPCItem = HarmonyToolsShell.CreateSubKey( "8_PackAllSPC" );
+                    PackAllSPCItem.SetValue( "MUIVerb", texts[ language ][ "PackAllSPCName" ] );
+                    PackAllSPCItem.SetValue( "Icon", installationPath + @"\Harmony-Tools-Pack-Icon.ico" );
+
+                    RegistryKey PackAllSPCCommand = PackAllSPCItem.CreateSubKey( "command" );
+                    PackAllSPCCommand.SetValue( "", installationPath + "\\ConvertAll.exe --pack --format=SPC \"%1\" --pause-after-error " + ( deleteOriginal ? " --delete-original" : "" ) );
+                }
+                catch ( System.UnauthorizedAccessException ) {
+                    Console.WriteLine( "Error: You don't have permission to register the context menu." );
+                    Console.WriteLine( "Tip: Try to run this program as administrator" );
+                    Console.WriteLine( "Press <Enter> to close this window" );
+                    while ( Console.ReadKey().Key != ConsoleKey.Enter ) {}
+                    return;
+                }
+            }
+            else {
+                Console.WriteLine( "Warning: Context menu for empty space already exists" );
             }
         }
 
@@ -247,6 +359,10 @@ namespace ExplorerExtension {
 
             if ( doesKeyExists( @"Directory\shell\HarmonyTools" ) ) {
                 Registry.ClassesRoot.DeleteSubKeyTree( @"Directory\shell\HarmonyTools" );
+            }
+
+            if ( doesKeyExists( @"Directory\Background\shell\HarmonyTools" ) ) {
+                Registry.ClassesRoot.DeleteSubKeyTree( @"Directory\Background\shell\HarmonyTools" );
             }
         }
     }

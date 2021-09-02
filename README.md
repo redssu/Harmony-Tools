@@ -198,6 +198,27 @@ If ```--pause-after-error``` parameter is set - the tool will wait for user inte
 The directory will contain files in a specific schema, described in the **PACKING** section.
 
 
+### CONVERTALL
+
+A tool, that allows you to perform a specific operation on files in specific directory.
+
+**Warning**: This tool assumes that you've installed other tools with provided installer. (The tools should be prefixed with "HT" string and should be 'callable' globally).
+
+Usage:
+
+ConvertAll (--unpack|--pack) --format=(STX|DAT|SPC|SRD|WRD) input_dir [--delete-original] [--pause-after-error]
+
+```input_dir``` powinien być ścieżką do katalogu
+
+Parameter ```--format``` allows following formats: STX, DAT, SPC, SRD, WRD if selected operation is unpacking and: STX, DAT, SPC if selected operation is packing.
+
+If ```--pause-after-error``` parameter is set - the tool will wait for user interaction before exiting if any error occurred.
+
+If ```--delete-original``` parameter is set, the tool will pass it to sub-programs. Because of that, it will delete original files or directories.
+
+
+
+
 
 
 

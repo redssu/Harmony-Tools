@@ -202,7 +202,23 @@ Narzędzie utworzy katalog o takiej samej nazwie, co plik wejściowy, dodając "
 Struktura katalogu będzie analogiczna do tej opisanej w sekcji **PAKOWANIE CZCIONKI**
 
 
+### CONVERTALL
 
+Narzędzie, które pozwala wykonywać operacje na wszystkich plikach danego folderu.
+
+**Uwaga**: Te narzędzie przyjmuje, że pozostałe narzędzia zostały zainstalowane za pomocą dołączonego instalatora. (To znaczy: nazwy narzędzi powinny być poprzedzone napisem "HT" i powinno móc się je włączać globalnie).
+
+Użycie:
+
+ConvertAll (--unpack|--pack) --format=(STX|DAT|SPC|SRD|WRD) input_dir [--delete-original] [--pause-after-error]
+
+```input_dir``` powinien być ścieżką do katalogu
+
+Parametr ```--format``` przyjmuje opcje: STX, DAT, SPC, SRD, WRD jeśli wybrano parametr ```--unpack```, oraz opcje: STX, DAT, SPC jeśli wybrano parametr ```--pack```.
+
+Jeżeli parametr ```--pause-after-error``` jest ustawiony - narzędzie będzie czekać na interakcję użytkownika jeśli wystąpi jakiś błąd zanim zakończy działanie.
+
+Jeżeli parametr  ```--delete-original``` jest ustawiony, narzędzie przekaże ten parametr do pod-narzędzi. Spowoduje to usunięcie plików oryginalnych.
 
 
 
