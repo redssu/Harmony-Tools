@@ -6,6 +6,7 @@ All tools are non-interactive and can be used via your favorite terminal such as
 
 Here you will also find a tool called "Explorer-Extension" that adds a new contextual menu list that contains shortcuts to other tools, making them faster and more convenient to use. Explorer-Extension currently only supports Windows.
 
+
 ## Installation
 
 In each release, I'm attaching the ZIP file with ```Installer.exe```  and ```bin``` directory inside it. The installer will copy all files from ```bin``` into ```%ProgramFiles%\HarmonyTools``` directory and it will add this directory to the Enviroment Path Variable, so it can be used in every directory via terminal. Note that all executables in ```bin``` directory are prefixed with "HT" just in case of conflicts with other programs, so you have to run ```HTStx``` instead of ```Stx```.
@@ -29,6 +30,13 @@ The repository created by [EDDxample](https://github.com/EDDxample) ([Ultimate-D
 
 ## Usage
 
+There are some parameters that are available in nearly all these tools, so I'll write them here.
+
+If ```--pause-after-error``` parameter is set - the tool will wait for user interaction before exiting if any error occurred.
+
+If ```--delete-original``` parameter is set, the original files or directories will be deleted afterwards.
+
+
 ### EXPLORER-EXTENSION
 
 Tool usage:
@@ -37,8 +45,7 @@ Tool usage:
 
 If the parameter ```--register``` is set, the tool will make a new entries into the System Registry resulting in new Explorer Context Menu, which appears when user is right-clicking onto a file or directory.
 
-If the parameter ```--delete-original``` is set during the registering operation, Context Menu Entries will invoke commands with
- ```--delete-original``` parameter.
+If the parameter ```--delete-original``` is set during the registering operation, Context Menu Entries will invoke commands with ```--delete-original``` parameter.
 
 The ```--lang``` parameter is used to switch between (currently) two languages. The default one is English (EN). This setting changes only the text in Context Menu.
 
@@ -46,7 +53,6 @@ If the parameter ```--unregister``` is set, the tool will remove previously crea
 
 **Note**: This program assumes, that you installed all tools with provided installer - it uses the tools that are prefixed with "HT" and assumes, that they are in ```%ProgramFiles%\HarmonyTools``` directory.
 
- 
 
 ### STX
 
@@ -58,11 +64,14 @@ Tool Usage:
 
 ```stx (--unpack|--pack) file_path [--delete-original] [--pause-after-error]```
 
-If the parameter ``` --delete-original``` is set, the original file will be deleted afterwards.
 
-If ```--pause-after-error``` parameter is set - the tool will wait for user interaction before exiting if any error occurred.
+### DIALOGUE
 
-If you are packing a ".TXT" into ".STX" and the file name ends with ".STX.TXT", the tool will only remove the ".TXT" suffix from the name. 
+The STX tool described above has one major flaw - it doesn't show who is speaking the text. This is where the "DIALOGUE" tool comes in handy, it allows you to merge a ".WRD" file with a ".STX" file. This will create the resulting ".JSON" file, which will contain both the text and the character name that says the text.
+
+Tool Usage:
+
+```Dialogue (--pack | --unpack) input_file [--delete-original] [--pause-after-error]```
 
 
 ### DAT
@@ -77,12 +86,6 @@ Tool Usage:
 
 ```dat (--unpack|--pack) file_path [--delete-original] [--pause-after-error]```
 
-If the parameter ``` --delete-original``` is set, the original file will be deleted afterwards.
-
-If ```--pause-after-error``` parameter is set - the tool will wait for user interaction before exiting if any error occurred.
-
-If you are packing a ".CSV" into ".DAT" and the file name ends with ".DAT.CSV", the tool will only remove the ".CSV" suffix from the name. 
-
 
 ### WRD
 
@@ -96,10 +99,6 @@ Tool Usage:
 
 If the parameter ```--translate``` is set, the Opcodes will be translated to a more readable sentences.
 
-If the parameter ```--delete-original``` is set, the original file will be deleted afterwards.
-
-If ```--pause-after-error``` parameter is set - the tool will wait for user interaction before exiting if any error occurred.
-
 
 ### SPC
 
@@ -110,10 +109,6 @@ Tool Usage:
 ```spc (--unpack|--pack) object_path [--delete-original] [--pause-after-error]```
 
 ```object_path``` should be a path to the directory if you are trying to pack or a file if you are trying to unpack.
-
-If ```--delete-original ``` is set, the original object will be deleted afterwards.
-
-If ```--pause-after-error``` parameter is set - the tool will wait for user interaction before exiting if any error occurred.
 
 When unpacking an SPC archive, the tool will create a directory with the same name as the archive with the ".decompressed" suffix.
 
@@ -131,10 +126,6 @@ Tool Usage:
 ```srd (--unpack|--pack) object_path [--delete-original] [--pause-after-error]```
 
 ```object_path``` should be path to the directory containing the textures that will replace those inside the SRD archive or the path to a SRD Archive meant for unpacking.
-
-If the parameter ``` --delete-original``` is set, the original object will be deleted afterwards.
-
-If ```--pause-after-error``` parameter is set - the tool will wait for user interaction before exiting if any error occurred.
 
 Note that this tool will extract only textures from an SRD archive.
 
@@ -156,8 +147,6 @@ Tool Usage:
 ```object_path``` should be a path to the directory
 
 If ```--gen-debug-image``` parameter is set when packing, the tool will create a file with the same name as the directory, adding ``` __DEBUG_IMAGE``` to it. This file will contain the texture which is made of all glyphs.
-
-If ```--pause-after-error``` parameter is set - the tool will wait for user interaction before exiting if any error occurred.
 
 The directory that will be packed into the font file must contain the file ``` __font_info.json```, which contains a JSON object with the following properties:
 
@@ -193,8 +182,6 @@ Each ".BMP" file should have a corresponding ".JSON" file with the same name. Th
 
 The tool will create a directory based on the name of ```object_path```, adding ".decompressed_font" to the end of the file name.
 
-If ```--pause-after-error``` parameter is set - the tool will wait for user interaction before exiting if any error occurred.
-
 The directory will contain files in a specific schema, described in the **PACKING** section.
 
 
@@ -211,11 +198,6 @@ ConvertAll (--unpack|--pack) --format=(STX|DAT|SPC|SRD|WRD) input_dir [--delete-
 ```input_dir``` powinien być ścieżką do katalogu
 
 Parameter ```--format``` allows following formats: STX, DAT, SPC, SRD, WRD if selected operation is unpacking and: STX, DAT, SPC if selected operation is packing.
-
-If ```--pause-after-error``` parameter is set - the tool will wait for user interaction before exiting if any error occurred.
-
-If ```--delete-original``` parameter is set, the tool will pass it to sub-programs. Because of that, it will delete original files or directories.
-
 
 
 

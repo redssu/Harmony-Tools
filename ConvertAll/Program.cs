@@ -9,7 +9,7 @@ using V3Lib;
 
 namespace ExtractAll {
     class Program {
-        public const string USAGE_MESSAGE = "Usage: ConvertAll (--unpack|--pack) --format=(STX|DAT|SPC|SRD|WRD) input_dir [--delete-original] [--pause-after-error]";
+        public const string USAGE_MESSAGE = "Usage: ConvertAll (--unpack|--pack) --format=(STX|DAT|SPC|SRD|WRD|DIALOGUE) input_dir [--delete-original] [--pause-after-error]";
 
         static void Main( string[] args ) {
             if ( args.Length < 1 ) {
@@ -78,10 +78,15 @@ namespace ExtractAll {
                     case "dat":
                     case "spc":
                     case "srd":
-                    case "wrd":
                         executable = "HT" + format.First().ToString().ToUpper() + format.Substring( 1 ) + ".exe";
 
                         files = Directory.GetFiles( directoryPath, "*." + format );
+                        break;
+
+                    case "dialogue":
+                        executable = "HTDialogue.exe";
+                        
+                        files = Directory.GetFiles( directoryPath, "*.stx" );
                         break;
 
                     default: 
@@ -108,6 +113,12 @@ namespace ExtractAll {
                         executable = "HTSpc.exe";
 
                         files = Directory.GetDirectories( directoryPath, "*.decompressed" );
+                        break;
+                    
+                    case "dialogue":
+                        executable = "HTDialogue.exe";
+
+                        files = Directory.GetFiles( directoryPath, "*.json" );
                         break;
                     
                     default: 

@@ -6,6 +6,7 @@ Wszystkie narzędzia są nieinteraktywne i mogą być używane za pomocą twojeg
 
 Znajdziesz tutaj też jedno narzędzie "Explorer-Extension", które po uruchomieniu dodaje nową listę do menu kontekstowego, zawierającą skróty do reszty narzędzi, przez co można używać ich szybciej i łatwiej. Explorer-Extension wspiera obecnie tylko system Windows.
 
+
 ## Instalacja
 
 W każdej wypuszczonej wersji będę umieszczał archiwum ZIP z programem ```Installer.exe``` i katalogiem ```bin``` w środku. Po uruchomieniu instalator skopiuje wszystkie pliki z katalogu ```bin``` do katalogu ```%ProgramFiles%\HarmonyTools``` i doda również tę ścieżkę do Zmiennych Środowiskowych, po to, by można było używać tych narzędzi w każdym katalogu za pomocą terminala. Zauważ, że wszystkie narzędzia w katalogu ```bin``` mają przedrostek "HT" - dodałem to w razie gdyby powstały konflikty nazw z innymi programami, a więc używając na przykład narzędzia ```Stx``` powinno wpisywać się ```HTStx```.
@@ -29,6 +30,13 @@ Repozytorium stworzone przez [EDDxample](https://github.com/EDDxample) ([Ultimat
 
 ## Użycie
 
+Większość parametrów powtarza się dla każdego narzędzia, więc poniżej ich opis.
+
+Jeżeli parametr  ``` --delete-original``` jest ustawiony, oryginalny katalog lub archiwum lub plik zostaną usunięte.
+
+Jeżeli parametr ```--pause-after-error``` jest ustawiony - narzędzie będzie czekać na interakcję użytkownika zanim zakończy działanie jeśli wystąpi jakiś błąd.
+
+
 ### EXPLORER-EXTENSION
 
 Użycie:
@@ -46,7 +54,6 @@ Jeżeli parametr ```--unregister``` jest ustawiony, program usunie wszystkie pop
 **Uwaga**: Ten program zakłada, że narzędzia zostały zainstalowane z dołączonym instalatorem - używa narzędzi, które znajdują się w katalogu ```%ProgramFiles%\HarmonyTools``` i mają przedrostek "HT".
 
 
-
 ### STX
 
 Pliki STX zawierają głównie dialogi postaci, bądź zawierają w sobie czcionki.
@@ -57,11 +64,14 @@ Użycie:
 
 ```stx (--unpack|--pack) file_path [--delete-original] [--pause-after-error]```
 
-Jeżeli parametr  ``` --delete-original``` jest ustawiony, oryginalny plik zostanie usunięty.
 
-Jeżeli parametr ```--pause-after-error``` jest ustawiony - narzędzie będzie czekać na interakcję użytkownika jeśli wystąpi jakiś błąd zanim zakończy działanie.
+### DIALOGUE
 
-Jeżeli pakujesz plik ".TXT" do pliku ".STX" i jego nazwa kończy się na ".STX.TXT", narzędzie usunie tylko końcówkę ".TXT" z nazwy, by brzmiała jak oryginalny plik.
+Narzędzie STX podane powyżej, ma jedną znaczącą wadę - nie pokazuje kto mówi dany tekst. Tu z pomocą przychodzi narzędzie "DIALOGUE", które pozwala złączyć plik ".WRD" z plikiem ".STX". W ten sposób powstanie wynikowy plik ".JSON", który będzie zawierał i tekst, i nazwę postaci wypowiadającą dany tekst.
+
+Użycie: 
+
+```Dialogue (--pack | --unpack) input_file [--delete-original] [--pause-after-error]```
 
 
 ### DAT
@@ -76,12 +86,6 @@ Użycie:
 
 ```dat (--unpack|--pack) file_path [--delete-original] [--pause-after-error]```
 
-Jeżeli parametr  ``` --delete-original``` jest ustawiony, oryginalny plik zostanie usunięty.
-
-Jeżeli parametr ```--pause-after-error``` jest ustawiony - narzędzie będzie czekać na interakcję użytkownika jeśli wystąpi jakiś błąd zanim zakończy działanie.
-
-Jeżeli pakujesz plik ".CSV" do pliku ".DAT" i jego nazwa kończy się na ".DAT.CSV", narzędzie usunie tylko końcówkę ".CSV" z nazwy, by brzmiała jak oryginalny plik.
-
 
 ### WRD
 
@@ -95,10 +99,6 @@ Użycie:
 
 Jeżeli parametr ```--translate``` jest ustawiony, nazwy kodów operacji są tłumaczone na bardziej zrozumiałe.
 
-Jeżeli parametr  ```--delete-original``` jest ustawiony, oryginalny plik zostanie usunięty.
-
-Jeżeli parametr ```--pause-after-error``` jest ustawiony - narzędzie będzie czekać na interakcję użytkownika jeśli wystąpi jakiś błąd zanim zakończy działanie.
-
 
 ### SPC
 
@@ -110,16 +110,11 @@ Użycie:
 
 ```object_path``` powinien być ścieżką do katalogu, jeśli próbujesz stworzyć nowe archiwum SPC lub ścieżką do archiwum SPC przeznaczonego do rozpakowania.
 
-Jeżeli parametr  ``` --delete-original``` jest ustawiony, oryginalny katalog lub archiwum zostaną usunięte.
-
-Jeżeli parametr ```--pause-after-error``` jest ustawiony - narzędzie będzie czekać na interakcję użytkownika jeśli wystąpi jakiś błąd zanim zakończy działanie.
-
 Gdy rozpakowujesz archiwum SPC, narzędzie stworzy katalog z nazwą taką samą, jak archiwum, lecz z dopiskiem ".decompressed".
 
 Gdy pakujesz katalog do postaci archiwum SPC, narzędzie analogicznie usunie dopisek ".decompressed". W ten sposób, po operacji rozpakowania i pakowania, otrzymasz tę samą nazwę archiwum SPC.
 
 **Uwaga**: Nie usuwaj oraz nie modyfikuj pliku ```__spc_info.json```, który znajduje się w środku powstałego katalogu. Bez niego nie można zapakować katalogu do postaci archiwum SPC.
-
 
 
 ### SRD
@@ -132,10 +127,6 @@ Użycie:
 
 ```object_path``` powinien być ścieżką do katalogu zawierającego tekstury do podmiany w oryginalnym archiwum SRD lub ścieżką do archiwum SRD przeznaczonego do rozpakowania.
 
-Jeżeli parametr  ``` --delete-original``` jest ustawiony, oryginalny katalog lub archiwum zostaną usunięte.
-
-Jeżeli parametr ```--pause-after-error``` jest ustawiony - narzędzie będzie czekać na interakcję użytkownika jeśli wystąpi jakiś błąd zanim zakończy działanie.
-
 Gdy rozpakowujesz archiwum SRD, narzędzie stworzy katalog zawierający tekstury, o takiej samej nazwie co archiwum, lecz z dopiskiem ".decompressed"
 
 Gdy pakujesz katalog do archiwum SRD, narzędzie zamieni tylko tekstury, które znajdują się w oryginalnym pliku SRD (jego kopia znajduje się w katalogu i ma nazwę ```_.srd```). Tak więc nie powinno zmieniać się nazw plików tekstur, by narzędzie mogło podmienić ich odpowiedniki w oryginalnym pliku. 
@@ -145,8 +136,6 @@ Z uwagi na to, że to narzędzie nie obsługuje zaawansowanej kompresji używane
 Po pakowaniu do archiwum SRD, narzędzie nazwie je tak jak katalog, z tą różnicą, że usunie z nazwy dopisek ".decompressed". 
 
 **Uwaga**: Nie usuwaj oraz nie modyfikuj plików ```_.srd``` oraz (jeśli istnieje) ```_.srdi``` oraz (jeśli istnieje) ```_.srdv```. Bez nich nie można zapakować katalogu do postaci archiwum SRD.
-
-
 
 
 ### FONT
@@ -160,8 +149,6 @@ Użycie:
 ```object_path``` powinien być ścieżką do katalogu.
 
 Jeżeli parametr ```--gen-debug-image``` jest ustawiony - narzędzie utworzy dodatkowy plik z dopiskiem ```__DEBUG_IMAGE```, który jest teksturą zawierającą wszystkie znaki po ich połączeniu w całość.
-
-Jeżeli parametr ```--pause-after-error``` jest ustawiony - narzędzie będzie czekać na interakcję użytkownika jeśli wystąpi jakiś błąd zanim zakończy działanie.
 
 Katalog, który zostanie zapakowany do pliku czcionki, musi zawierać w sobie plik ```__font_info.json```, który zawiera obiekt JSON z następującymi właściwościami:
 
@@ -195,8 +182,6 @@ Każdy plik ".BMP" powinien mieć również plik ".JSON" o tej samej nazwie. Pli
 
 ```object_path``` powinien być ścieżką do pliku ".SRD" lub ".STX"
 
-Jeżeli parametr ```--pause-after-error``` jest ustawiony - narzędzie będzie czekać na interakcję użytkownika jeśli wystąpi jakiś błąd zanim zakończy działanie.
-
 Narzędzie utworzy katalog o takiej samej nazwie, co plik wejściowy, dodając ".decompressed_font" na końcu jego nazwy.
 
 Struktura katalogu będzie analogiczna do tej opisanej w sekcji **PAKOWANIE CZCIONKI**
@@ -215,10 +200,6 @@ ConvertAll (--unpack|--pack) --format=(STX|DAT|SPC|SRD|WRD) input_dir [--delete-
 ```input_dir``` powinien być ścieżką do katalogu
 
 Parametr ```--format``` przyjmuje opcje: STX, DAT, SPC, SRD, WRD jeśli wybrano parametr ```--unpack```, oraz opcje: STX, DAT, SPC jeśli wybrano parametr ```--pack```.
-
-Jeżeli parametr ```--pause-after-error``` jest ustawiony - narzędzie będzie czekać na interakcję użytkownika jeśli wystąpi jakiś błąd zanim zakończy działanie.
-
-Jeżeli parametr  ```--delete-original``` jest ustawiony, narzędzie przekaże ten parametr do pod-narzędzi. Spowoduje to usunięcie plików oryginalnych.
 
 
 
