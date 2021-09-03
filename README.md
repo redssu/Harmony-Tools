@@ -187,15 +187,13 @@ The directory will contain files in a specific schema, described in the **PACKIN
 
 ### CONVERTALL
 
-A tool, that allows you to perform a specific operation on files in specific directory.
+A tool, that allows you to perform a specific operation on files in current working directory.
 
 **Warning**: This tool assumes that you've installed other tools with provided installer. (The tools should be prefixed with "HT" string and should be 'callable' globally).
 
 Usage:
 
-ConvertAll (--unpack|--pack) --format=(STX|DAT|SPC|SRD|WRD) input_dir [--delete-original] [--pause-after-error]
-
-```input_dir``` powinien być ścieżką do katalogu
+ConvertAll (--unpack|--pack) --format=(STX|DAT|SPC|SRD|WRD) [--delete-original] [--pause-after-error]
 
 Parameter ```--format``` allows following formats: STX, DAT, SPC, SRD, WRD if selected operation is unpacking and: STX, DAT, SPC if selected operation is packing.
 

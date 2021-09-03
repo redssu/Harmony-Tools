@@ -291,7 +291,7 @@ namespace ExplorerExtension {
                     UnpackAllDialogueItem.SetValue( "Icon", installationPath + @"\Harmony-Tools-Unpack-File-Icon.ico" );
 
                     RegistryKey UnpackAllDialogueCommand = UnpackAllDialogueItem.CreateSubKey( "command" );
-                    UnpackAllDialogueCommand.SetValue( "", installationPath + "\\ConvertAll.exe --unpack --format=DIALOGUE \"%1\" --pause-after-error " + ( deleteOriginal ? " --delete-original" : "" ) );
+                    UnpackAllDialogueCommand.SetValue( "", installationPath + "\\HTConvertAll.exe --unpack --format=DIALOGUE --pause-after-error " + ( deleteOriginal ? " --delete-original" : "" ) );
 
                     // Unpack All STX
                     RegistryKey UnpackAllSTXItem = HarmonyToolsShell.CreateSubKey( "2_UnpackAllSTX" );
@@ -299,7 +299,7 @@ namespace ExplorerExtension {
                     UnpackAllSTXItem.SetValue( "Icon", installationPath + @"\Harmony-Tools-Unpack-File-Icon.ico" );
                     
                     RegistryKey UnpackAllSTXCommand = UnpackAllSTXItem.CreateSubKey( "command" );
-                    UnpackAllSTXCommand.SetValue( "", installationPath + "\\ConvertAll.exe --unpack --format=STX \"%1\" --pause-after-error " + ( deleteOriginal ? " --delete-original" : "" ) );
+                    UnpackAllSTXCommand.SetValue( "", installationPath + "\\HTConvertAll.exe --unpack --format=STX --pause-after-error " + ( deleteOriginal ? " --delete-original" : "" ) );
 
                     // Unpack All DAT
                     RegistryKey UnpackAllDATItem = HarmonyToolsShell.CreateSubKey( "3_UnpackAllDAT" );
@@ -307,7 +307,7 @@ namespace ExplorerExtension {
                     UnpackAllDATItem.SetValue( "Icon", installationPath + @"\Harmony-Tools-Unpack-File-Icon.ico" );
 
                     RegistryKey UnpackAllDATCommand = UnpackAllDATItem.CreateSubKey( "command" );
-                    UnpackAllDATCommand.SetValue( "", installationPath + "\\ConvertAll.exe --unpack -format=DAT \"%1\" --pause-after-error " + ( deleteOriginal ? " --delete-original" : "" ) );
+                    UnpackAllDATCommand.SetValue( "", installationPath + "\\HTConvertAll.exe --unpack -format=DAT --pause-after-error " + ( deleteOriginal ? " --delete-original" : "" ) );
 
                     // Unpack All SPC
                     RegistryKey UnpackAllSPCItem = HarmonyToolsShell.CreateSubKey( "4_UnpackAllSPC" );
@@ -315,15 +315,16 @@ namespace ExplorerExtension {
                     UnpackAllSPCItem.SetValue( "Icon", installationPath + @"\Harmony-Tools-Unpack-Icon.ico" );
 
                     RegistryKey UnpackAllSPCCommand = UnpackAllSPCItem.CreateSubKey( "command" );
-                    UnpackAllSPCCommand.SetValue( "", installationPath + "\\ConvertAll.exe --unpack --format=SPC \"%1\" --pause-after-error " + ( deleteOriginal ? " --delete-original" : "" ) );
+                    UnpackAllSPCCommand.SetValue( "", installationPath + "\\HTConvertAll.exe --unpack --format=SPC --pause-after-error " + ( deleteOriginal ? " --delete-original" : "" ) );
 
                     // Unpack All SRD
                     RegistryKey UnpackAllSRDItem = HarmonyToolsShell.CreateSubKey( "5_UnpackAllSRD" );
                     UnpackAllSRDItem.SetValue( "MUIVerb", texts[ language ][ "UnpackAllSRDName" ] );
                     UnpackAllSRDItem.SetValue( "Icon", installationPath + @"\Harmony-Tools-Unpack-Icon.ico" );
+                    UnpackAllSRDItem.SetValue( "CommandFlags", (uint) 0x40, RegistryValueKind.DWord );
 
                     RegistryKey UnpackAllSRDCommand = UnpackAllSRDItem.CreateSubKey( "command" );
-                    UnpackAllSRDCommand.SetValue( "", installationPath + "\\ConvertAll.exe --unpack --format=SRD \"%1\" --pause-after-error " + ( deleteOriginal ? " --delete-original" : "" ) );
+                    UnpackAllSRDCommand.SetValue( "", installationPath + "\\HTConvertAll.exe --unpack --format=SRD --pause-after-error " + ( deleteOriginal ? " --delete-original" : "" ) );
                     
                     // ----------
 
@@ -337,7 +338,7 @@ namespace ExplorerExtension {
                     PackAllDialogueItem.SetValue( "Icon", installationPath + @"\Harmony-Tools-Pack-File-Icon.ico" );
 
                     RegistryKey PackAllDialogueCommand = PackAllDialogueItem.CreateSubKey( "command" );
-                    PackAllDialogueCommand.SetValue( "", installationPath + "\\ConvertAll.exe --pack --format=DIALOGUE \"%1\" --pause-after-error " + ( deleteOriginal ? " --delete-original" : "" ) );
+                    PackAllDialogueCommand.SetValue( "", installationPath + "\\HTConvertAll.exe --pack --format=DIALOGUE --pause-after-error " + ( deleteOriginal ? " --delete-original" : "" ) );
 
                     // Pack All STX
                     RegistryKey PackAllSTXItem = HarmonyToolsShell.CreateSubKey( "7_PackAllSTX" );
@@ -345,7 +346,7 @@ namespace ExplorerExtension {
                     PackAllSTXItem.SetValue( "Icon", installationPath + @"\Harmony-Tools-Pack-File-Icon.ico" );
 
                     RegistryKey PackAllSTXCommand = PackAllSTXItem.CreateSubKey( "command" );
-                    PackAllSTXCommand.SetValue( "", installationPath + "\\ConvertAll.exe --pack --format=STX \"%1\" --pause-after-error " + ( deleteOriginal ? " --delete-original" : "" ) );
+                    PackAllSTXCommand.SetValue( "", installationPath + "\\HTConvertAll.exe --pack --format=STX --pause-after-error " + ( deleteOriginal ? " --delete-original" : "" ) );
 
                     // Pack All DAT
                     RegistryKey PackAllDATItem = HarmonyToolsShell.CreateSubKey( "8_PackAllDAT" );
@@ -353,7 +354,7 @@ namespace ExplorerExtension {
                     PackAllDATItem.SetValue( "Icon", installationPath + @"\Harmony-Tools-Pack-File-Icon.ico" );
 
                     RegistryKey PackAllDATCommand = PackAllDATItem.CreateSubKey( "command" );
-                    PackAllDATCommand.SetValue( "", installationPath + "\\ConvertAll.exe --pack --format=DAT \"%1\" --pause-after-error " + ( deleteOriginal ? " --delete-original" : "" ) );
+                    PackAllDATCommand.SetValue( "", installationPath + "\\HTConvertAll.exe --pack --format=DAT --pause-after-error " + ( deleteOriginal ? " --delete-original" : "" ) );
 
                     // Pack All SPC
                     RegistryKey PackAllSPCItem = HarmonyToolsShell.CreateSubKey( "9_PackAllSPC" );
@@ -361,7 +362,7 @@ namespace ExplorerExtension {
                     PackAllSPCItem.SetValue( "Icon", installationPath + @"\Harmony-Tools-Pack-Icon.ico" );
 
                     RegistryKey PackAllSPCCommand = PackAllSPCItem.CreateSubKey( "command" );
-                    PackAllSPCCommand.SetValue( "", installationPath + "\\ConvertAll.exe --pack --format=SPC \"%1\" --pause-after-error " + ( deleteOriginal ? " --delete-original" : "" ) );
+                    PackAllSPCCommand.SetValue( "", installationPath + "\\HTConvertAll.exe --pack --format=SPC --pause-after-error " + ( deleteOriginal ? " --delete-original" : "" ) );
                 }
                 catch ( System.UnauthorizedAccessException ) {
                     Console.WriteLine( "Error: You don't have permission to register the context menu." );

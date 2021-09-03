@@ -189,15 +189,13 @@ Struktura katalogu będzie analogiczna do tej opisanej w sekcji **PAKOWANIE CZCI
 
 ### CONVERTALL
 
-Narzędzie, które pozwala wykonywać operacje na wszystkich plikach danego folderu.
+Narzędzie, które pozwala wykonywać operacje na wszystkich plikach obecnie używanego folderu.
 
 **Uwaga**: Te narzędzie przyjmuje, że pozostałe narzędzia zostały zainstalowane za pomocą dołączonego instalatora. (To znaczy: nazwy narzędzi powinny być poprzedzone napisem "HT" i powinno móc się je włączać globalnie).
 
 Użycie:
 
-ConvertAll (--unpack|--pack) --format=(STX|DAT|SPC|SRD|WRD) input_dir [--delete-original] [--pause-after-error]
-
-```input_dir``` powinien być ścieżką do katalogu
+ConvertAll (--unpack|--pack) --format=(STX|DAT|SPC|SRD|WRD) [--delete-original] [--pause-after-error]
 
 Parametr ```--format``` przyjmuje opcje: STX, DAT, SPC, SRD, WRD jeśli wybrano parametr ```--unpack```, oraz opcje: STX, DAT, SPC jeśli wybrano parametr ```--pack```.
 

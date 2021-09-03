@@ -9,7 +9,7 @@ using V3Lib;
 
 namespace ExtractAll {
     class Program {
-        public const string USAGE_MESSAGE = "Usage: ConvertAll (--unpack|--pack) --format=(STX|DAT|SPC|SRD|WRD|DIALOGUE) input_dir [--delete-original] [--pause-after-error]";
+        public const string USAGE_MESSAGE = "Usage: ConvertAll (--unpack|--pack) --format=(STX|DAT|SPC|SRD|WRD|DIALOGUE) [--delete-original] [--pause-after-error]";
 
         static void Main( string[] args ) {
             if ( args.Length < 1 ) {
@@ -17,7 +17,7 @@ namespace ExtractAll {
                 return;
             }
 
-            string directoryPath = string.Empty;
+            string directoryPath = Directory.GetCurrentDirectory();
             string format = string.Empty;
             bool wantToUnpack = true;
             bool deleteOriginal = false;
@@ -43,9 +43,6 @@ namespace ExtractAll {
                     Console.WriteLine( "Error: Unknown argument: " + arg );
                     Utils.WaitForEnter( pauseAfterError );
                     return;
-                }
-                else {
-                    directoryPath = arg;
                 }
             }
 
