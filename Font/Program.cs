@@ -109,7 +109,17 @@ namespace Font {
                 }
 
                 string fontInfoJson = File.ReadAllText( fontInfoPath );
-                FontInfoJson fontInfo = JsonSerializer.Deserialize<FontInfoJson>( fontInfoJson );
+
+                FontInfoJson fontInfo;
+
+                try { 
+                    fontInfo = JsonSerializer.Deserialize<FontInfoJson>( fontInfoJson );
+                }
+                catch ( JsonException ) {
+                    Console.WriteLine( "Error: Invalid JSON file: " + fontInfoPath );
+                    Utils.WaitForEnter( pauseAfterError );
+                    return;
+                }
 
                 string fontName = fontInfo.FontName;
                 string charset = string.Empty; // We will reconstruct it from subimages
@@ -170,7 +180,17 @@ namespace Font {
                         }
 
                         string glyphInfoJsonString = File.ReadAllText( infoFilePath );
-                        GlyphInfoJson glyphInfoJson = JsonSerializer.Deserialize<GlyphInfoJson>( glyphInfoJsonString );
+
+                        GlyphInfoJson glyphInfoJson;
+
+                        try {
+                            glyphInfoJson = JsonSerializer.Deserialize<GlyphInfoJson>( glyphInfoJsonString );
+                        }
+                        catch ( JsonException ) {
+                            Console.WriteLine( "Error: Invalid JSON file: " + infoFilePath );
+                            hasErrorOccurred = true;
+                            continue;
+                        }
 
                         GlyphInfo glyphInfo = new GlyphInfo();
 
@@ -313,7 +333,7 @@ namespace Font {
 
                 // These values are copied from v3_font00.stx
                 ResourceInfo info;
-                info.Values = new int[] { 0x40000000, 0x00034000, 0x00000080, 0x00000000, 0x00004553, 0x00000030, 0x0000450E, 0x0000FFFF };
+                info.Values = new int[] { 0x40000000, 0x00032000, 0x00000080, 0x00000000, 0x00000E93, 0x00000030, 0x00000E4C, 0x0000FFFF };
                 rsiBlock.ResourceInfoList.Add( info );
 
                 rsiBlock.ExternalData.Clear();

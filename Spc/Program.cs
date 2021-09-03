@@ -87,7 +87,17 @@ namespace Spc {
                 }
 
                 string jsonString = File.ReadAllText( infoFilePath );
-                SpcInfo spcInfo = JsonSerializer.Deserialize<SpcInfo>( jsonString );
+
+                SpcInfo spcInfo;
+
+                try {
+                    spcInfo = JsonSerializer.Deserialize<SpcInfo>( jsonString );
+                }
+                catch ( JsonException ) {
+                    Console.WriteLine( "Error: Invalid JSON file: " + infoFilePath );
+                    Utils.WaitForEnter( pauseAfterError );
+                    return;
+                }
 
                 SpcFile spcFile = new SpcFile();
                 spcFile.Unknown1 = spcInfo.Unknown1;
