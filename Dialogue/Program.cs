@@ -316,10 +316,10 @@ namespace Dialogue {
             string characterKey = character;
 
             if ( !characterKey.StartsWith( "chara_" ) && characterKey.StartsWith( "C" ) ) {
-                characterKey = characterKey.Substring( 0, 4 ).ToUpper();
+                characterKey = characterKey.Substring( 0, 5 ).ToUpper();
             }
 
-            if ( CHARACTER_MAP.ContainsKey( character ) ) {
+            if ( CHARACTER_MAP.ContainsKey( characterKey ) ) {
                 return CHARACTER_MAP[ characterKey ];
             }
 

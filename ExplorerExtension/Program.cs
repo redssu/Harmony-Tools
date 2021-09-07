@@ -43,7 +43,7 @@ namespace ExplorerExtension {
                     { "UnpackSRDName", "Rozpakuj archiwum SRD (tylko tekstury)" },
                     { "UnpackFontsName", "Rozpakuj plik czcionki" },
 
-                    { "UnpackAllDialogueName", "Rozpakuj wszystkie pliki Dialogow" },
+                    { "UnpackAllDialogueName", "Rozpakuj wszystkie pliki dialogow" },
                     { "UnpackAllSTXName", "Rozpakuj wszystkie pliki STX" },
                     { "UnpackAllDATName", "Rozpakuj wszystkie pliki DAT" },
                     { "UnpackAllSPCName", "Rozpakuj wszystkie archiwa SPC" },
