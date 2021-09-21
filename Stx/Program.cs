@@ -2,6 +2,7 @@ using System;
 using System.Security;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using V3Lib;
 using V3Lib.Stx;
 
@@ -104,6 +105,8 @@ namespace Stx {
 
                             table.Add( key, value.Replace( @"\n", "\n" ).Replace( @"\r", "\r" ) );
                         }
+
+                        table = table.OrderBy( item => item.Key ).ToDictionary( item => item.Key, item => item.Value );
 
                         stxFile.StringTables.Add( new StringTable( table, 8 ) );
                     }

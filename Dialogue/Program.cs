@@ -2,9 +2,11 @@ using System;
 using System.Security;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Text.Unicode;
 using V3Lib;
 using V3Lib.Stx;
@@ -13,7 +15,8 @@ using V3Lib.Wrd;
 namespace Dialogue {
     class DialogueStringJson {
         public uint Id { get; set; }
-        public string Speaker { get; set; }
+        public string? Choice { get; set; }
+        public string? Speaker { get; set; }
         public string Text { get; set; }
     }
 
@@ -188,6 +191,8 @@ namespace Dialogue {
                     table.Add( dialogueString.Id, dialogueString.Text.Replace( @"\n", "\n" ).Replace( @"\r", "\r" ) );
                 }
 
+                table = table.OrderBy( item => item.Key ).ToDictionary( item => item.Key, item => item.Value );
+
                 stxFile.StringTables.Add( new StringTable( table, 8 ) );
 
                 if ( fileInfo.FullName.ToLower().EndsWith( ".stx.json" ) ) {
@@ -228,6 +233,32 @@ namespace Dialogue {
                             } 
                         );
                     }
+                    else if ( 
+                           command.Opcode == "CHK"
+                        && command.Arguments.Count >= 1
+                        && ( 
+                               command.Arguments[ 0 ] == "ChkTimeOut"
+                            || command.Arguments[ 0 ] == "ChkQuestion"
+                            || command.Arguments[ 0 ].StartsWith( "Choice" )
+                        )
+                    ) {
+                        usefulCommands.Add( command );
+                    }
+                    else if (
+                           command.Opcode == "CHR"
+                        && command.Arguments.Count >= 2
+                        && ( 
+                               CHARACTER_MAP.ContainsKey( command.Arguments[ 1 ] )
+                            || CHARACTER_MAP.ContainsKey( command.Arguments[ 1 ].Substring( 0, 5 ).ToUpper() )
+                        )
+                    ) {
+                        usefulCommands.Add( 
+                            new WrdCommand {
+                                Opcode = "CHN",
+                                Arguments = new List<string> { command.Arguments[ 1 ] }
+                            } 
+                        );
+                    }
                 }
 
                 StxFile stxFile = new StxFile();
@@ -236,15 +267,85 @@ namespace Dialogue {
                 List<DialogueStringJson> dialogueStrings = new List<DialogueStringJson>();
 
                 foreach ( KeyValuePair<uint, string> kvp in stxFile.StringTables[ 0 ].Strings ) {
-                    dialogueStrings.Add( new DialogueStringJson {
+                    DialogueStringJson dialogueObject = new DialogueStringJson {
                         Id = kvp.Key,
-                        Speaker = GetSpeaker( kvp.Key, usefulCommands ),
                         Text = kvp.Value
-                    } );
+                    };
+
+                    int stringPosition = -1;
+                    string? character = null;
+
+                    bool notMyParams = false;
+
+                    int i = 0;
+                    foreach ( WrdCommand command in usefulCommands ) {
+                        if ( command.Opcode == "LOC" && command.Arguments.Count >= 1 && command.Arguments[ 0 ] == kvp.Key.ToString() ) {
+                            stringPosition = i;
+                            break;
+                        }
+
+                        i++;
+                    }
+
+                    if ( stringPosition - 1 >= 0 ) {
+                        for ( i = stringPosition - 1; i >= 0; i-- ) {
+                            if ( usefulCommands[ i ].Opcode == "LOC" ) {
+                                notMyParams = true;
+                            }
+                            
+                            if ( usefulCommands[ i ].Opcode == "CHN" && usefulCommands[ i ].Arguments.Count >= 1 ) {
+                                dialogueObject.Speaker = usefulCommands[ i ].Arguments[ 0 ];
+
+                                if ( 
+                                   i - 1 >= 0 
+                                && !notMyParams
+                                && usefulCommands[ i - 1 ].Opcode == "CHK" 
+                                && usefulCommands[ i - 1 ].Arguments.Count >= 1 
+                                && usefulCommands[ i - 1 ].Arguments[ 0 ] == "ChkQuestion"
+                                ) {
+                                    dialogueObject.Choice = "Question";
+                                }
+
+                                break;
+                            }
+
+                            if ( usefulCommands[ i ].Opcode == "CHK" && usefulCommands[ i ].Arguments.Count >= 1 && !notMyParams ) {
+                                if ( usefulCommands[ i ].Arguments[ 0 ] == "ChkQuestion" ) {
+                                    dialogueObject.Choice = "Question";
+                                }
+                                else if ( usefulCommands[ i ].Arguments[ 0 ] == "ChkTimeOut" ) {
+                                    dialogueObject.Choice = "Timeout";
+                                    dialogueObject.Speaker = null;
+                                    break;
+                                }
+                                else if ( usefulCommands[ i ].Arguments[ 0 ].StartsWith( "Choice" ) ) {
+                                    dialogueObject.Choice = usefulCommands[ i ].Arguments[ 0 ].Substring( 6 );
+                                    dialogueObject.Speaker = null;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if ( dialogueObject.Speaker != null ) {
+                            string characterKey = dialogueObject.Speaker;
+
+                            if ( !characterKey.StartsWith( "chara_" ) && characterKey.StartsWith( "C" ) ) {
+                                characterKey = characterKey.Substring( 0, 5 ).ToUpper();
+                            }
+
+                            if ( CHARACTER_MAP.ContainsKey( characterKey ) ) {
+                                dialogueObject.Speaker = CHARACTER_MAP[ characterKey ];
+                            }
+                        }
+                    }
+                    
+                    dialogueStrings.Add( dialogueObject );
+                    
                 }
 
                 JsonSerializerOptions options = new JsonSerializerOptions { 
                     Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
                     WriteIndented = true,
                     MaxDepth = 3
                 };
@@ -281,49 +382,6 @@ namespace Dialogue {
                     Utils.WaitForEnter( pauseAfterError );
                 }
             }
-        }
-
-        static string GetSpeaker ( uint stringId, List<WrdCommand> commands ) {
-            int stringPosition = -1;
-
-            int i = 0;
-            foreach ( WrdCommand command in commands ) {
-                if ( command.Opcode == "LOC" && command.Arguments.Count >= 1 && command.Arguments[ 0 ] == stringId.ToString() ) {
-                    stringPosition = i;
-                    break;
-                }
-
-                i++;
-            }
-
-            if ( stringPosition == -1 ) {
-                return "Unknown";
-            }
-            
-            string character = string.Empty;
-
-            for ( i = stringPosition; i >= 0; i-- ) {
-                if ( commands[ i ].Opcode == "CHN" && commands[ i ].Arguments.Count >= 1 ) {
-                    character = commands[ i ].Arguments[ 0 ];
-                    break;
-                }
-            }
-
-            if ( character == string.Empty ) {
-                return "Unknown";
-            }
-
-            string characterKey = character;
-
-            if ( !characterKey.StartsWith( "chara_" ) && characterKey.StartsWith( "C" ) ) {
-                characterKey = characterKey.Substring( 0, 5 ).ToUpper();
-            }
-
-            if ( CHARACTER_MAP.ContainsKey( characterKey ) ) {
-                return CHARACTER_MAP[ characterKey ];
-            }
-
-            return character;
         }
     }
 }
