@@ -249,7 +249,10 @@ namespace Dialogue {
                         && command.Arguments.Count >= 2
                         && ( 
                                CHARACTER_MAP.ContainsKey( command.Arguments[ 1 ] )
-                            || CHARACTER_MAP.ContainsKey( command.Arguments[ 1 ].Substring( 0, 5 ).ToUpper() )
+                            || (
+                                   command.Arguments[ 1 ].Length >= 5
+                                && CHARACTER_MAP.ContainsKey( command.Arguments[ 1 ].Substring( 0, 5 ).ToUpper() )
+                            )
                         )
                     ) {
                         usefulCommands.Add( 
@@ -329,7 +332,7 @@ namespace Dialogue {
                         if ( dialogueObject.Speaker != null ) {
                             string characterKey = dialogueObject.Speaker;
 
-                            if ( !characterKey.StartsWith( "chara_" ) && characterKey.StartsWith( "C" ) ) {
+                            if ( !characterKey.StartsWith( "chara_" ) && characterKey.ToUpper().StartsWith( "C" ) && characterKey.Length >= 5  ) {
                                 characterKey = characterKey.Substring( 0, 5 ).ToUpper();
                             }
 
