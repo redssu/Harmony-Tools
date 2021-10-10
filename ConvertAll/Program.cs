@@ -74,6 +74,7 @@ namespace ExtractAll {
                     case "stx":
                     case "dat":
                     case "spc":
+                    case "wrd":
                     case "srd":
                         executable = "HT" + format.First().ToString().ToUpper() + format.Substring( 1 ) + ".exe";
 
@@ -143,6 +144,10 @@ namespace ExtractAll {
                 startInfo.WindowStyle = ProcessWindowStyle.Hidden;
                 startInfo.FileName = executable;
                 startInfo.Arguments = ( wantToUnpack ? "--unpack" : "--pack" ) + " \"" + files[ i ] + "\" " + ( deleteOriginal ? "--delete-original" : string.Empty );
+
+                if ( format == "wrd" ) {
+                    startInfo.Arguments += " --translate";
+                }
 
                 Console.WriteLine( ( wantToUnpack ? "Extracting: " : "Packing: " )  + files[ i ] );
 
