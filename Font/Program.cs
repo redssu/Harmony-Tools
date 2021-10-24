@@ -166,7 +166,7 @@ namespace Font {
                         uint glyphIndex = Convert.ToUInt32( glyphIndexPadded );
 
                         if ( glyphList.ContainsKey( glyphIndex ) ) {
-                            Console.WriteLine( "Error: Duplicate glyph ID: " + glyphIndexPadded );
+                            Console.WriteLine( "Error: Found duplicated glyph ID: " + glyphIndexPadded );
                             hasErrorOccurred = true;
                             continue;
                         }
@@ -294,7 +294,10 @@ namespace Font {
                     }
                 }
 
-                ImageBinary imageBinary = new ImageBinary( dummyImage.Width, dummyImage.Height, PixelDataFormat.FormatAbgr8888, pixelData.ToArray() );
+                byte[] pixelDataArray = pixelData.ToArray();
+                int pixelDataSize = pixelDataArray.Length;
+
+                ImageBinary imageBinary = new ImageBinary( dummyImage.Width, dummyImage.Height, PixelDataFormat.FormatAbgr8888, pixelDataArray );
 
                 // Prepare correct SRD Blocks
                 TxrBlock txrBlock = new TxrBlock();
@@ -332,8 +335,10 @@ namespace Font {
                 rsiBlock.AdjustSize = true; 
 
                 // These values are copied from v3_font00.stx
+                // The first one is a pointer to Image Data
+                // The second one is a image data length
                 ResourceInfo info;
-                info.Values = new int[] { 0x40000000, 0x00032000, 0x00000080, 0x00000000, 0x00000E93, 0x00000030, 0x00000E4C, 0x0000FFFF };
+                info.Values = new int[] { 0x40000000, pixelDataSize, 0x00000080, 0x00000000, 0x00000E93, 0x00000030, 0x00000E4C, 0x0000FFFF };
                 rsiBlock.ResourceInfoList.Add( info );
 
                 rsiBlock.ExternalData.Clear();
@@ -353,7 +358,7 @@ namespace Font {
                 writer.Write( (uint) charset.Length ); // char count
 
                 writer.Seek( 0x24, SeekOrigin.Begin );
-                writer.Write( (uint) scaleFlag ); // scale flag?
+                writer.Write( (uint) scaleFlag ); // scale flag
 
                 writer.Seek( 0x1C, SeekOrigin.Begin );
                 writer.Write( (uint) 0x2C ); // bit flags pointer
