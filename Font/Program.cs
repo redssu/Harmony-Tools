@@ -622,8 +622,10 @@ namespace Font {
                         // move to the BB table
                         fontReader.BaseStream.Seek( bbListPtr, SeekOrigin.Begin );
                         
+                        GlyphInfo[] kerningList = new GlyphInfo[ charset.Length ];
+
                         // parse each glyph info
-                        for ( int i = 0; i < charCount; ++i ) {
+                        for ( int i = 0; i < charCount && i < kerningList.Length; ++i ) {
                             byte[] rawGlyphPosition = fontReader.ReadBytes( 3 );
                             byte[] glyphSize = fontReader.ReadBytes( 2 );
                             sbyte[] glyphKerning = new sbyte[ 3 ];
@@ -633,12 +635,30 @@ namespace Font {
                             glyphKerning[ 2 ] = fontReader.ReadSByte();
 
                             short[] glyphPosition = Utils.abc2xy( rawGlyphPosition[ 0 ], rawGlyphPosition[ 1 ], rawGlyphPosition[ 2 ] );
-                        
-                            if ( i < glyphList.Length ) {
-                                glyphList[ i ].position = glyphPosition;
-                                glyphList[ i ].size = glyphSize;
-                                glyphList[ i ].kerning = glyphKerning;
+
+                            kerningList[ i ] = new GlyphInfo();
+                            kerningList[ i ].position = glyphPosition;
+                            kerningList[ i ].size = glyphSize;
+                            kerningList[ i ].kerning = glyphKerning;
+                        }
+
+                        Dictionary<uint, uint> indexOffsets = new Dictionary<uint, uint>();
+
+                        for ( int i = 0; i < glyphList.Length; ++i ) {
+                            uint kerningIndex = glyphList[ i ].index;
+
+                            if ( indexOffsets.ContainsKey( kerningIndex ) ) {
+                                indexOffsets[ kerningIndex ] += 1;
                             }
+                            else {
+                                indexOffsets[ kerningIndex ] = 0;
+                            }
+
+                            uint reconstructedIndex = kerningIndex + indexOffsets[ kerningIndex ];
+
+                            glyphList[ i ].position = kerningList[ reconstructedIndex ].position;
+                            glyphList[ i ].size = kerningList[ reconstructedIndex ].size;
+                            glyphList[ i ].kerning = kerningList[ reconstructedIndex ].kerning;
                         }
 
                         // read font name
