@@ -16,6 +16,7 @@ namespace Installer {
                 }
                 catch ( Exception e ) {
                     Console.WriteLine( "Error: Could not create installation directory: " + e.Message );
+                    WaitForEnter();
                     return;
                 }
 
@@ -27,6 +28,7 @@ namespace Installer {
 
             if ( !Directory.Exists( @".\bin" ) ) { 
                 Console.WriteLine( "Error: Could not copy bin files: bin folder doesn't exist" );
+                WaitForEnter();
                 return;
             }
 
@@ -47,6 +49,7 @@ namespace Installer {
             }
 
             if ( !isCopyingSuccess ) { 
+                WaitForEnter();
                 return;
             }
 
@@ -67,6 +70,12 @@ namespace Installer {
 
             Console.WriteLine( "Installation successful" );
             Console.WriteLine( "You can now delete this directory" );
+            WaitForEnter();
+        }
+
+        static void WaitForEnter () {
+            Console.WriteLine( "Press <Enter> to close this window" );
+            while ( Console.ReadKey().Key != ConsoleKey.Enter ) {}
         }
     }
 }
