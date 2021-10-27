@@ -122,7 +122,6 @@ namespace Font {
                 }
 
                 string fontName = fontInfo.FontName;
-                string charset = string.Empty; // We will reconstruct it from subimages
                 uint scaleFlag = fontInfo.ScaleFlag;
                 uint bitFlagCount = 65375;
                 List<string> fontResources = fontInfo.Resources;
@@ -150,8 +149,6 @@ namespace Font {
                 Dictionary<uint, GlyphInfo> glyphList = new Dictionary<uint, GlyphInfo>();
 
                 // Iterate through each file and add it to the image
-                uint fileIndex = 0;
-
                 bool hasErrorOccurred = false;
 
                 foreach ( string file in targetFiles ) {
@@ -194,14 +191,12 @@ namespace Font {
 
                         GlyphInfo glyphInfo = new GlyphInfo();
 
-                        glyphInfo.kerning = new sbyte[3];
+                        glyphInfo.kerning = new sbyte[ 3 ];
                         glyphInfo.kerning[ 0 ] = glyphInfoJson.Kerning[ "Left" ];
                         glyphInfo.kerning[ 1 ] = glyphInfoJson.Kerning[ "Right" ];
                         glyphInfo.kerning[ 2 ] = glyphInfoJson.Kerning[ "Vertical" ];
 
                         glyphInfo.glyph = Convert.ToChar( glyphInfoJson.Glyph );
-
-                        charset = charset + glyphInfoJson.Glyph;
 
                         Image glyphImage = Image.Load( file );
 
@@ -256,8 +251,6 @@ namespace Font {
                         glyphInfo.size = new byte[ 2 ];
                         glyphInfo.size[ 0 ] = (byte) ( glyphImage.Width );
                         glyphInfo.size[ 1 ] = (byte) ( glyphImage.Height );
-
-                        glyphInfo.index = fileIndex++;
 
                         glyphList.Add( glyphIndex, glyphInfo );
 
@@ -355,7 +348,7 @@ namespace Font {
                 writer.Write( (uint) fontName.Length ); // Used font name length
 
                 writer.Seek( 0x14, SeekOrigin.Begin );
-                writer.Write( (uint) charset.Length ); // char count
+                writer.Write( (uint) glyphList.Count ); // char count
 
                 writer.Seek( 0x24, SeekOrigin.Begin );
                 writer.Write( (uint) scaleFlag ); // scale flag
@@ -387,9 +380,20 @@ namespace Font {
                 BinaryReader reader = new BinaryReader( stream );
 
                 List<int> alreadyWrittenIndexes = new List<int>();
-                
-                for ( int i = 0; i < charset.Length; ++i ) {
-                    int charNo = (int) Convert.ToChar( charset[ i ] );
+
+                // in second table there are indexes of bounding boxes for each character
+                // we need to sort this list, because if there is a collision
+                // (and there *always* is.. trust me)
+                // we should write the index of bounding box for a character
+                // with lowest unicode value
+                // and game expects that bounding boxes of other characters which are in collision
+                // will have indexes that are directly after the first bounding box
+                List<GlyphInfo> sortedGlyphList = glyphList.OrderBy( kvp => ( (int) kvp.Value.glyph ) ).Select( kvp => kvp.Value ).ToList();
+
+                for ( int i = 0; i < sortedGlyphList.Count; ++i ) {
+                    sortedGlyphList[ i ].index = (uint) i;
+
+                    int charNo = (int) sortedGlyphList[ i ].glyph;
                     int byteOffset = ( charNo >> 3 ) + 0x2C;
                     int bitNo = charNo & 0b111;
 
@@ -422,8 +426,9 @@ namespace Font {
                 
                 writer.Seek( lastOffset, SeekOrigin.Begin );
                 
-                foreach ( KeyValuePair<uint, GlyphInfo> kvp in glyphList ) {
-                    GlyphInfo glyphInfo = kvp.Value;
+                for ( int i = 0; i < sortedGlyphList.Count; ++i ) {
+                    GlyphInfo glyphInfo = sortedGlyphList[ i ];
+                    Console.WriteLine( "Writing bbox of glyph: " + glyphInfo.glyph + " at " + i + " position" );
                     writer.Write( Utils.xy2abc( glyphInfo.position[ 0 ], glyphInfo.position[ 1 ] ) );
                     writer.Write( (byte) glyphInfo.size[ 0 ] ); // width
                     writer.Write( (byte) glyphInfo.size[ 1 ] ); // height
@@ -616,6 +621,8 @@ namespace Font {
                             glyphInfo.index = fontReader.ReadUInt32();
                             glyphList[ i ] = glyphInfo;
 
+                            Console.WriteLine( "Glyph: " + glyphInfo.glyph + " should have BBox at Index: " + glyphInfo.index );
+
                             fontReader.BaseStream.Seek( currentPosition, SeekOrigin.Begin );
                         }
 
@@ -655,6 +662,8 @@ namespace Font {
                             }
 
                             uint reconstructedIndex = kerningIndex + indexOffsets[ kerningIndex ];
+
+                            Console.WriteLine( "[RECONSTRUCT] Glyph: " + glyphList[ i ].glyph + " should have BBox at Index: " + reconstructedIndex );
 
                             glyphList[ i ].position = kerningList[ reconstructedIndex ].position;
                             glyphList[ i ].size = kerningList[ reconstructedIndex ].size;
