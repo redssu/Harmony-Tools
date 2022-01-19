@@ -14,7 +14,7 @@ Pull requests are welcome. I just started programming in C#, so in the code of t
 
 ## Notes
 
-Most of these tools are basically wrappers to tools made by [CapitanSwag](https://github.com/jpmac26) - he did most of the hard work - these tools would not be created without his effort. My goal was to create a translator-friendly set of tools, so I used code of [DRV3-Sharp](https://github.com/jpmac26/DRV3-Sharp) and made them completely non-interactive and then I made a context menu for them. 
+Most of these tools are basically wrappers to tools made by [CapitanSwag](https://github.com/CaptainSwag101) - he did most of the hard work - these tools would not be created without his effort. My goal was to create a translator-friendly set of tools, so I used code of [DRV3-Sharp](https://github.com/CaptainSwag101/DRV3-Sharp) and made them completely non-interactive and then I made a context menu for them. 
 
 The repository created by [EDDxample](https://github.com/EDDxample) ([Ultimate-DRv3-Toolset](https://github.com/EDDxample/ultimate-drv3-toolset)) was also a huge source of informations for me. Without it, I couldn't write a font packing tool.
 
