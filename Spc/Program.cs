@@ -1,14 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Text;
-using System.Threading.Tasks;
 using System.Security;
 using System.Text.Json;
 using V3Lib;
 using V3Lib.Spc;
-using System.Linq;
 
 namespace Spc {
     class SpcInfo {
@@ -104,17 +101,13 @@ namespace Spc {
                 spcFile.Unknown2 = spcInfo.Unknown2;
 
                 List<String> targetFiles = new List<string>( Directory.GetFiles( filePath ) );
-                Task[] insertTasks = new Task[ targetFiles.Count - 1 ]; // Because we don't count the __spc_info.json file
 
                 foreach ( string subfileName in targetFiles ) {
-                    if ( subfileName.EndsWith( "__spc_info.json" ) ) { 
+                    if ( subfileName.EndsWith( "__spc_info.json" ) )
                         continue;
-                    }
 
-                    insertTasks[ targetFiles.IndexOf( subfileName ) ] = Task.Factory.StartNew( () => spcFile.InsertSubfile( subfileName ) );
+                    spcFile.InsertSubfile(subfileName);
                 }
-
-                Task.WaitAll( insertTasks );
                 
                 string originalPath = filePath;
 
@@ -166,13 +159,9 @@ namespace Spc {
                 string directoryBasePath = fileInfo.FullName;
                 Directory.CreateDirectory( directoryBasePath + ".decompressed" );
 
-                Task[] extractTasks = new Task[ spcFile.Subfiles.Count ];
-
                 foreach ( SpcSubfile subfile in spcFile.Subfiles ) { 
-                    extractTasks[ spcFile.Subfiles.IndexOf( subfile ) ] = Task.Factory.StartNew( () => spcFile.ExtractSubfile( subfile.Name, directoryBasePath + ".decompressed" ) );
+                    spcFile.ExtractSubfile( subfile.Name, directoryBasePath + ".decompressed" );
                 }
-
-                Task.WaitAll( extractTasks );
 
                 SpcInfo spcInfo = new SpcInfo {
                     Unknown1 = spcFile.Unknown1,
