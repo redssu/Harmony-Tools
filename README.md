@@ -18,4 +18,4 @@ Most of these tools are basically wrappers to tools made by [CapitanSwag](https:
 
 The repository created by [EDDxample](https://github.com/EDDxample) ([Ultimate-DRv3-Toolset](https://github.com/EDDxample/ultimate-drv3-toolset)) was also a huge source of informations for me. Without it, I couldn't write a font packing tool.
 
-I'd also like to thank @Paks for the effort he put in finding bugs in the tools. Many of them wouldn't have been detected without his help.
+I'd also like to thank [Paks](https://github.com/P4K5) for the effort he put in finding bugs in the tools. Many of them wouldn't have been detected without his help.
