@@ -1,42 +1,78 @@
 using System;
 using System.Collections.Generic;
+using System.CommandLine;
 using System.IO;
 using System.Linq;
 using HarmonyTools.Exceptions;
+using HarmonyTools.Formats;
 using V3Lib.Stx;
 
 namespace HarmonyTools.Drivers
 {
-    public class StxDriver : IToolDriver
+    public class StxDriver : StandardDriver<StxDriver>, IStandardDriver
     {
-        public void Extract(FileSystemInfo input, string output, bool deleteOriginal, bool verbose)
+        public static Command GetCommand()
+        {
+            return GetCommand(
+                "stx",
+                "A tool to work with STX files (DRV3 string tables).",
+                new FSObjectFormat(FSObjectType.File, extension: "stx"),
+                new FSObjectFormat(FSObjectType.File, extension: "stx.txt")
+            );
+        }
+
+        public override void Extract(FileSystemInfo input, string output, bool verbose)
         {
             StxFile stxFile = new StxFile();
             stxFile.Load(input.FullName);
 
+            if (verbose)
+                Console.WriteLine("Loaded STX file.");
+
             using (StreamWriter writer = new StreamWriter(output, false))
             {
+                if (verbose)
+                    Console.WriteLine($"Writing to file \"{output}\".");
+
                 foreach (var table in stxFile.StringTables)
                 {
                     writer.WriteLine("{");
+
+                    if (verbose)
+                        Console.WriteLine("Wrote strings table start marker.");
 
                     foreach (KeyValuePair<uint, string> kvp in table.Strings)
                     {
                         var value = kvp.Value.Replace("\n", @"\n").Replace("\r", @"\r");
                         writer.WriteLine($"[{kvp.Key}] {value}");
+
+                        if (verbose)
+                            Console.WriteLine($"Wrote new line with key \"{kvp.Key}\".");
                     }
 
                     writer.WriteLine("}");
+
+                    if (verbose)
+                        Console.WriteLine("Wrote strings table end marker.");
                 }
             }
+
+            if (verbose)
+                Console.WriteLine($"Finished extracting the STX file.");
         }
 
-        public void Pack(FileSystemInfo input, string output, bool deleteOriginal, bool verbose)
+        public override void Pack(FileSystemInfo input, string output, bool verbose)
         {
             StxFile stxFile = new StxFile();
 
+            if (verbose)
+                Console.WriteLine($"New STX file has been created.");
+
             using (StreamReader reader = new StreamReader(input.FullName))
             {
+                if (verbose)
+                    Console.WriteLine($"Opened TXT file \"{input.FullName}\".");
+
                 while (reader != null && !reader.EndOfStream)
                 {
                     if (reader.ReadLine()!.StartsWith("{"))
@@ -51,7 +87,14 @@ namespace HarmonyTools.Drivers
                             string value = string.Empty;
 
                             if (line == null || line.StartsWith("}"))
+                            {
+                                if (verbose)
+                                    Console.WriteLine(
+                                        "End of strings table character or end of file found, exiting."
+                                    );
+
                                 break;
+                            }
 
                             if (line.StartsWith("["))
                             {
@@ -59,7 +102,7 @@ namespace HarmonyTools.Drivers
 
                                 if (index == -1)
                                     throw new PackingException(
-                                        $"No key pattern found in line: {line}"
+                                        $"No valid key pattern found at the beginning of the line: {line}."
                                     );
 
                                 try
@@ -68,11 +111,11 @@ namespace HarmonyTools.Drivers
                                 }
                                 catch (Exception)
                                 {
-                                    throw new PackingException($"Invalid key in line: {line}");
+                                    throw new PackingException($"Key in line {line} is not valid.");
                                 }
 
                                 if (verbose)
-                                    Console.WriteLine($"Line {key} successfully parsed.");
+                                    Console.WriteLine($"Line {key} processed.");
 
                                 if (index + 1 < line.Length)
                                     value = line.Substring(index + 1).TrimStart(' ');
@@ -81,7 +124,9 @@ namespace HarmonyTools.Drivers
                             }
                             else
                             {
-                                throw new PackingException($"No key pattern found in line: {line}");
+                                throw new PackingException(
+                                    $"No valid key pattern found at the beginning of the line: {line}."
+                                );
                             }
 
                             table.Add(key, value.Replace(@"\n", "\n").Replace(@"\r", "\r"));
@@ -94,14 +139,14 @@ namespace HarmonyTools.Drivers
                         stxFile.StringTables.Add(new StringTable(table, 8));
 
                         if (verbose)
-                            Console.WriteLine($"Table successfully parsed.");
+                            Console.WriteLine("Strings table saved successfully.");
                     }
                 }
 
                 stxFile.Save(output);
 
                 if (verbose)
-                    Console.WriteLine($"File successfully saved.");
+                    Console.WriteLine($"STX File with name \"{output}\" saved successfully.");
             }
         }
     }

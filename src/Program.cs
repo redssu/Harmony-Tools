@@ -1,9 +1,6 @@
 using System;
 using System.CommandLine;
-using System.IO;
-using HarmonyTools.Commands;
 using HarmonyTools.Drivers;
-using HarmonyTools.Formats;
 
 namespace HarmonyTools
 {
@@ -17,16 +14,8 @@ namespace HarmonyTools
 
             rootCommand.SetHandler(() => rootCommand.Invoke("-h"));
 
-            rootCommand.AddCommand(
-                ToolCommand.Generate<StxDriver>(
-                    new ToolCommand.CommandInfo(
-                        name: "stx",
-                        description: "Tool for packing/extracting STX files",
-                        gameFormat: new FSObjectFormat(FSObjectType.File, "stx"),
-                        knownFormat: new FSObjectFormat(FSObjectType.File, "txt")
-                    )
-                )
-            );
+            rootCommand.AddCommand(StxDriver.GetCommand());
+            rootCommand.AddCommand(WrdDriver.GetCommand());
 
             rootCommand.Invoke(args);
         }
