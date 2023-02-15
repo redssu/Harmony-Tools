@@ -23,13 +23,13 @@ namespace HarmonyTools.Drivers
 
         public override void Extract(FileSystemInfo input, string output, bool verbose)
         {
-            StxFile stxFile = new StxFile();
+            var stxFile = new StxFile();
             stxFile.Load(input.FullName);
 
             if (verbose)
                 Console.WriteLine("Loaded STX file.");
 
-            using (StreamWriter writer = new StreamWriter(output, false))
+            using (var writer = new StreamWriter(output, false))
             {
                 if (verbose)
                     Console.WriteLine($"Writing to file \"{output}\".");
@@ -41,7 +41,7 @@ namespace HarmonyTools.Drivers
                     if (verbose)
                         Console.WriteLine("Wrote strings table start marker.");
 
-                    foreach (KeyValuePair<uint, string> kvp in table.Strings)
+                    foreach (var kvp in table.Strings)
                     {
                         var value = kvp.Value.Replace("\n", @"\n").Replace("\r", @"\r");
                         writer.WriteLine($"[{kvp.Key}] {value}");
@@ -58,17 +58,19 @@ namespace HarmonyTools.Drivers
             }
 
             if (verbose)
-                Console.WriteLine($"Finished extracting the STX file.");
+                Console.WriteLine(
+                    $"TXT file with extracted strings has been successfully saved with name \"{output}\"."
+                );
         }
 
         public override void Pack(FileSystemInfo input, string output, bool verbose)
         {
-            StxFile stxFile = new StxFile();
+            var stxFile = new StxFile();
 
             if (verbose)
                 Console.WriteLine($"New STX file has been created.");
 
-            using (StreamReader reader = new StreamReader(input.FullName))
+            using (var reader = new StreamReader(input.FullName))
             {
                 if (verbose)
                     Console.WriteLine($"Opened TXT file \"{input.FullName}\".");
@@ -77,7 +79,7 @@ namespace HarmonyTools.Drivers
                 {
                     if (reader.ReadLine()!.StartsWith("{"))
                     {
-                        Dictionary<uint, string> table = new Dictionary<uint, string>();
+                        var table = new Dictionary<uint, string>();
 
                         while (true)
                         {
@@ -146,7 +148,9 @@ namespace HarmonyTools.Drivers
                 stxFile.Save(output);
 
                 if (verbose)
-                    Console.WriteLine($"STX File with name \"{output}\" saved successfully.");
+                    Console.WriteLine(
+                        $"STX File with name \"{output}\" has been saved successfully."
+                    );
             }
         }
     }

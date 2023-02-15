@@ -142,7 +142,7 @@ namespace HarmonyTools.Drivers
 
         public void Extract(FileSystemInfo input, string output, bool friendlyNames, bool verbose)
         {
-            WrdFile wrdFile = new WrdFile();
+            var wrdFile = new WrdFile();
             wrdFile.Load(input.FullName);
 
             if (verbose)
@@ -151,9 +151,9 @@ namespace HarmonyTools.Drivers
             if (verbose && friendlyNames)
                 Console.WriteLine("Using friendly names for opcodes.");
 
-            using (StreamWriter writer = new StreamWriter(output, false))
+            using (var writer = new StreamWriter(output, false))
             {
-                foreach (WrdCommand command in wrdFile.Commands)
+                foreach (var command in wrdFile.Commands)
                 {
                     string line;
 
@@ -175,7 +175,9 @@ namespace HarmonyTools.Drivers
             }
 
             if (verbose)
-                Console.WriteLine("Finished extracting the game script file.");
+                Console.WriteLine(
+                    $"TXT file with extracted game script has been successfully saved with name \"{output}\" ."
+                );
         }
 
         protected static Option<bool> GetFriendlyNamesOption() =>
