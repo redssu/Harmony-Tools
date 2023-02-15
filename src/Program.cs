@@ -14,9 +14,10 @@ namespace HarmonyTools
 
             rootCommand.SetHandler(() => rootCommand.Invoke("-h"));
 
-            rootCommand.AddCommand(StxDriver.GetCommand());
-            rootCommand.AddCommand(WrdDriver.GetCommand());
             rootCommand.AddCommand(DialogueDriver.GetCommand());
+            rootCommand.AddCommand(StxDriver.GetCommand());
+            rootCommand.AddCommand(DatDriver.GetCommand());
+            rootCommand.AddCommand(WrdDriver.GetCommand());
 
             rootCommand.Invoke(args);
         }
