@@ -11,15 +11,13 @@ namespace HarmonyTools.Drivers
 {
     public class StxDriver : StandardDriver<StxDriver>, IStandardDriver
     {
-        public static Command GetCommand()
-        {
-            return GetCommand(
+        public static Command GetCommand() =>
+            GetCommand(
                 "stx",
                 "A tool to work with STX files (DRV3 string tables).",
                 new FSObjectFormat(FSObjectType.File, extension: "stx"),
                 new FSObjectFormat(FSObjectType.File, extension: "stx.txt")
             );
-        }
 
         public override void Extract(FileSystemInfo input, string output, bool verbose)
         {

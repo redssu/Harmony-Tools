@@ -114,15 +114,13 @@ namespace HarmonyTools.Drivers
             { "CHARA_HATENA", "???" }
         };
 
-        public static Command GetCommand()
-        {
-            return GetCommand(
+        public static Command GetCommand() =>
+            GetCommand(
                 "dialogue",
                 "A tool to work with specific STX files (the ones that contain dialogue lines).",
                 new FSObjectFormat(FSObjectType.File, extension: "stx"),
                 new FSObjectFormat(FSObjectType.File, extension: "stx.txt")
             );
-        }
 
         public override void Extract(FileSystemInfo input, string output, bool verbose)
         {

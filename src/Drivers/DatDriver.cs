@@ -11,15 +11,13 @@ namespace HarmonyTools.Drivers
 {
     public class DatDriver : StandardDriver<DatDriver>, IStandardDriver
     {
-        public static Command GetCommand()
-        {
-            return GetCommand(
+        public static Command GetCommand() =>
+            GetCommand(
                 "dat",
                 "A tool to work with DAT files (DRV3 data tables).",
                 new FSObjectFormat(FSObjectType.File, extension: "dat"),
                 new FSObjectFormat(FSObjectType.File, extension: "dat.csv")
             );
-        }
 
         public override void Extract(FileSystemInfo input, string output, bool verbose)
         {
