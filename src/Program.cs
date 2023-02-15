@@ -16,6 +16,7 @@ namespace HarmonyTools
 
             rootCommand.AddCommand(DialogueDriver.GetCommand());
             rootCommand.AddCommand(StxDriver.GetCommand());
+            rootCommand.AddCommand(SpcDriver.GetCommand());
             rootCommand.AddCommand(DatDriver.GetCommand());
             rootCommand.AddCommand(WrdDriver.GetCommand());
 
