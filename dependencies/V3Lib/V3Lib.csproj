@@ -9,4 +9,8 @@
     <Nullable>enable</Nullable>
     <Version>1.1.0</Version>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AssimpNet" Version="5.0.0-beta1" />
+  </ItemGroup>
 </Project>
