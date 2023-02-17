@@ -42,15 +42,13 @@ namespace HarmonyTools.Drivers
             );
 
             var inputArgument = GetInputArgument(knownFormat);
-            var verboseOption = GetVerboseOption();
-            var deleteOriginalOption = GetDeleteOriginalOption(knownFormat);
-
             command.Add(inputArgument);
-            command.Add(verboseOption);
+
+            var deleteOriginalOption = GetDeleteOriginalOption(knownFormat);
             command.Add(deleteOriginalOption);
 
             command.SetHandler(
-                (FileSystemInfo input, bool verbose, bool deleteOriginal) =>
+                (FileSystemInfo input, bool deleteOriginal) =>
                 {
                     var outputPath = Utils.GetOutputPath(
                         input,
@@ -61,17 +59,13 @@ namespace HarmonyTools.Drivers
                     if (gameFormat.IsDirectory && !Directory.Exists(outputPath))
                     {
                         Directory.CreateDirectory(outputPath);
-
-                        if (verbose)
-                            Console.WriteLine($"Created output directory \"{outputPath}\"");
                     }
 
-                    driver.Pack(input, outputPath, verbose);
+                    driver.Pack(input, outputPath);
 
                     // TODO: Delete original file if deleteOriginal is true
                 },
                 inputArgument,
-                verboseOption,
                 deleteOriginalOption
             );
 
@@ -90,15 +84,13 @@ namespace HarmonyTools.Drivers
             );
 
             var inputArgument = GetInputArgument(gameFormat);
-            var verboseOption = GetVerboseOption();
-            var deleteOriginalOption = GetDeleteOriginalOption(gameFormat);
-
             command.Add(inputArgument);
-            command.Add(verboseOption);
+
+            var deleteOriginalOption = GetDeleteOriginalOption(gameFormat);
             command.Add(deleteOriginalOption);
 
             command.SetHandler(
-                (FileSystemInfo input, bool verbose, bool deleteOriginal) =>
+                (FileSystemInfo input, bool deleteOriginal) =>
                 {
                     var outputPath = Utils.GetOutputPath(
                         input,
@@ -109,24 +101,20 @@ namespace HarmonyTools.Drivers
                     if (gameFormat.IsDirectory && !Directory.Exists(outputPath))
                     {
                         Directory.CreateDirectory(outputPath);
-
-                        if (verbose)
-                            Console.WriteLine($"Created output directory \"{outputPath}\".");
                     }
 
-                    driver.Pack(input, outputPath, verbose);
+                    driver.Pack(input, outputPath);
 
                     // TODO: Delete original file if deleteOriginal is true
                 },
                 inputArgument,
-                verboseOption,
                 deleteOriginalOption
             );
 
             return command;
         }
 
-        public abstract void Pack(FileSystemInfo input, string outputPath, bool verbose);
-        public abstract void Extract(FileSystemInfo input, string outputPath, bool verbose);
+        public abstract void Pack(FileSystemInfo input, string outputPath);
+        public abstract void Extract(FileSystemInfo input, string outputPath);
     }
 }

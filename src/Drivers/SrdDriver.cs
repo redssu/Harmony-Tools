@@ -4,6 +4,7 @@ using System.CommandLine;
 using System.IO;
 using System.Linq;
 using HarmonyTools.Exceptions;
+using HarmonyTools.Extensions;
 using HarmonyTools.Formats;
 using Scarlet.Drawing;
 using SixLabors.ImageSharp;
@@ -23,7 +24,7 @@ namespace HarmonyTools.Drivers
                 new FSObjectFormat(FSObjectType.Directory, extension: "srd.decompressed")
             );
 
-        public override void Extract(FileSystemInfo input, string output, bool verbose)
+        public override void Extract(FileSystemInfo input, string output)
         {
             var srdiPath = Path.ChangeExtension(input.FullName, "srdi");
             var srdvPath = Path.ChangeExtension(input.FullName, "srdv");
@@ -35,114 +36,44 @@ namespace HarmonyTools.Drivers
             {
                 Console.WriteLine($"Info: No corresponding SRDI file found at \"{srdiPath}\".");
             }
-            else if (verbose)
-            {
-                Console.WriteLine($"Found SRDI file at \"{srdiPath}\".");
-            }
 
             if (srdvPath == null)
             {
                 Console.WriteLine($"Info: No corresponding SRDV file found at \"{srdvPath}\".");
-            }
-            else if (verbose)
-            {
-                Console.WriteLine($"Found SRDV file at \"{srdvPath}\".");
             }
 
             // TODO: Delete original files
 
             File.Copy(input.FullName, Path.Combine(output, "_.srd"), true);
 
-            if (verbose)
-                Console.WriteLine("Copied original SRD file to output directory.");
-
             if (srdiPath != null)
             {
                 File.Copy(srdiPath, Path.Combine(output, "_.srdi"), true);
-
-                if (verbose)
-                    Console.WriteLine("Copied original SRDI file to output directory.");
             }
 
             if (srdvPath != null)
             {
                 File.Copy(srdvPath, Path.Combine(output, "_.srdv"), true);
-
-                if (verbose)
-                    Console.WriteLine("Copied original SRDV file to output directory.");
             }
 
             var srdFile = new SrdFile();
             srdFile.Load(input.FullName, srdiPath ?? string.Empty, srdvPath ?? string.Empty);
 
-            if (verbose)
-                Console.WriteLine("Loaded SRD file.");
-
             foreach (var block in srdFile.Blocks)
             {
                 if (block is TxrBlock txr && block.Children.First() is RsiBlock rsi)
                 {
-                    if (verbose)
-                        Console.WriteLine($"Found a TXR block in SRD file.");
-
-                    var paletteData = new byte[] { };
-
-                    if (txr.Palette == 1)
-                    {
-                        var paletteInfo = rsi.ResourceInfoList[txr.PaletteId];
-                        rsi.ResourceInfoList.RemoveAt(txr.PaletteId);
-                        paletteData = rsi.ExternalData[txr.PaletteId];
-                    }
-
+                    var paletteData = SrdDriver.GetPaletteData(txr, rsi);
                     var inputImageData = rsi.ExternalData.First();
-                    var displayWidth = txr.DisplayWidth;
-                    var displayHeight = txr.DisplayHeight;
+                    var (displayWidth, displayHeight) = SrdDriver.GetDimensions(txr, rsi);
+                    var pixelFormat = SrdDriver.GetPixelDataFormat(txr);
 
-                    if (verbose)
-                        Console.WriteLine("Set up image dimmensions.");
-
-                    if (rsi.Unknown12 == 0x08)
-                    {
-                        displayWidth = (ushort)V3Lib.Utils.PowerOfTwo(displayWidth);
-                        displayHeight = (ushort)V3Lib.Utils.PowerOfTwo(displayHeight);
-
-                        if (verbose)
-                            Console.WriteLine("Applied dimmensions multiplier.");
-                    }
-
-                    var pixelFormat = txr.Format switch
-                    {
-                        TextureFormat.ARGB8888 => PixelDataFormat.FormatArgb8888,
-                        TextureFormat.BGR565 => PixelDataFormat.FormatBgr565,
-                        TextureFormat.BGRA4444 => PixelDataFormat.FormatBgra4444,
-                        TextureFormat.DXT1RGB => PixelDataFormat.FormatDXT1Rgb,
-                        TextureFormat.DXT5 => PixelDataFormat.FormatDXT5,
-                        TextureFormat.BC5 => PixelDataFormat.FormatRGTC2,
-                        TextureFormat.BC4 => PixelDataFormat.FormatRGTC1,
-                        TextureFormat.Indexed8 => PixelDataFormat.FormatIndexed8,
-                        TextureFormat.BPTC => PixelDataFormat.FormatBPTC,
-                        _ => PixelDataFormat.Undefined
-                    };
-
-                    if (verbose)
-                        Console.WriteLine($"Set up pixel format.");
-
-                    if (txr.Swizzle == 0 || txr.Swizzle == 2 || txr.Swizzle == 6)
-                    {
-                        if (verbose)
-                            Console.WriteLine("Unswizzling image data.");
-
-                        inputImageData = V3Lib.ImportExportHelper.PS4UnSwizzle(
-                            inputImageData,
-                            displayWidth,
-                            displayHeight,
-                            8
-                        );
-                    }
-                    else if (txr.Swizzle != 1)
-                    {
-                        Console.WriteLine("WARNING: Resource is swizzled.");
-                    }
+                    inputImageData = SrdDriver.UnSwizzleTexture(
+                        inputImageData,
+                        displayWidth,
+                        displayHeight,
+                        txr.Swizzle
+                    );
 
                     var mipWidth = Math.Max((ushort)1, displayWidth);
                     var mipHeight = Math.Max((ushort)1, displayHeight);
@@ -153,96 +84,42 @@ namespace HarmonyTools.Drivers
                         pixelFormat,
                         inputImageData
                     );
-                    var outputImageData = imageBinary.GetOutputPixelData(0);
 
-                    if (verbose)
-                        Console.WriteLine("Converted resource to binary pixel data.");
-
-                    var image = new Image<Rgba32>(mipWidth, mipHeight);
-
-                    for (int y = 0; y < mipHeight; y++)
-                    {
-                        for (int x = 0; x < mipWidth; x++)
-                        {
-                            Rgba32 pixelColor;
-
-                            if (pixelFormat == PixelDataFormat.FormatIndexed8)
-                            {
-                                var pixelDataOffset = (y * mipWidth) + x;
-
-                                var paletteDataOffset = outputImageData[pixelDataOffset];
-                                pixelColor.B = paletteData[paletteDataOffset];
-                                pixelColor.G = paletteData[paletteDataOffset + 1];
-                                pixelColor.R = paletteData[paletteDataOffset + 2];
-                                pixelColor.A = paletteData[paletteDataOffset + 3];
-                            }
-                            else
-                            {
-                                int pixelDataOffset = ((y * mipWidth) + x) * 4;
-                                pixelColor.B = outputImageData[pixelDataOffset];
-                                pixelColor.G = outputImageData[pixelDataOffset + 1];
-                                pixelColor.R = outputImageData[pixelDataOffset + 2];
-                                pixelColor.A = outputImageData[pixelDataOffset + 3];
-
-                                if (pixelFormat == PixelDataFormat.FormatRGTC2)
-                                {
-                                    pixelColor.B = pixelColor.A = 255;
-                                }
-                                else if (pixelFormat == PixelDataFormat.FormatRGTC1)
-                                {
-                                    pixelColor.G = pixelColor.B = pixelColor.R;
-                                }
-                            }
-
-                            image[x, y] = pixelColor;
-                        }
-                    }
-
-                    if (verbose)
-                        Console.WriteLine("Converted binary pixel data to known image format.");
+                    var image = SrdDriver.TransformPixelDataToImage(
+                        mipWidth,
+                        mipHeight,
+                        pixelFormat,
+                        paletteData,
+                        imageBinary.GetOutputPixelData(0)
+                    );
 
                     var mipmapName = rsi.ResourceStringList.First();
                     var mipmapNameWithoutExtension = Path.GetFileNameWithoutExtension(mipmapName);
-                    var mipmapExtension = Path.GetExtension(mipmapName).ToUpper();
+                    var mipmapExtension = Path.GetExtension(mipmapName);
                     var mipmapOutputPath = Path.Combine(output, mipmapName);
 
                     using (var fileStream = new FileStream(mipmapOutputPath, FileMode.Create))
                     {
-                        switch (mipmapExtension)
+                        try
                         {
-                            case ".BMP":
-                                image.SaveAsBmp(fileStream);
-                                break;
-
-                            case ".PNG":
-                                image.SaveAsPng(fileStream);
-                                break;
-
-                            case ".TGA":
-                                image.SaveAsTga(fileStream);
-                                break;
-
-                            default:
-                                throw new ExtractingException(
-                                    $"Cannot save image \"{mipmapNameWithoutExtension}\": Unsupported image format \"{mipmapExtension}\"."
-                                );
+                            image.Save(fileStream, mipmapExtension);
+                        }
+                        catch (ArgumentException)
+                        {
+                            throw new ExtractionException(
+                                $"Cannot save image \"{mipmapNameWithoutExtension}\": Unsupported image format \"{mipmapExtension}\"."
+                            );
                         }
                     }
-
-                    if (verbose)
-                        Console.WriteLine(
-                            $"Image has been successfully saved to \"{mipmapOutputPath}\"."
-                        );
 
                     image.Dispose();
                 }
             }
 
-            if (verbose)
-                Console.WriteLine($"Extracted all images to \"{output}\".");
+            Console.WriteLine($"Extracted all images to \"{output}\".");
         }
 
-        public override void Pack(FileSystemInfo input, string output, bool verbose)
+        public override void Pack(FileSystemInfo input, string output)
         {
             var targetFiles = Directory.GetFiles(input.FullName);
             var srdPath = Path.Combine(input.FullName, "_.srd");
@@ -251,7 +128,7 @@ namespace HarmonyTools.Drivers
 
             if (!File.Exists(srdPath))
             {
-                throw new PackingException(
+                throw new PackException(
                     $"Cannot pack images: Required original SRD file not found. (expected path: \"{srdPath}\")."
                 );
             }
@@ -275,9 +152,6 @@ namespace HarmonyTools.Drivers
             var srdFile = new SrdFile();
             srdFile.Load(srdPath, srdiPath ?? string.Empty, srdvPath ?? string.Empty);
 
-            if (verbose)
-                Console.WriteLine("Loaded SRD file.");
-
             foreach (var file in targetFiles)
             {
                 if (file.EndsWith(".srd") || file.EndsWith(".srdi") || file.EndsWith(".srdv"))
@@ -298,12 +172,9 @@ namespace HarmonyTools.Drivers
                 {
                     var image = Image.Load<Rgba32>(fileStream);
 
-                    if (verbose)
-                        Console.WriteLine($"Loaded image \"{textureName}\".");
-
                     if (image == null)
                     {
-                        throw new PackingException(
+                        throw new PackException(
                             $"Cannot pack texture \"{textureName}\": Failed to load image."
                         );
                     }
@@ -318,9 +189,6 @@ namespace HarmonyTools.Drivers
                         }
                     }
 
-                    if (verbose)
-                        Console.WriteLine("Converted image to binary pixel data.");
-
                     var imageBinary = new ImageBinary(
                         image.Width,
                         image.Height,
@@ -328,13 +196,7 @@ namespace HarmonyTools.Drivers
                         pixelData.ToArray()
                     );
 
-                    if (verbose)
-                        Console.WriteLine("Created binary image.");
-
                     bool isTextureFound = false;
-
-                    if (verbose)
-                        Console.WriteLine("Searching for texture in SRD file...");
 
                     foreach (var block in srdFile.Blocks)
                     {
@@ -344,9 +206,6 @@ namespace HarmonyTools.Drivers
                             && rsi.ResourceStringList.First() == textureName
                         )
                         {
-                            if (verbose)
-                                Console.WriteLine("Found texture in SRD file.");
-
                             isTextureFound = true;
                             rsi.ExternalData.Clear();
                             rsi.ExternalData.Add(imageBinary.GetOutputPixelData(0));
@@ -367,16 +226,13 @@ namespace HarmonyTools.Drivers
                             txr.Swizzle = 1;
                             txr.Unknown1D = 1;
 
-                            if (verbose)
-                                Console.WriteLine("Saved texture in SRD file.");
-
                             break;
                         }
                     }
 
                     if (!isTextureFound)
                     {
-                        throw new PackingException(
+                        throw new PackException(
                             $"Cannot pack texture \"{textureName}\": Texture with given name not found in SRD file."
                         );
                     }
@@ -387,9 +243,117 @@ namespace HarmonyTools.Drivers
             var srdvOutputPath = Path.ChangeExtension(output, "srdv");
 
             srdFile.Save(output, srdiOutputPath, srdvOutputPath);
+        }
 
-            if (verbose)
-                Console.WriteLine($"SRD file successfully saved to \"{output}\".");
+        public static (ushort, ushort) GetDimensions(TxrBlock txr, RsiBlock rsi)
+        {
+            var width = txr.DisplayWidth;
+            var height = txr.DisplayHeight;
+
+            if (rsi.Unknown12 == 0x08)
+            {
+                width = (ushort)V3Lib.Utils.PowerOfTwo(width);
+                height = (ushort)V3Lib.Utils.PowerOfTwo(height);
+            }
+
+            return (width, height);
+        }
+
+        public static PixelDataFormat GetPixelDataFormat(TxrBlock txr) =>
+            txr.Format switch
+            {
+                TextureFormat.ARGB8888 => PixelDataFormat.FormatArgb8888,
+                TextureFormat.BGR565 => PixelDataFormat.FormatBgr565,
+                TextureFormat.BGRA4444 => PixelDataFormat.FormatBgra4444,
+                TextureFormat.DXT1RGB => PixelDataFormat.FormatDXT1Rgb,
+                TextureFormat.DXT5 => PixelDataFormat.FormatDXT5,
+                TextureFormat.BC5 => PixelDataFormat.FormatRGTC2,
+                TextureFormat.BC4 => PixelDataFormat.FormatRGTC1,
+                TextureFormat.Indexed8 => PixelDataFormat.FormatIndexed8,
+                TextureFormat.BPTC => PixelDataFormat.FormatBPTC,
+                _ => PixelDataFormat.Undefined
+            };
+
+        public static byte[] UnSwizzleTexture(
+            byte[] data,
+            ushort width,
+            ushort height,
+            ushort swizzleFlag
+        )
+        {
+            if (swizzleFlag == 0 || swizzleFlag == 2 || swizzleFlag == 6)
+            {
+                data = V3Lib.ImportExportHelper.PS4UnSwizzle(data, width, height, 8);
+            }
+            else if (swizzleFlag != 1)
+            {
+                Console.WriteLine("WARNING: Resource is swizzled.");
+            }
+
+            return data;
+        }
+
+        public static byte[] GetPaletteData(TxrBlock txr, RsiBlock rsi)
+        {
+            if (txr.Palette == 1)
+            {
+                var paletteInfo = rsi.ResourceInfoList[txr.PaletteId];
+                rsi.ResourceInfoList.RemoveAt(txr.PaletteId);
+                return rsi.ExternalData[txr.PaletteId];
+            }
+
+            return new byte[] { };
+        }
+
+        public static Image<Rgba32> TransformPixelDataToImage(
+            ushort width,
+            ushort height,
+            PixelDataFormat pixelFormat,
+            byte[] paletteData,
+            byte[] outputImageData
+        )
+        {
+            var image = new Image<Rgba32>(width, height);
+
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    Rgba32 pixelColor;
+
+                    if (pixelFormat == PixelDataFormat.FormatIndexed8)
+                    {
+                        var pixelDataOffset = (y * width) + x;
+
+                        var paletteDataOffset = outputImageData[pixelDataOffset];
+                        pixelColor.B = paletteData[paletteDataOffset];
+                        pixelColor.G = paletteData[paletteDataOffset + 1];
+                        pixelColor.R = paletteData[paletteDataOffset + 2];
+                        pixelColor.A = paletteData[paletteDataOffset + 3];
+                    }
+                    else
+                    {
+                        int pixelDataOffset = ((y * width) + x) * 4;
+                        pixelColor.B = outputImageData[pixelDataOffset];
+                        pixelColor.G = outputImageData[pixelDataOffset + 1];
+                        pixelColor.R = outputImageData[pixelDataOffset + 2];
+                        pixelColor.A = outputImageData[pixelDataOffset + 3];
+
+                        if (pixelFormat == PixelDataFormat.FormatRGTC2)
+                        {
+                            pixelColor.B = pixelColor.A = 255;
+                        }
+                        else if (pixelFormat == PixelDataFormat.FormatRGTC1)
+                        {
+                            pixelColor.G = pixelColor.B = pixelColor.R;
+                        }
+                    }
+
+                    image[x, y] = pixelColor;
+                }
+            }
+
+            return image;
         }
     }
 }

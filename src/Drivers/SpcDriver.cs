@@ -60,13 +60,10 @@ namespace HarmonyTools.Drivers
                 new FSObjectFormat(FSObjectType.Directory, extension: "spc.decompressed")
             );
 
-        public override void Extract(FileSystemInfo input, string output, bool verbose)
+        public override void Extract(FileSystemInfo input, string output)
         {
             var spcFile = new SpcFile();
             spcFile.Load(input.FullName);
-
-            if (verbose)
-                Console.WriteLine("Loaded SPC file.");
 
             if (Unknown1.SequenceEqual(spcFile.Unknown1))
                 Console.WriteLine(
@@ -78,19 +75,16 @@ namespace HarmonyTools.Drivers
                     "WARNING: Unknown2 value of this SPC Archive is not equal to the expected value. Please report this to the developers."
                 );
 
+            // TODO:
             foreach (var subfile in spcFile.Subfiles)
             {
                 spcFile.ExtractSubfile(subfile.Name, output);
-
-                if (verbose)
-                    Console.WriteLine($"Extracted subfile \"{subfile.Name}\".");
             }
 
-            if (verbose)
-                Console.WriteLine($"Extracted all subfiles to \"{output}\".");
+            Console.WriteLine($"Extracted all subfiles to \"{output}\".");
         }
 
-        public override void Pack(FileSystemInfo input, string output, bool verbose)
+        public override void Pack(FileSystemInfo input, string output)
         {
             var spcFile = new SpcFile();
             spcFile.Unknown1 = Unknown1;
@@ -98,23 +92,15 @@ namespace HarmonyTools.Drivers
 
             var targetFiles = new List<string>(Directory.GetFiles(input.FullName));
 
-            if (verbose)
-                Console.WriteLine($"Found {targetFiles.Count} files to pack.");
-
+            // TODO:
             foreach (string subfileName in targetFiles)
             {
                 spcFile.InsertSubfile(subfileName);
-
-                if (verbose)
-                    Console.WriteLine($"Adding subfile \"{subfileName}\".");
             }
 
             spcFile.Save(output);
 
-            if (verbose)
-                Console.WriteLine(
-                    $"SPC archive with name \"{output}\" has been successfully saved."
-                );
+            Console.WriteLine($"SPC archive has been successfully saved to \"{output}\".");
         }
     }
 }

@@ -122,62 +122,43 @@ namespace HarmonyTools.Drivers
                 new FSObjectFormat(FSObjectType.File, extension: "stx.txt")
             );
 
-        public override void Extract(FileSystemInfo input, string output, bool verbose)
+        public override void Extract(FileSystemInfo input, string output)
         {
             // To create a dialogue file, we need to load both STX and WRD files.
             // The WRD file contains character names and the STX file contains the actual dialogue.
             // It's pretty simple to tell which WRD file belongs to which STX file, since they have the same name.
-            string wrdPath;
-
-            if (input.FullName.EndsWith(".stx"))
-            {
-                wrdPath = input.FullName.Substring(0, input.FullName.Length - 4) + ".wrd";
-            }
-            else
-            {
-                wrdPath = input.FullName + ".wrd";
-            }
+            string wrdPath =
+                input.Extension.ToUpper() == ".STX"
+                    ? Path.ChangeExtension(input.FullName, "wrd")
+                    : input.FullName + ".wrd";
 
             if (!File.Exists(wrdPath))
             {
-                throw new ExtractingException(
-                    $"Required WRD file not found. (expected path: \"{wrdPath}\")"
+                throw new ExtractionException(
+                    $"Required WRD file not found. (expected path: \"{wrdPath}\")."
                 );
             }
 
             var wrdFile = new WrdFile();
             wrdFile.Load(wrdPath);
 
-            if (verbose)
-                Console.WriteLine($"Loaded WRD file \"{wrdPath}\".");
-
             var usefulCommands = new List<WrdCommand>();
 
+            // TODO: Refactor this loop
             // Filter and transform the commands.
             foreach (var command in wrdFile.Commands)
             {
-                bool isCommandUseful = AddCommandIfUseful(ref usefulCommands, command);
-
-                if (verbose && isCommandUseful)
-                    Console.WriteLine(
-                        $"Added command \"{command.Opcode}\" to the list of useful commands."
-                    );
+                AddCommandIfUseful(ref usefulCommands, command);
             }
 
             var stxFile = new StxFile();
             stxFile.Load(input.FullName);
-
-            if (verbose)
-                Console.WriteLine("Loaded STX file.");
 
             var dialogueEntries = new List<DialogueEntry>();
 
             foreach (var kvp in stxFile.StringTables.First().Strings)
             {
                 var dialogueEntry = new DialogueEntry { Id = kvp.Key, Text = kvp.Value };
-
-                if (verbose)
-                    Console.WriteLine($"Processing string {kvp.Key}.");
 
                 // Find the LOC command that corresponds to the string thats currently being processed.
                 // LOC is a command that displays a dialogue line.
@@ -186,14 +167,6 @@ namespace HarmonyTools.Drivers
                 // If it's first command there is not even a chance to find the character name.
                 if (locCommandIndex == 0)
                 {
-                    if (verbose)
-                    {
-                        Console.WriteLine(
-                            "LOC command is first in the game script. Cannot find the speaker name."
-                        );
-                        Console.WriteLine("Adding the dialogue line without a speaker.");
-                    }
-
                     dialogueEntries.Add(dialogueEntry);
                     continue;
                 }
@@ -230,11 +203,6 @@ namespace HarmonyTools.Drivers
                             )
                             {
                                 dialogueEntry.Choice = "Question";
-
-                                if (verbose)
-                                    Console.WriteLine(
-                                        "Currently processed dialogue line is a question."
-                                    );
                             }
                         }
 
@@ -251,31 +219,16 @@ namespace HarmonyTools.Drivers
 
                         if (firstArgument == "ChkQuestion")
                         {
-                            if (verbose)
-                                Console.WriteLine(
-                                    "Currently processed dialogue line is a question."
-                                );
-
                             dialogueEntry.Choice = "Question";
                         }
                         else if (firstArgument == "ChkTimeOut")
                         {
-                            if (verbose)
-                                Console.WriteLine(
-                                    "Currently processed dialogue line is a default response to question."
-                                );
-
                             dialogueEntry.Choice = "Timeout";
                             dialogueEntry.Speaker = null;
                             break;
                         }
                         else if (firstArgument.StartsWith("Choice"))
                         {
-                            if (verbose)
-                                Console.WriteLine(
-                                    "Currently processed dialogue line is a one of many possible responses to question."
-                                );
-
                             dialogueEntry.Choice = firstArgument.Substring(6);
                             dialogueEntry.Speaker = null;
                             break;
@@ -293,11 +246,6 @@ namespace HarmonyTools.Drivers
                     }
                 }
 
-                if (verbose)
-                    Console.WriteLine(
-                        $"Added dialogue line with ID {dialogueEntry.Id} and speaker \"{dialogueEntry.Speaker}\"."
-                    );
-
                 dialogueEntries.Add(dialogueEntry);
             }
 
@@ -311,36 +259,26 @@ namespace HarmonyTools.Drivers
 
             var json = JsonSerializer.Serialize(dialogueEntries, jsonOptions);
 
-            if (verbose)
-                Console.WriteLine($"Serialized dialogue lines to JSON string.");
-
             File.WriteAllText(output, json);
 
-            if (verbose)
-                Console.WriteLine(
-                    $"JSON file with dialogue lines has been successfully saved with name \"{output}\"."
-                );
+            Console.WriteLine(
+                $"JSON file with dialogue lines has been successfully saved to \"{output}\"."
+            );
         }
 
-        public override void Pack(FileSystemInfo input, string output, bool verbose)
+        public override void Pack(FileSystemInfo input, string output)
         {
             var dialogueJson = File.ReadAllText(input.FullName);
-
-            if (verbose)
-                Console.WriteLine("Loaded JSON file.");
 
             List<DialogueEntry> dialogueEntries;
 
             try
             {
-                if (verbose)
-                    Console.WriteLine("Trying to deserialize JSON..");
-
                 var deserialized = JsonSerializer.Deserialize<List<DialogueEntry>>(dialogueJson);
 
                 if (deserialized == null)
                 {
-                    throw new PackingException(
+                    throw new PackException(
                         "Deserialized JSON object from input file has an unexpected null value."
                     );
                 }
@@ -349,16 +287,12 @@ namespace HarmonyTools.Drivers
             }
             catch (JsonException)
             {
-                throw new PackingException(
+                throw new PackException(
                     "Failed to deserialize JSON objects from input file. (Is the JSON structure correct?)"
                 );
             }
 
-            if (verbose)
-                Console.WriteLine("Deserialized dialogue lines.");
-
             var stxFile = new StxFile();
-
             var stringTable = new Dictionary<uint, string>();
 
             foreach (var dialogueEntry in dialogueEntries)
@@ -367,24 +301,13 @@ namespace HarmonyTools.Drivers
                     dialogueEntry.Id,
                     dialogueEntry.Text.Replace(@"\n", "\n").Replace(@"\r", "\r")
                 );
-
-                if (verbose)
-                    Console.WriteLine(
-                        $"Added dialogue line with ID {dialogueEntry.Id} to the StringTable."
-                    );
             }
 
             stringTable = stringTable.OrderBy(x => x.Key).ToDictionary(x => x.Key, x => x.Value);
-
-            if (verbose)
-                Console.WriteLine("Sorted string table.");
-
             stxFile.StringTables.Add(new StringTable(stringTable, 8));
-
             stxFile.Save(output);
 
-            if (verbose)
-                Console.WriteLine($"STX File with name \"{output}\" saved successfully.");
+            Console.WriteLine($"STX File has been saved successfully to \"{output}\".");
         }
 
         private static bool AddCommandIfUseful(ref List<WrdCommand> commands, WrdCommand command)

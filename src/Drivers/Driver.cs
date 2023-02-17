@@ -15,13 +15,6 @@ namespace HarmonyTools.Drivers
                 .ExistingOnly()
                 .OnlyWithExtension(inputFormat.Extension);
 
-        protected static Option<bool> GetVerboseOption() =>
-            new Option<bool>(
-                aliases: new[] { "-v", "--verbose" },
-                description: "Whether to print verbose output",
-                getDefaultValue: () => false
-            );
-
         protected static Option<bool> GetDeleteOriginalOption(FSObjectFormat inputFormat) =>
             new Option<bool>(
                 aliases: new[] { "-d", "--delete-original" },

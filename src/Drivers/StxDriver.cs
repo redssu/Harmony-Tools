@@ -19,60 +19,38 @@ namespace HarmonyTools.Drivers
                 new FSObjectFormat(FSObjectType.File, extension: "stx.txt")
             );
 
-        public override void Extract(FileSystemInfo input, string output, bool verbose)
+        public override void Extract(FileSystemInfo input, string output)
         {
             var stxFile = new StxFile();
             stxFile.Load(input.FullName);
 
-            if (verbose)
-                Console.WriteLine("Loaded STX file.");
-
             using (var writer = new StreamWriter(output, false))
             {
-                if (verbose)
-                    Console.WriteLine($"Writing to file \"{output}\".");
-
                 foreach (var table in stxFile.StringTables)
                 {
                     writer.WriteLine("{");
-
-                    if (verbose)
-                        Console.WriteLine("Wrote strings table start marker.");
 
                     foreach (var kvp in table.Strings)
                     {
                         var value = kvp.Value.Replace("\n", @"\n").Replace("\r", @"\r");
                         writer.WriteLine($"[{kvp.Key}] {value}");
-
-                        if (verbose)
-                            Console.WriteLine($"Wrote new line with key \"{kvp.Key}\".");
                     }
 
                     writer.WriteLine("}");
-
-                    if (verbose)
-                        Console.WriteLine("Wrote strings table end marker.");
                 }
             }
 
-            if (verbose)
-                Console.WriteLine(
-                    $"TXT file with extracted strings has been successfully saved with name \"{output}\"."
-                );
+            Console.WriteLine(
+                $"TXT file with extracted strings has been successfully saved to \"{output}\"."
+            );
         }
 
-        public override void Pack(FileSystemInfo input, string output, bool verbose)
+        public override void Pack(FileSystemInfo input, string output)
         {
             var stxFile = new StxFile();
 
-            if (verbose)
-                Console.WriteLine($"New STX file has been created.");
-
             using (var reader = new StreamReader(input.FullName))
             {
-                if (verbose)
-                    Console.WriteLine($"Opened TXT file \"{input.FullName}\".");
-
                 while (reader != null && !reader.EndOfStream)
                 {
                     if (reader.ReadLine()!.StartsWith("{"))
@@ -88,11 +66,6 @@ namespace HarmonyTools.Drivers
 
                             if (line == null || line.StartsWith("}"))
                             {
-                                if (verbose)
-                                    Console.WriteLine(
-                                        "End of strings table character or end of file found, exiting."
-                                    );
-
                                 break;
                             }
 
@@ -101,7 +74,7 @@ namespace HarmonyTools.Drivers
                                 int index = line.IndexOf("]");
 
                                 if (index == -1)
-                                    throw new PackingException(
+                                    throw new PackException(
                                         $"No valid key pattern found at the beginning of the line: {line}."
                                     );
 
@@ -111,20 +84,21 @@ namespace HarmonyTools.Drivers
                                 }
                                 catch (Exception)
                                 {
-                                    throw new PackingException($"Key in line {line} is not valid.");
+                                    throw new PackException($"Key in line {line} is not valid.");
                                 }
 
-                                if (verbose)
-                                    Console.WriteLine($"Line {key} processed.");
-
                                 if (index + 1 < line.Length)
+                                {
                                     value = line.Substring(index + 1).TrimStart(' ');
+                                }
                                 else
+                                {
                                     value = string.Empty;
+                                }
                             }
                             else
                             {
-                                throw new PackingException(
+                                throw new PackException(
                                     $"No valid key pattern found at the beginning of the line: {line}."
                                 );
                             }
@@ -137,18 +111,12 @@ namespace HarmonyTools.Drivers
                             .ToDictionary(item => item.Key, item => item.Value);
 
                         stxFile.StringTables.Add(new StringTable(table, 8));
-
-                        if (verbose)
-                            Console.WriteLine("Strings table saved successfully.");
                     }
                 }
 
                 stxFile.Save(output);
 
-                if (verbose)
-                    Console.WriteLine(
-                        $"STX File with name \"{output}\" has been saved successfully."
-                    );
+                Console.WriteLine($"STX File has been saved successfully to \"{output}\".");
             }
         }
     }

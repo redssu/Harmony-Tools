@@ -18,6 +18,7 @@ namespace HarmonyTools
             rootCommand.AddCommand(StxDriver.GetCommand());
             rootCommand.AddCommand(SpcDriver.GetCommand());
             rootCommand.AddCommand(SrdDriver.GetCommand());
+            rootCommand.AddCommand(FontDriver.GetCommand());
             rootCommand.AddCommand(DatDriver.GetCommand());
             rootCommand.AddCommand(WrdDriver.GetCommand());
 

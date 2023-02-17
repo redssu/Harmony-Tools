@@ -104,7 +104,6 @@ namespace HarmonyTools.Drivers
 
             var inputArgument = GetInputArgument(inputFormat);
             var deleteOriginalOption = GetDeleteOriginalOption(inputFormat);
-            var verboseOption = GetVerboseOption();
             var friendlyNamesOption = GetFriendlyNamesOption();
 
             var extractCommand = new Command("extract", "Extracts a WRD file to TXT file")
@@ -112,27 +111,20 @@ namespace HarmonyTools.Drivers
                 inputArgument,
                 friendlyNamesOption,
                 deleteOriginalOption,
-                verboseOption,
             };
 
             extractCommand.SetHandler(
-                (
-                    FileSystemInfo input,
-                    bool friendlyNamesOption,
-                    bool deleteOriginal,
-                    bool verbose
-                ) =>
+                (FileSystemInfo input, bool friendlyNamesOption, bool deleteOriginal) =>
                 {
                     var outputPath = Utils.GetOutputPath(input, "wrd", "wrd.txt");
 
-                    driver.Extract(input, outputPath, friendlyNamesOption, verbose);
+                    driver.Extract(input, outputPath, friendlyNamesOption);
 
                     // TODO: Delete original file if deleteOriginal is true
                 },
                 inputArgument,
                 friendlyNamesOption,
-                deleteOriginalOption,
-                verboseOption
+                deleteOriginalOption
             );
 
             command.AddCommand(extractCommand);
@@ -140,16 +132,13 @@ namespace HarmonyTools.Drivers
             return command;
         }
 
-        public void Extract(FileSystemInfo input, string output, bool friendlyNames, bool verbose)
+        public void Extract(FileSystemInfo input, string output, bool friendlyNames)
         {
             var wrdFile = new WrdFile();
             wrdFile.Load(input.FullName);
 
-            if (verbose)
-                Console.WriteLine("Loaded WRD file.");
-
-            if (verbose && friendlyNames)
-                Console.WriteLine("Using friendly names for opcodes.");
+            if (friendlyNames)
+                Console.WriteLine("Info: Using friendly names for opcodes.");
 
             using (var writer = new StreamWriter(output, false))
             {
@@ -158,26 +147,26 @@ namespace HarmonyTools.Drivers
                     string line;
 
                     if (friendlyNames && OpcodeTranslation.ContainsKey(command.Opcode))
+                    {
                         line = $"({command.Opcode}) {OpcodeTranslation[command.Opcode]}";
+                    }
                     else
+                    {
                         line = $"({command.Opcode}) ";
+                    }
 
                     for (int i = 0; i < command.Arguments.Count; i++)
+                    {
                         line += " \"" + command.Arguments[i].ToString() + "\"";
+                    }
 
                     writer.WriteLine(line);
-
-                    if (verbose)
-                        Console.WriteLine(
-                            $"Saved the next line of the game script with opcode \"{command.Opcode}\" to the output file."
-                        );
                 }
             }
 
-            if (verbose)
-                Console.WriteLine(
-                    $"TXT file with extracted game script has been successfully saved with name \"{output}\" ."
-                );
+            Console.WriteLine(
+                $"TXT file with extracted game script has been successfully saved to \"{output}\" ."
+            );
         }
 
         protected static Option<bool> GetFriendlyNamesOption() =>
