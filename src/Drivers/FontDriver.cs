@@ -17,9 +17,18 @@ using V3Lib.Srd.BlockTypes;
 
 namespace HarmonyTools.Drivers
 {
-    public class FontDriver : StandardDriver<FontDriver>, IStandardDriver
+    public class FontDriver : Driver, IDriver
     {
-        protected static uint maxMasterImageWidth => 4096;
+        protected static readonly uint maxMasterImageWidth = 4096;
+        protected static readonly FSObjectFormat gameFormat = new FSObjectFormat(
+            FSObjectType.File,
+            extension: "spc"
+        );
+
+        protected static readonly FSObjectFormat knownFormat = new FSObjectFormat(
+            FSObjectType.Directory,
+            extension: "spc.decompressed_font"
+        );
 
         protected struct FontInfo
         {
@@ -31,17 +40,109 @@ namespace HarmonyTools.Drivers
 
         public static Command GetCommand()
         {
-            var command = GetCommand(
+            var driverInstance = new FontDriver();
+
+            var command = new Command(
                 "font",
-                "A tool to work with SPC files (DRV3 font archives).",
-                new FSObjectFormat(FSObjectType.File, extension: "spc"),
-                new FSObjectFormat(FSObjectType.Directory, extension: "spc.decompressed_font")
+                "A tool to work with SPC files (DRV3 font archives)."
+            );
+
+            command.Add(GetPackCommand(driverInstance));
+            command.Add(GetExtractCommand(driverInstance));
+            command.Add(GetReplaceWithFontCommand(driverInstance));
+
+            return command;
+        }
+
+        protected static Command GetPackCommand(FontDriver driverInstance)
+        {
+            var command = new Command("pack", "Packs a directory into a SPC archive");
+
+            var inputArgument = GetInputArgument(knownFormat);
+            var deleteOriginalOption = GetDeleteOriginalOption(knownFormat);
+            var generateDebugImage = GetGenerateDebugImageOption();
+
+            command.Add(inputArgument);
+            command.Add(deleteOriginalOption);
+            command.Add(generateDebugImage);
+
+            command.SetHandler(
+                (FileSystemInfo input, bool deleteOriginal, bool generateDebugImage) =>
+                {
+                    var outputPath = Utils.GetOutputPath(input, "spc.decompressed_font", "spc");
+                    driverInstance.Pack(input, outputPath, generateDebugImage);
+                },
+                inputArgument,
+                deleteOriginalOption,
+                generateDebugImage
             );
 
             return command;
         }
 
-        public override void Extract(FileSystemInfo input, string output)
+        protected static Command GetExtractCommand(FontDriver driverInstance)
+        {
+            var command = new Command("extract", "Extracts a SPC archive into a directory");
+
+            var inputArgument = GetInputArgument(gameFormat);
+            var deleteOriginalOption = GetDeleteOriginalOption(gameFormat);
+
+            command.Add(inputArgument);
+            command.Add(deleteOriginalOption);
+
+            command.SetHandler(
+                (FileSystemInfo input, bool deleteOriginal) =>
+                {
+                    var outputPath = Utils.GetOutputPath(input, "spc", "spc.decompressed_font");
+
+                    if (!Directory.Exists(outputPath))
+                    {
+                        Directory.CreateDirectory(outputPath);
+                    }
+
+                    driverInstance.Extract(input, outputPath);
+                },
+                inputArgument,
+                deleteOriginalOption
+            );
+
+            return command;
+        }
+
+        protected static Command GetReplaceWithFontCommand(FontDriver driverInstance)
+        {
+            var command = new Command("replace-with-font", "Packs a TTF file into a SPC archive");
+
+            var inputArgument = GetInputArgument(knownFormat);
+            var deleteOriginalOption = GetDeleteOriginalOption(knownFormat);
+            var generateDebugImage = GetGenerateDebugImageOption();
+
+            command.Add(inputArgument);
+            command.Add(deleteOriginalOption);
+            command.Add(generateDebugImage);
+
+            command.SetHandler(
+                (FileSystemInfo input, bool deleteOriginal, bool generateDebugImage) =>
+                {
+                    var outputPath = Utils.GetOutputPath(input, "ttf", "spc");
+                    driverInstance.ReplaceWithFontFile(input, outputPath, generateDebugImage);
+                },
+                inputArgument,
+                deleteOriginalOption,
+                generateDebugImage
+            );
+
+            return command;
+        }
+
+        protected static Option<bool> GetGenerateDebugImageOption() =>
+            new Option<bool>(
+                aliases: new[] { "-d", "--generate-debug-image" },
+                description: "Generate a debug image",
+                getDefaultValue: () => false
+            );
+
+        public void Extract(FileSystemInfo input, string output)
         {
             // Extracting the font is basically extracting the .SRD Archive
             // this tool also splits glyphs into separate files
@@ -177,12 +278,14 @@ namespace HarmonyTools.Drivers
          * @license GNU GPL 3.0 <https://github.com/P4K5/DanganV3FontsConverter/blob/master/LICENSE.txt
          */
         public void ReplaceWithFontFile(
-            FileSystemInfo inputSpc,
             FileSystemInfo inputFontFile,
-            string output
+            string output,
+            bool generateDebugImage
         )
         {
-            var oldSrdFile = SrdDriver.LoadSrdFile(inputSpc, true, false);
+            var spcPath = new FileInfo(Path.ChangeExtension(inputFontFile.FullName, "spc"));
+
+            var oldSrdFile = SrdDriver.LoadSrdFile(spcPath, true, false);
             var fontBlock = GetFontBlock(oldSrdFile.Blocks);
 
             if (fontBlock == null)
@@ -215,10 +318,10 @@ namespace HarmonyTools.Drivers
                 new FileInfo(charsetFilePath)
             );
 
-            Pack(fontFileGlyphProvider, fontInfo, output);
+            Pack(fontFileGlyphProvider, fontInfo, output, generateDebugImage);
         }
 
-        public override void Pack(FileSystemInfo input, string output)
+        public void Pack(FileSystemInfo input, string output, bool generateDebugImage)
         {
             var fontInfoPath = Path.Combine(input.FullName, "__font_info.json");
 
@@ -246,10 +349,15 @@ namespace HarmonyTools.Drivers
 
             var fileGlyphProvider = new FileGlyphProvider(input);
 
-            Pack(fileGlyphProvider, fontInfo, output);
+            Pack(fileGlyphProvider, fontInfo, output, generateDebugImage);
         }
 
-        protected void Pack(IGlyphProvider glyphProvider, FontInfo fontInfo, string output)
+        protected void Pack(
+            IGlyphProvider glyphProvider,
+            FontInfo fontInfo,
+            string output,
+            bool generateDebugImage
+        )
         {
             var srdFile = new SrdFile();
             var masterImage = new Image<Rgba32>(1, 1);
@@ -321,6 +429,11 @@ namespace HarmonyTools.Drivers
 
             // Easiest way to fill image with black pixels
             masterImage.Mutate(x => x.BackgroundColor(Color.Black));
+
+            if (generateDebugImage)
+            {
+                masterImage.Save(Path.Combine(Path.GetDirectoryName(output)!, "__DEBUG_IMAGE.png"));
+            }
 
             // Convert image to binary pixel data
             var pixelData = new List<byte>();
