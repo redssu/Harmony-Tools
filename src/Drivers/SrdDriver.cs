@@ -26,23 +26,10 @@ namespace HarmonyTools.Drivers
 
         public override void Extract(FileSystemInfo input, string output)
         {
-            var srdiPath = Path.ChangeExtension(input.FullName, "srdi");
-            var srdvPath = Path.ChangeExtension(input.FullName, "srdv");
+            string? srdiPath = null;
+            string? srdvPath = null;
 
-            srdiPath = File.Exists(srdiPath) ? srdiPath : null;
-            srdvPath = File.Exists(srdvPath) ? srdvPath : null;
-
-            if (srdiPath == null)
-            {
-                Console.WriteLine($"Info: No corresponding SRDI file found at \"{srdiPath}\".");
-            }
-
-            if (srdvPath == null)
-            {
-                Console.WriteLine($"Info: No corresponding SRDV file found at \"{srdvPath}\".");
-            }
-
-            // TODO: Delete original files
+            var srdFile = LoadSrdFile(input, out srdiPath, out srdvPath);
 
             File.Copy(input.FullName, Path.Combine(output, "_.srd"), true);
 
@@ -55,9 +42,6 @@ namespace HarmonyTools.Drivers
             {
                 File.Copy(srdvPath, Path.Combine(output, "_.srdv"), true);
             }
-
-            var srdFile = new SrdFile();
-            srdFile.Load(input.FullName, srdiPath ?? string.Empty, srdvPath ?? string.Empty);
 
             foreach (var block in srdFile.Blocks)
             {
@@ -123,34 +107,8 @@ namespace HarmonyTools.Drivers
         {
             var targetFiles = Directory.GetFiles(input.FullName);
             var srdPath = Path.Combine(input.FullName, "_.srd");
-            var srdiPath = Path.Combine(input.FullName, "_.srdi");
-            var srdvPath = Path.Combine(input.FullName, "_.srdv");
 
-            if (!File.Exists(srdPath))
-            {
-                throw new PackException(
-                    $"Cannot pack images: Required original SRD file not found. (expected path: \"{srdPath}\")."
-                );
-            }
-
-            if (!File.Exists(srdiPath))
-            {
-                srdiPath = null;
-                Console.WriteLine(
-                    $"Info: Corresponding SRDI file not found. (expected path: \"{srdiPath}\")."
-                );
-            }
-
-            if (!File.Exists(srdvPath))
-            {
-                srdvPath = null;
-                Console.WriteLine(
-                    $"Info: Corresponding SRDV file not found. (expected path: \"{srdvPath}\")."
-                );
-            }
-
-            var srdFile = new SrdFile();
-            srdFile.Load(srdPath, srdiPath ?? string.Empty, srdvPath ?? string.Empty);
+            var srdFile = LoadSrdFile(new FileInfo(srdPath), true, true);
 
             foreach (var file in targetFiles)
             {
@@ -354,6 +312,79 @@ namespace HarmonyTools.Drivers
             }
 
             return image;
+        }
+
+        public static SrdFile LoadSrdFile(
+            FileSystemInfo srdFileInfo,
+            bool ignoreMissingSrdi = true,
+            bool ignoreMissingSrdv = true
+        )
+        {
+            string? srdiPath;
+            string? srdvPath;
+
+            return LoadSrdFile(
+                srdFileInfo,
+                out srdiPath,
+                out srdvPath,
+                ignoreMissingSrdi,
+                ignoreMissingSrdv
+            );
+        }
+
+        public static SrdFile LoadSrdFile(
+            FileSystemInfo srdFileInfo,
+            out string? srdiPath,
+            out string? srdvPath,
+            bool ignoreMissingSrdi = true,
+            bool ignoreMissingSrdv = true
+        )
+        {
+            var srdPath = srdFileInfo.FullName;
+            srdiPath = Path.ChangeExtension(srdPath, "srdi");
+            srdvPath = Path.ChangeExtension(srdPath, "srdv");
+
+            srdPath = File.Exists(srdPath) ? srdPath : null;
+            srdiPath = File.Exists(srdiPath) ? srdiPath : null;
+            srdvPath = File.Exists(srdvPath) ? srdvPath : null;
+
+            if (srdPath == null)
+            {
+                throw new FileNotFoundException($"SRD file not found at \"{srdPath}\".");
+            }
+
+            if (srdiPath == null)
+            {
+                if (ignoreMissingSrdi)
+                {
+                    Console.WriteLine($"Info: No corresponding SRDI file found at \"{srdiPath}\".");
+                }
+                else
+                {
+                    throw new FileNotFoundException(
+                        $"No corresponding SRDI file not found at \"{srdiPath}\"."
+                    );
+                }
+            }
+
+            if (srdvPath == null)
+            {
+                if (ignoreMissingSrdv)
+                {
+                    Console.WriteLine($"Info: No corresponding SRDV file found at \"{srdvPath}\".");
+                }
+                else
+                {
+                    throw new FileNotFoundException(
+                        $"No corresponding SRDV file not found at \"{srdvPath}\"."
+                    );
+                }
+            }
+
+            var srdFile = new SrdFile();
+            srdFile.Load(srdPath, srdiPath ?? string.Empty, srdvPath ?? string.Empty);
+
+            return srdFile;
         }
     }
 }

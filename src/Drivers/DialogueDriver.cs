@@ -370,15 +370,14 @@ namespace HarmonyTools.Drivers
             return true;
         }
 
-        // sid - String ID
-        private static int GetLocCommandIndexInCommands(List<WrdCommand> commands, uint sid)
+        private static int GetLocCommandIndexInCommands(List<WrdCommand> commands, uint stringId)
         {
             for (int index = 0; index < commands.Count; index++)
             {
                 if (
                     commands[index].Opcode == "LOC"
                     && commands[index].Arguments.Count >= 1
-                    && commands[index].Arguments[0] == sid.ToString()
+                    && commands[index].Arguments[0] == stringId.ToString()
                 )
                 {
                     return index;

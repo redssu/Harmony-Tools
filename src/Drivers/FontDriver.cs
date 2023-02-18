@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text.Json;
 using HarmonyTools.Exceptions;
 using HarmonyTools.Extensions;
+using HarmonyTools.Font;
 using HarmonyTools.Formats;
 using Scarlet.Drawing;
 using SixLabors.ImageSharp;
@@ -20,7 +21,7 @@ namespace HarmonyTools.Drivers
     {
         protected static uint maxMasterImageWidth => 4096;
 
-        protected struct FontInfoExternal
+        protected struct FontInfo
         {
             public string FontName { get; set; }
             public string Charset { get; set; }
@@ -28,26 +29,17 @@ namespace HarmonyTools.Drivers
             public List<string> Resources { get; set; }
         }
 
-        protected struct GlyphInfoExternal
+        public static Command GetCommand()
         {
-            public string Glyph { get; set; }
-            public KerningInfoExternal Kerning { get; set; }
-        }
-
-        protected struct KerningInfoExternal
-        {
-            public sbyte Left { get; set; }
-            public sbyte Right { get; set; }
-            public sbyte Vertical { get; set; }
-        }
-
-        public static Command GetCommand() =>
-            GetCommand(
+            var command = GetCommand(
                 "font",
                 "A tool to work with SPC files (DRV3 font archives).",
                 new FSObjectFormat(FSObjectType.File, extension: "spc"),
                 new FSObjectFormat(FSObjectType.Directory, extension: "spc.decompressed_font")
             );
+
+            return command;
+        }
 
         public override void Extract(FileSystemInfo input, string output)
         {
@@ -56,62 +48,15 @@ namespace HarmonyTools.Drivers
 
             // Font files also contains Bounding Boxes for each glyph
             // so we are making a JSON file with informations about each glyph
+            var srdFile = SrdDriver.LoadSrdFile(input, true, false);
+            var fontBlock = GetFontBlock(srdFile.Blocks);
 
-            var srdiPath = Path.ChangeExtension(input.FullName, "srdi");
-            var srdvPath = Path.ChangeExtension(input.FullName, "srdv");
-
-            srdiPath = File.Exists(srdiPath) ? srdiPath : null;
-            srdvPath = File.Exists(srdvPath) ? srdvPath : null;
-
-            if (srdiPath == null)
-            {
-                Console.WriteLine($"Info: No corresponding SRDI file found at \"{srdiPath}\".");
-            }
-
-            if (srdvPath == null)
-            {
-                throw new ExtractionException(
-                    $"Could not extract font: No corresponding SRDV file found at \"{srdvPath}\"."
-                );
-            }
-
-            var srdFile = new SrdFile();
-            srdFile.Load(input.FullName, srdiPath ?? string.Empty, srdvPath ?? string.Empty);
-
-            var fontBlock = new FontBlock();
-            var isFontFile = false;
-
-            foreach (var block in srdFile.Blocks)
-            {
-                if (block is TxrBlock && block.Children[0] is RsiBlock rsiLocal)
-                {
-                    var decompressionSuccessful = fontBlock.Deserialize(rsiLocal.ResourceData);
-
-                    if (decompressionSuccessful)
-                    {
-                        isFontFile = true;
-                        break;
-                    }
-                }
-            }
-
-            if (!isFontFile)
+            if (fontBlock == null)
             {
                 throw new ExtractionException("Cannot extract font: Font block not found.");
             }
 
-            TxrBlock? txr = null;
-            RsiBlock? rsi = null;
-
-            foreach (var block in srdFile.Blocks)
-            {
-                if (block is TxrBlock localTxr && block.Children[0] is RsiBlock localRsi)
-                {
-                    txr = localTxr;
-                    rsi = localRsi;
-                    break;
-                }
-            }
+            var (txr, rsi) = GetResourceBlocks(srdFile.Blocks);
 
             if (txr == null || rsi == null)
             {
@@ -181,10 +126,10 @@ namespace HarmonyTools.Drivers
 
                 glyphImage.Dispose();
 
-                var jsonInfo = new GlyphInfoExternal
+                var jsonInfo = new FontFileGlyphProvider.GlyphInfoExternal
                 {
                     Glyph = glyphInfo.Glyph.ToString(),
-                    Kerning = new KerningInfoExternal
+                    Kerning = new FontFileGlyphProvider.KerningInfoExternal
                     {
                         Left = glyphInfo.Kerning[0],
                         Right = glyphInfo.Kerning[1],
@@ -193,14 +138,17 @@ namespace HarmonyTools.Drivers
                 };
 
                 var options = new JsonSerializerOptions { WriteIndented = true };
-                var jsonString = JsonSerializer.Serialize<GlyphInfoExternal>(jsonInfo, options);
+                var jsonString = JsonSerializer.Serialize<FontFileGlyphProvider.GlyphInfoExternal>(
+                    jsonInfo,
+                    options
+                );
 
                 File.WriteAllText(glyphInfoOutput, jsonString);
 
                 glyphIndex++;
             }
 
-            var fontInfo = new FontInfoExternal()
+            var fontInfo = new FontInfo()
             {
                 FontName = fontBlock.FontName,
                 Charset = fontBlock.Charset,
@@ -209,7 +157,7 @@ namespace HarmonyTools.Drivers
             };
 
             var fontInfoJsonOptions = new JsonSerializerOptions { WriteIndented = true };
-            var fontInfoJsonString = JsonSerializer.Serialize<FontInfoExternal>(
+            var fontInfoJsonString = JsonSerializer.Serialize<FontInfo>(
                 fontInfo,
                 fontInfoJsonOptions
             );
@@ -221,9 +169,57 @@ namespace HarmonyTools.Drivers
             Console.WriteLine($"Glyphs has been successfully extracted to \"{output}\".");
         }
 
+        /**
+         * Original code of this function has been written by Paks
+         *
+         * @author Paks <https://github.com/P4K5>
+         * @see https://github.com/P4K5/DanganV3FontsConverter
+         * @license GNU GPL 3.0 <https://github.com/P4K5/DanganV3FontsConverter/blob/master/LICENSE.txt
+         */
+        public void ReplaceWithFontFile(
+            FileSystemInfo inputSpc,
+            FileSystemInfo inputFontFile,
+            string output
+        )
+        {
+            var oldSrdFile = SrdDriver.LoadSrdFile(inputSpc, true, false);
+            var fontBlock = GetFontBlock(oldSrdFile.Blocks);
+
+            if (fontBlock == null)
+            {
+                throw new ExtractionException("Cannot extract font: Font block not found.");
+            }
+
+            var (txr, rsi) = GetResourceBlocks(oldSrdFile.Blocks);
+
+            if (txr == null || rsi == null)
+            {
+                throw new ExtractionException("Cannot extract font: TXR or RSI block not found.");
+            }
+
+            var fontInfo = new FontInfo()
+            {
+                FontName = fontBlock.FontName,
+                Charset = fontBlock.Charset,
+                ScaleFlag = fontBlock.ScaleFlag,
+                Resources = rsi.ResourceStringList
+            };
+
+            var charsetFilePath = Path.Combine(
+                Path.GetDirectoryName(inputFontFile.FullName)!,
+                "charset.txt"
+            );
+
+            var fontFileGlyphProvider = new FontFileGlyphProvider(
+                inputFontFile,
+                new FileInfo(charsetFilePath)
+            );
+
+            Pack(fontFileGlyphProvider, fontInfo, output);
+        }
+
         public override void Pack(FileSystemInfo input, string output)
         {
-            var targetFiles = Directory.GetFiles(input.FullName);
             var fontInfoPath = Path.Combine(input.FullName, "__font_info.json");
 
             if (!File.Exists(fontInfoPath))
@@ -235,11 +231,11 @@ namespace HarmonyTools.Drivers
 
             var fontInfoJson = File.ReadAllText(fontInfoPath);
 
-            FontInfoExternal fontInfoExternal;
+            FontInfo fontInfo;
 
             try
             {
-                fontInfoExternal = JsonSerializer.Deserialize<FontInfoExternal>(fontInfoJson);
+                fontInfo = JsonSerializer.Deserialize<FontInfo>(fontInfoJson);
             }
             catch (JsonException)
             {
@@ -248,6 +244,13 @@ namespace HarmonyTools.Drivers
                 );
             }
 
+            var fileGlyphProvider = new FileGlyphProvider(input);
+
+            Pack(fileGlyphProvider, fontInfo, output);
+        }
+
+        protected void Pack(IGlyphProvider glyphProvider, FontInfo fontInfo, string output)
+        {
             var srdFile = new SrdFile();
             var masterImage = new Image<Rgba32>(1, 1);
 
@@ -257,66 +260,12 @@ namespace HarmonyTools.Drivers
             var highestGlyphInRowHeight = 0;
             var glyphList = new Dictionary<uint, GlyphInfo>();
 
-            foreach (var file in targetFiles)
+            foreach (var (glyphInfo, glyphImage) in glyphProvider.GetGlyphs())
             {
-                if (!file.EndsWith(".bmp"))
-                {
-                    continue;
-                }
-
-                var paddedGlyphIndex = Path.GetFileNameWithoutExtension(file);
-                var glyphIndex = uint.Parse(paddedGlyphIndex);
-
-                if (glyphList.ContainsKey(glyphIndex))
-                {
-                    throw new PackException(
-                        $"Cannot pack font: Glyph index {glyphIndex} is already in use."
-                    );
-                }
-
-                var glyphInfoFilePath = Path.ChangeExtension(file, "json");
-
-                if (!File.Exists(glyphInfoFilePath))
-                {
-                    throw new PackException(
-                        $"Cannot pack font: Required glyph info file for glyph with ID \"{paddedGlyphIndex}\" not found. (expected path: \"{glyphInfoFilePath}\")."
-                    );
-                }
-
-                string glyphInfoFileJson = File.ReadAllText(glyphInfoFilePath);
-
-                GlyphInfoExternal externalGlyphInfo;
-
-                try
-                {
-                    externalGlyphInfo = JsonSerializer.Deserialize<GlyphInfoExternal>(
-                        glyphInfoFileJson
-                    );
-                }
-                catch (JsonException)
-                {
-                    throw new PackException(
-                        $"Cannot pack font: Failed to parse glyph info file for glyph with ID \"{paddedGlyphIndex}\". (path: \"{glyphInfoFilePath}\")."
-                    );
-                }
-
-                var glyphInfo = new GlyphInfo
-                {
-                    Glyph = char.Parse(externalGlyphInfo.Glyph),
-                    Kerning = new sbyte[3]
-                    {
-                        externalGlyphInfo.Kerning.Left,
-                        externalGlyphInfo.Kerning.Right,
-                        externalGlyphInfo.Kerning.Vertical
-                    }
-                };
-
-                var glyphImage = Image.Load<Rgba32>(file);
-
                 if (glyphImage.Width > 255 || glyphImage.Height > 255)
                 {
                     throw new PackException(
-                        $"Cannot pack font: Texture for glyph with ID \"{paddedGlyphIndex}\" is too large. (max allowed size: 255x255)"
+                        $"Cannot pack font: Texture for glyph with ID \"{glyphInfo.Index}\" is too large. (max allowed size: 255x255)"
                     );
                 }
 
@@ -364,7 +313,7 @@ namespace HarmonyTools.Drivers
 
                 glyphInfo.Position = new short[2] { (short)masterX, (short)masterY };
                 glyphInfo.Size = new byte[2] { (byte)glyphImage.Width, (byte)glyphImage.Height };
-                glyphList.Add(glyphIndex, glyphInfo);
+                glyphList.Add(glyphInfo.Index, glyphInfo);
 
                 highestGlyphInRowHeight = Math.Max(highestGlyphInRowHeight, glyphImage.Height + 2);
                 masterX += glyphImage.Width + 2;
@@ -402,8 +351,8 @@ namespace HarmonyTools.Drivers
             // Prepare the most important part - internal data about the font
             var fontBlock = new FontBlock()
             {
-                FontName = fontInfoExternal.FontName,
-                ScaleFlag = fontInfoExternal.ScaleFlag,
+                FontName = fontInfo.FontName,
+                ScaleFlag = fontInfo.ScaleFlag,
                 Glyphs = glyphList
             };
 
@@ -435,7 +384,7 @@ namespace HarmonyTools.Drivers
                 FallbackResourceInfoSize = 0,
                 ResourceInfoSize = 32,
                 Unknown1A = 0,
-                ResourceStringList = fontInfoExternal.Resources,
+                ResourceStringList = fontInfo.Resources,
                 ResourceInfoList = new List<ResourceInfo>()
                 {
                     new ResourceInfo()
@@ -482,6 +431,46 @@ namespace HarmonyTools.Drivers
             );
 
             Console.WriteLine($"SPC Font file has been successfully saved to \"{output}\".");
+        }
+
+        protected FontBlock? GetFontBlock(IEnumerable<Block> blocks)
+        {
+            var fontBlock = new FontBlock();
+            var isFontFile = false;
+
+            foreach (var block in blocks)
+            {
+                if (block is TxrBlock && block.Children[0] is RsiBlock rsiLocal)
+                {
+                    var decompressionSuccessful = fontBlock.Deserialize(rsiLocal.ResourceData);
+
+                    if (decompressionSuccessful)
+                    {
+                        isFontFile = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!isFontFile)
+            {
+                return null;
+            }
+
+            return fontBlock;
+        }
+
+        protected (TxrBlock?, RsiBlock?) GetResourceBlocks(IEnumerable<Block> blocks)
+        {
+            foreach (var block in blocks)
+            {
+                if (block is TxrBlock txrBlock && block.Children[0] is RsiBlock rsiBlock)
+                {
+                    return (txrBlock, rsiBlock);
+                }
+            }
+
+            return (null, null);
         }
     }
 }

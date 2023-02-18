@@ -1,5 +1,3 @@
-// extend exception class
-
 using System;
 
 namespace HarmonyTools.Exceptions
