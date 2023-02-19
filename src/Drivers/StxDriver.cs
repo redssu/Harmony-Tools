@@ -9,7 +9,7 @@ using V3Lib.Stx;
 
 namespace HarmonyTools.Drivers
 {
-    public class StxDriver : StandardDriver<StxDriver>, IStandardDriver
+    public class StxDriver : StandardDriver<StxDriver>, IStandardDriver, IContextMenu
     {
         #region Specify Driver formats
 
@@ -24,6 +24,27 @@ namespace HarmonyTools.Drivers
         );
 
         #endregion
+
+        public static IEnumerable<ContextMenuEntry> SetupContextMenu()
+        {
+            yield return new ContextMenuEntry
+            {
+                SubKeyID = "ExtractSTX",
+                Name = "Extract STX file",
+                Icon = "Harmony-Tools-Extract-Icon.ico",
+                Command = "stx extract \"%1\"",
+                ApplyTo = gameFormat
+            };
+
+            yield return new ContextMenuEntry
+            {
+                SubKeyID = "PackSTX",
+                Name = "Pack this file as STX file",
+                Icon = "Harmony-Tools-Pack-Icon.ico",
+                Command = "stx pack \"%1\"",
+                ApplyTo = knownFormat
+            };
+        }
 
         public static Command GetCommand() =>
             GetCommand(

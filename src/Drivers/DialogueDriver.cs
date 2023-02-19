@@ -13,7 +13,7 @@ using V3Lib.Wrd;
 
 namespace HarmonyTools.Drivers
 {
-    public class DialogueDriver : StandardDriver<DialogueDriver>, IStandardDriver
+    public class DialogueDriver : StandardDriver<DialogueDriver>, IStandardDriver, IContextMenu
     {
         /**
          * Author: Paks <https://github.com/P4K5>
@@ -126,6 +126,27 @@ namespace HarmonyTools.Drivers
         );
 
         #endregion
+
+        public static IEnumerable<ContextMenuEntry> SetupContextMenu()
+        {
+            yield return new ContextMenuEntry
+            {
+                SubKeyID = "ExtractDialogue",
+                Name = "Extract Dialogue file (STX)",
+                Icon = "Harmony-Tools-Extract-Icon.ico",
+                Command = "dialogue extract \"%1\"",
+                ApplyTo = gameFormat
+            };
+
+            yield return new ContextMenuEntry
+            {
+                SubKeyID = "PackDialogue",
+                Name = "Pack this file to Dialogue file (STX)",
+                Icon = "Harmony-Tools-Pack-Icon.ico",
+                Command = "dialogue pack \"%1\"",
+                ApplyTo = knownFormat
+            };
+        }
 
         public static Command GetCommand()
         {

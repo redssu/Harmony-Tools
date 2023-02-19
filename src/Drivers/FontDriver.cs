@@ -17,7 +17,7 @@ using V3Lib.Srd.BlockTypes;
 
 namespace HarmonyTools.Drivers
 {
-    public class FontDriver : Driver, IDriver
+    public class FontDriver : Driver, IDriver, IContextMenu
     {
         protected struct FontInfo
         {
@@ -47,6 +47,36 @@ namespace HarmonyTools.Drivers
         );
 
         #endregion
+
+        public static IEnumerable<ContextMenuEntry> SetupContextMenu()
+        {
+            yield return new ContextMenuEntry
+            {
+                SubKeyID = "ExtractFont",
+                Name = "Extract font file (SPC)",
+                Icon = "Harmony-Tools-Extract-Icon.ico",
+                Command = "font pack \"%1\"",
+                ApplyTo = knownFormat
+            };
+
+            yield return new ContextMenuEntry
+            {
+                SubKeyID = "PackFont",
+                Name = "Pack this directory to Font file (SPC)",
+                Icon = "Harmony-Tools-Pack-Icon.ico",
+                Command = "font extract \"%1\"",
+                ApplyTo = gameFormat
+            };
+
+            yield return new ContextMenuEntry
+            {
+                SubKeyID = "ReplaceFont",
+                Name = "Replace font file (SPC) with TTF file",
+                Icon = "Harmony-Tools-Pack-Icon.ico",
+                Command = "font replace \"%1\"",
+                ApplyTo = replacementFormat
+            };
+        }
 
         #region Command Registration
 

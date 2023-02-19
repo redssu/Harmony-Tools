@@ -8,7 +8,7 @@ using V3Lib.Spc;
 
 namespace HarmonyTools.Drivers
 {
-    public class SpcDriver : StandardDriver<SpcDriver>, IStandardDriver
+    public class SpcDriver : StandardDriver<SpcDriver>, IStandardDriver, IContextMenu
     {
         #region Unknown Constant Values
 
@@ -69,6 +69,27 @@ namespace HarmonyTools.Drivers
         );
 
         #endregion
+
+        public static IEnumerable<ContextMenuEntry> SetupContextMenu()
+        {
+            yield return new ContextMenuEntry
+            {
+                SubKeyID = "ExtractSPC",
+                Name = "Extract SPC file",
+                Icon = "Harmony-Tools-Extract-Icon.ico",
+                Command = "spc extract \"%1\"",
+                ApplyTo = gameFormat
+            };
+
+            yield return new ContextMenuEntry
+            {
+                SubKeyID = "PackSPC",
+                Name = "Pack this directory as SPC file",
+                Icon = "Harmony-Tools-Pack-Icon.ico",
+                Command = "spc pack \"%1\"",
+                ApplyTo = knownFormat
+            };
+        }
 
         public static Command GetCommand() =>
             GetCommand(

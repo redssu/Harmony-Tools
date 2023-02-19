@@ -25,7 +25,6 @@ namespace HarmonyTools
 
             /**
              * TODO --------------
-             * - Context-menu integration for Windows
              * - Support for extracting and packing all files from a directory
              * - Better error handling
              * - L10n

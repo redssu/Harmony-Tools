@@ -14,7 +14,7 @@ using V3Lib.Srd.BlockTypes;
 
 namespace HarmonyTools.Drivers
 {
-    public class SrdDriver : StandardDriver<SrdDriver>, IStandardDriver
+    public class SrdDriver : StandardDriver<SrdDriver>, IStandardDriver, IContextMenu
     {
         #region Specify Driver formats
 
@@ -29,6 +29,27 @@ namespace HarmonyTools.Drivers
         );
 
         #endregion
+
+        public static IEnumerable<ContextMenuEntry> SetupContextMenu()
+        {
+            yield return new ContextMenuEntry
+            {
+                SubKeyID = "ExtractSRD",
+                Name = "Extract SRD file",
+                Icon = "Harmony-Tools-Extract-Icon.ico",
+                Command = "srd extract \"%1\"",
+                ApplyTo = gameFormat
+            };
+
+            yield return new ContextMenuEntry
+            {
+                SubKeyID = "PackSRD",
+                Name = "Pack this directory as SRD file",
+                Icon = "Harmony-Tools-Pack-Icon.ico",
+                Command = "srd pack \"%1\"",
+                ApplyTo = knownFormat
+            };
+        }
 
         public static Command GetCommand() =>
             GetCommand(

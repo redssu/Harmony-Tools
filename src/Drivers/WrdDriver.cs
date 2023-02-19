@@ -7,7 +7,7 @@ using V3Lib.Wrd;
 
 namespace HarmonyTools.Drivers
 {
-    public class WrdDriver : Driver, IDriver
+    public class WrdDriver : Driver, IDriver, IContextMenu
     {
         protected static Dictionary<string, string> opcodeTranslationTable = new Dictionary<
             string,
@@ -105,6 +105,18 @@ namespace HarmonyTools.Drivers
         );
 
         #endregion
+
+        public static IEnumerable<ContextMenuEntry> SetupContextMenu()
+        {
+            yield return new ContextMenuEntry
+            {
+                SubKeyID = "ExtractSRD",
+                Name = "Extract WRD file",
+                Icon = "Harmony-Tools-Extract-Icon.ico",
+                Command = "wrd extract \"%1\"",
+                ApplyTo = gameFormat
+            };
+        }
 
         #region Command Registration
 

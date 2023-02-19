@@ -9,7 +9,7 @@ using V3Lib.Dat;
 
 namespace HarmonyTools.Drivers
 {
-    public class DatDriver : StandardDriver<DatDriver>, IStandardDriver
+    public class DatDriver : StandardDriver<DatDriver>, IStandardDriver, IContextMenu
     {
         #region Specify Driver formats
 
@@ -29,6 +29,27 @@ namespace HarmonyTools.Drivers
         );
 
         #endregion
+
+        public static IEnumerable<ContextMenuEntry> SetupContextMenu()
+        {
+            yield return new ContextMenuEntry
+            {
+                SubKeyID = "ExtractDAT",
+                Name = "Extract DAT file",
+                Icon = "Harmony-Tools-Extract-Icon.ico",
+                Command = "dat extract \"%1\"",
+                ApplyTo = gameFormat
+            };
+
+            yield return new ContextMenuEntry
+            {
+                SubKeyID = "PackDAT",
+                Name = "Pack this file to DAT file",
+                Icon = "Harmony-Tools-Pack-Icon.ico",
+                Command = "dat pack \"%1\"",
+                ApplyTo = knownFormat
+            };
+        }
 
         public static Command GetCommand() =>
             GetCommand(
