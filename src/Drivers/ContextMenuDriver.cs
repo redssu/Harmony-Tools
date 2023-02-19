@@ -68,6 +68,7 @@ namespace HarmonyTools.Drivers
                 DatDriver.SetupContextMenu(),
                 FontDriver.SetupContextMenu(),
                 WrdDriver.SetupContextMenu(),
+                CpkDriver.SetupContextMenu(),
             };
 
             try
@@ -99,19 +100,39 @@ namespace HarmonyTools.Drivers
 
                 foreach (var driverContextMenuDeclaration in driverContextMenuDeclarations)
                 {
-                    var driverDeclarationCount = driverContextMenuDeclaration.Count();
+                    var driverDeclarations = driverContextMenuDeclaration.ToList();
 
-                    for (int index = 0; index < driverDeclarationCount; index++)
+                    var directoryDeclarations = driverDeclarations
+                        .Where(declaration => declaration.ApplyTo.IsDirectory)
+                        .ToList();
+
+                    var fileDeclarations = driverDeclarations
+                        .Where(declaration => declaration.ApplyTo.IsFile)
+                        .ToList();
+
+                    for (int index = 0; index < fileDeclarations.Count; index++)
                     {
-                        var declaration = driverContextMenuDeclaration.ElementAt(index);
-                        var htShell = declaration.ApplyTo.IsDirectory ? htDirShell : htFileShell;
-            
-                        htShell.RegisterHTCommand(
+                        var declaration = fileDeclarations[index];
+
+                        htFileShell.RegisterHTCommand(
                             declaration.Command,
                             declaration.Name,
                             Path.Combine(installationPath, declaration.Icon),
                             $"{binaryPath} {declaration.Command} \"%1\"",
-                            hasSeparatorBelow: index == driverDeclarationCount - 1
+                            hasSeparatorBelow: index == fileDeclarations.Count - 1
+                        );
+                    }
+
+                    for (int index = 0; index < directoryDeclarations.Count; index++)
+                    {
+                        var declaration = directoryDeclarations[index];
+
+                        htDirShell.RegisterHTCommand(
+                            declaration.Command,
+                            declaration.Name,
+                            Path.Combine(installationPath, declaration.Icon),
+                            $"{binaryPath} {declaration.Command} \"%1\"",
+                            hasSeparatorBelow: index == directoryDeclarations.Count - 1
                         );
                     }
                 }
