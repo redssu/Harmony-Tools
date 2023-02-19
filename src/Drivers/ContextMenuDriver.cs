@@ -36,8 +36,13 @@ namespace HarmonyTools.Drivers
 
         public ContextMenuDriver()
         {
-            binaryPath = Assembly.GetExecutingAssembly().Location;
+            binaryPath = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName ?? "";
             installationPath = Path.GetDirectoryName(binaryPath)!;
+
+            if (string.IsNullOrEmpty(binaryPath))
+            {
+                throw new ContextMenuException("Could not get binary path.");
+            }
         }
 
         protected void Register()
@@ -49,6 +54,9 @@ namespace HarmonyTools.Drivers
             Console.WriteLine("         If you really need to move it somewhere else, you should unregister context menu first.");
             Console.WriteLine("         Then, move the binary file and register context menu again.");
             // csharpier-ignore-end
+
+            Console.WriteLine($"Considering \"{installationPath}\" as installation path.");
+            Console.WriteLine($"Considering \"{binaryPath}\" as binary path.");
 
             if (
                 DoesKeyExists(@"*\shell\HarmonyTools")
@@ -115,7 +123,7 @@ namespace HarmonyTools.Drivers
                         var declaration = fileDeclarations[index];
 
                         htFileShell.RegisterHTCommand(
-                            declaration.Command,
+                            declaration.SubKeyID,
                             declaration.Name,
                             Path.Combine(installationPath, declaration.Icon),
                             $"{binaryPath} {declaration.Command} \"%1\"",
@@ -128,7 +136,7 @@ namespace HarmonyTools.Drivers
                         var declaration = directoryDeclarations[index];
 
                         htDirShell.RegisterHTCommand(
-                            declaration.Command,
+                            declaration.SubKeyID,
                             declaration.Name,
                             Path.Combine(installationPath, declaration.Icon),
                             $"{binaryPath} {declaration.Command} \"%1\"",

@@ -10,14 +10,14 @@ namespace HarmonyTools.Extensions
     {
         public static void RegisterHTCommand(
             this RegistryKey key,
-            string subkeyId,
+            string subKeyID,
             string name,
             string icon,
             string command,
             bool hasSeparatorBelow = false
         )
         {
-            var itemSubKey = key.CreateSubKey(subkeyId);
+            var itemSubKey = key.CreateSubKey(subKeyID);
             itemSubKey.SetValue("MUIVerb", name);
             itemSubKey.SetValue("Icon", icon);
 
@@ -28,34 +28,6 @@ namespace HarmonyTools.Extensions
             {
                 itemSubKey.SetValue("CommandFlags", (uint)0x40, RegistryValueKind.DWord);
             }
-        }
-
-        public static Image<Rgba32> Save(this Image<Rgba32> image, Stream stream, string extension)
-        {
-            switch (extension.ToLower().TrimStart('.'))
-            {
-                case "png":
-                    image.SaveAsPng(stream);
-                    break;
-
-                case "jpg":
-                case "jpeg":
-                    image.SaveAsJpeg(stream);
-                    break;
-
-                case "bmp":
-                    image.SaveAsBmp(stream);
-                    break;
-
-                case "gif":
-                    image.SaveAsGif(stream);
-                    break;
-
-                default:
-                    throw new ArgumentException($"Unknown extension '{extension}'");
-            }
-
-            return image;
         }
     }
 }
