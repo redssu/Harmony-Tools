@@ -85,16 +85,25 @@ namespace HarmonyTools.Drivers
 
             foreach (var file in files)
             {
+                var fileOutputPath = output;
+
                 if (file.Directory != null)
                 {
-                    Directory.CreateDirectory(Path.Combine(output, file.Directory));
+                    fileOutputPath = Path.Combine(fileOutputPath, file.Directory);
+
+                    if (!Directory.Exists(fileOutputPath))
+                    {
+                        Directory.CreateDirectory(fileOutputPath);
+                    }
                 }
+
+                fileOutputPath = Path.Combine(fileOutputPath, file.FileName);
 
                 var extractedFile = cpkExtractor.ExtractFile(file);
 
                 using (
                     var writer = new FileStream(
-                        output,
+                        fileOutputPath,
                         FileMode.Create,
                         FileAccess.Write,
                         FileShare.Read
