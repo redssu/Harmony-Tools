@@ -20,6 +20,7 @@ namespace HarmonyTools
             rootCommand.AddCommand(FontDriver.GetCommand());
             rootCommand.AddCommand(DatDriver.GetCommand());
             rootCommand.AddCommand(WrdDriver.GetCommand());
+            rootCommand.AddCommand(CpkDriver.GetCommand());
 
             rootCommand.Invoke(args);
 
@@ -27,6 +28,7 @@ namespace HarmonyTools
              * TODO --------------
              * - Support for extracting and packing all files from a directory
              * - Better error handling
+             * - Delete original file option
              * - L10n
              * - Support for arbitrary output path
              * - Support for audio files
