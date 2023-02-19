@@ -11,13 +11,34 @@ namespace HarmonyTools.Drivers
 {
     public class DatDriver : StandardDriver<DatDriver>, IStandardDriver
     {
+        #region Specify Driver formats
+
+        public static readonly FSObjectFormat gameFormat = new FSObjectFormat(
+            FSObjectType.File,
+            extension: "dat"
+        );
+
+        public static readonly FSObjectFormat knownFormat = new FSObjectFormat(
+            FSObjectType.File,
+            extension: "dat.csv"
+        );
+
+        public static readonly FSObjectFormat replacementFormat = new FSObjectFormat(
+            FSObjectType.File,
+            extension: "ttf"
+        );
+
+        #endregion
+
         public static Command GetCommand() =>
             GetCommand(
                 "dat",
                 "A tool to work with DAT files (DRV3 data tables).",
-                new FSObjectFormat(FSObjectType.File, extension: "dat"),
-                new FSObjectFormat(FSObjectType.File, extension: "dat.csv")
+                gameFormat,
+                knownFormat
             );
+
+        #region Command Handlers
 
         public override void Extract(FileSystemInfo input, string output)
         {
@@ -182,11 +203,17 @@ namespace HarmonyTools.Drivers
             Console.WriteLine($"DAT File has been saved successfully to \"{output}\".");
         }
 
-        public static string PrepareColumnValue(string text)
+        #endregion
+
+        #region Helpers
+
+        protected static string PrepareColumnValue(string text)
         {
             return "\""
                 + text.Replace("\n", "\\n").Replace("\r", "\\r").Replace("\"", "\"\"")
                 + "\"";
         }
+
+        #endregion
     }
 }

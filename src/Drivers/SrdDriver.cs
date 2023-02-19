@@ -16,13 +16,29 @@ namespace HarmonyTools.Drivers
 {
     public class SrdDriver : StandardDriver<SrdDriver>, IStandardDriver
     {
+        #region Specify Driver formats
+
+        public static readonly FSObjectFormat gameFormat = new FSObjectFormat(
+            FSObjectType.File,
+            extension: "srd"
+        );
+
+        public static readonly FSObjectFormat knownFormat = new FSObjectFormat(
+            FSObjectType.File,
+            extension: "srd.decompressed"
+        );
+
+        #endregion
+
         public static Command GetCommand() =>
             GetCommand(
                 "srd",
                 "A tool to work with SPC files (DRV3 texture archives).",
-                new FSObjectFormat(FSObjectType.File, extension: "srd"),
-                new FSObjectFormat(FSObjectType.Directory, extension: "srd.decompressed")
+                gameFormat,
+                knownFormat
             );
+
+        #region Command Handlers
 
         public override void Extract(FileSystemInfo input, string output)
         {
@@ -202,6 +218,10 @@ namespace HarmonyTools.Drivers
 
             srdFile.Save(output, srdiOutputPath, srdvOutputPath);
         }
+
+        #endregion
+
+        #region Helpers
 
         public static (ushort, ushort) GetDimensions(TxrBlock txr, RsiBlock rsi)
         {
@@ -386,5 +406,7 @@ namespace HarmonyTools.Drivers
 
             return srdFile;
         }
+
+        #endregion
     }
 }

@@ -11,13 +11,29 @@ namespace HarmonyTools.Drivers
 {
     public class StxDriver : StandardDriver<StxDriver>, IStandardDriver
     {
+        #region Specify Driver formats
+
+        public static readonly FSObjectFormat gameFormat = new FSObjectFormat(
+            FSObjectType.File,
+            extension: "stx"
+        );
+
+        public static readonly FSObjectFormat knownFormat = new FSObjectFormat(
+            FSObjectType.File,
+            extension: "stx.txt"
+        );
+
+        #endregion
+
         public static Command GetCommand() =>
             GetCommand(
                 "stx",
                 "A tool to work with STX files (DRV3 string tables).",
-                new FSObjectFormat(FSObjectType.File, extension: "stx"),
-                new FSObjectFormat(FSObjectType.File, extension: "stx.txt")
+                gameFormat,
+                knownFormat
             );
+
+        #region Command Handlers
 
         public override void Extract(FileSystemInfo input, string output)
         {
@@ -119,5 +135,7 @@ namespace HarmonyTools.Drivers
                 Console.WriteLine($"STX File has been saved successfully to \"{output}\".");
             }
         }
+
+        #endregion
     }
 }

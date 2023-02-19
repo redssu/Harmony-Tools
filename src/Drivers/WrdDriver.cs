@@ -9,7 +9,7 @@ namespace HarmonyTools.Drivers
 {
     public class WrdDriver : Driver, IDriver
     {
-        private static Dictionary<string, string> OpcodeTranslation = new Dictionary<
+        protected static Dictionary<string, string> opcodeTranslationTable = new Dictionary<
             string,
             string
         >()
@@ -92,21 +92,39 @@ namespace HarmonyTools.Drivers
             { "JMN", "Jump_To_Branch" }
         };
 
+        #region Specify Driver formats
+
+        public static readonly FSObjectFormat gameFormat = new FSObjectFormat(
+            FSObjectType.File,
+            extension: "wrd"
+        );
+
+        public static readonly FSObjectFormat knownFormat = new FSObjectFormat(
+            FSObjectType.File,
+            extension: "wrd.txt"
+        );
+
+        #endregion
+
+        #region Command Registration
+
         public static Command GetCommand()
         {
             var driver = new WrdDriver();
-            var inputFormat = new FSObjectFormat(FSObjectType.File, extension: "wrd");
 
             var command = new Command(
                 "wrd",
                 "A tool to work with WRD files (DRV3 game-script files)"
             );
 
-            var inputArgument = GetInputArgument(inputFormat);
-            var deleteOriginalOption = GetDeleteOriginalOption(inputFormat);
+            var inputArgument = GetInputArgument(gameFormat);
+            var deleteOriginalOption = GetDeleteOriginalOption(gameFormat);
             var friendlyNamesOption = GetFriendlyNamesOption();
 
-            var extractCommand = new Command("extract", "Extracts a WRD file to TXT file")
+            var extractCommand = new Command(
+                "extract",
+                $"Extracts a {gameFormat.Description} to {knownFormat.Description}"
+            )
             {
                 inputArgument,
                 friendlyNamesOption,
@@ -116,7 +134,11 @@ namespace HarmonyTools.Drivers
             extractCommand.SetHandler(
                 (FileSystemInfo input, bool friendlyNamesOption, bool deleteOriginal) =>
                 {
-                    var outputPath = Utils.GetOutputPath(input, "wrd", "wrd.txt");
+                    var outputPath = Utils.GetOutputPath(
+                        input,
+                        gameFormat.Extension,
+                        knownFormat.Extension
+                    );
 
                     driver.Extract(input, outputPath, friendlyNamesOption);
 
@@ -132,6 +154,15 @@ namespace HarmonyTools.Drivers
             return command;
         }
 
+        protected static Option<bool> GetFriendlyNamesOption() =>
+            new Option<bool>(
+                aliases: new[] { "--friendly-names", "-f" },
+                description: "Switches the conversion of operation codes to more human-friendly names.",
+                getDefaultValue: () => true
+            );
+
+        #endregion
+
         public void Extract(FileSystemInfo input, string output, bool friendlyNames)
         {
             var wrdFile = new WrdFile();
@@ -146,9 +177,9 @@ namespace HarmonyTools.Drivers
                 {
                     string line;
 
-                    if (friendlyNames && OpcodeTranslation.ContainsKey(command.Opcode))
+                    if (friendlyNames && opcodeTranslationTable.ContainsKey(command.Opcode))
                     {
-                        line = $"({command.Opcode}) {OpcodeTranslation[command.Opcode]}";
+                        line = $"({command.Opcode}) {opcodeTranslationTable[command.Opcode]}";
                     }
                     else
                     {
@@ -168,12 +199,5 @@ namespace HarmonyTools.Drivers
                 $"TXT file with extracted game script has been successfully saved to \"{output}\" ."
             );
         }
-
-        protected static Option<bool> GetFriendlyNamesOption() =>
-            new Option<bool>(
-                aliases: new[] { "--friendly-names", "-f" },
-                description: "Switches the conversion of operation codes to more human-friendly names.",
-                getDefaultValue: () => true
-            );
     }
 }

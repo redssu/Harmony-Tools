@@ -10,7 +10,9 @@ namespace HarmonyTools.Drivers
 {
     public class SpcDriver : StandardDriver<SpcDriver>, IStandardDriver
     {
-        private static byte[] Unknown1 = new byte[]
+        #region Unknown Constant Values
+
+        protected static readonly byte[] Unknown1 = new byte[]
         {
             0x00,
             0x00,
@@ -50,15 +52,33 @@ namespace HarmonyTools.Drivers
             0x00,
         };
 
-        private static int Unknown2 = 4;
+        protected static readonly int Unknown2 = 4;
+
+        #endregion
+
+        #region Specify Driver formats
+
+        public static readonly FSObjectFormat gameFormat = new FSObjectFormat(
+            FSObjectType.File,
+            extension: "spc"
+        );
+
+        public static readonly FSObjectFormat knownFormat = new FSObjectFormat(
+            FSObjectType.Directory,
+            extension: "spc.decompressed"
+        );
+
+        #endregion
 
         public static Command GetCommand() =>
             GetCommand(
                 "spc",
                 "A tool to work with SPC files (DRV3 archives).",
-                new FSObjectFormat(FSObjectType.File, extension: "spc"),
-                new FSObjectFormat(FSObjectType.Directory, extension: "spc.decompressed")
+                gameFormat,
+                knownFormat
             );
+
+        #region Command Handlers
 
         public override void Extract(FileSystemInfo input, string output)
         {
@@ -75,7 +95,6 @@ namespace HarmonyTools.Drivers
                     "WARNING: Unknown2 value of this SPC Archive is not equal to the expected value. Please report this to the developers."
                 );
 
-            // TODO:
             foreach (var subfile in spcFile.Subfiles)
             {
                 spcFile.ExtractSubfile(subfile.Name, output);
@@ -92,7 +111,6 @@ namespace HarmonyTools.Drivers
 
             var targetFiles = new List<string>(Directory.GetFiles(input.FullName));
 
-            // TODO:
             foreach (string subfileName in targetFiles)
             {
                 spcFile.InsertSubfile(subfileName);
@@ -102,5 +120,7 @@ namespace HarmonyTools.Drivers
 
             Console.WriteLine($"SPC archive has been successfully saved to \"{output}\".");
         }
+
+        #endregion
     }
 }

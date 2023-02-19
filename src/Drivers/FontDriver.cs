@@ -19,17 +19,6 @@ namespace HarmonyTools.Drivers
 {
     public class FontDriver : Driver, IDriver
     {
-        protected static readonly uint maxMasterImageWidth = 4096;
-        protected static readonly FSObjectFormat gameFormat = new FSObjectFormat(
-            FSObjectType.File,
-            extension: "spc"
-        );
-
-        protected static readonly FSObjectFormat knownFormat = new FSObjectFormat(
-            FSObjectType.Directory,
-            extension: "spc.decompressed_font"
-        );
-
         protected struct FontInfo
         {
             public string FontName { get; set; }
@@ -37,6 +26,29 @@ namespace HarmonyTools.Drivers
             public uint ScaleFlag { get; set; }
             public List<string> Resources { get; set; }
         }
+
+        protected static readonly uint maxMasterImageWidth = 4096;
+
+        #region Specify Driver formats
+
+        public static readonly FSObjectFormat gameFormat = new FSObjectFormat(
+            FSObjectType.File,
+            extension: "spc"
+        );
+
+        public static readonly FSObjectFormat knownFormat = new FSObjectFormat(
+            FSObjectType.Directory,
+            extension: "spc.decompressed_font"
+        );
+
+        public static readonly FSObjectFormat replacementFormat = new FSObjectFormat(
+            FSObjectType.File,
+            extension: "ttf"
+        );
+
+        #endregion
+
+        #region Command Registration
 
         public static Command GetCommand()
         {
@@ -49,14 +61,17 @@ namespace HarmonyTools.Drivers
 
             command.Add(GetPackCommand(driverInstance));
             command.Add(GetExtractCommand(driverInstance));
-            command.Add(GetReplaceWithFontCommand(driverInstance));
+            command.Add(GetReplaceCommand(driverInstance));
 
             return command;
         }
 
         protected static Command GetPackCommand(FontDriver driverInstance)
         {
-            var command = new Command("pack", "Packs a directory into a SPC archive");
+            var command = new Command(
+                "pack",
+                $"Packs a {knownFormat.Description} into a {gameFormat.Description}"
+            );
 
             var inputArgument = GetInputArgument(knownFormat);
             var deleteOriginalOption = GetDeleteOriginalOption(knownFormat);
@@ -69,7 +84,17 @@ namespace HarmonyTools.Drivers
             command.SetHandler(
                 (FileSystemInfo input, bool deleteOriginal, bool generateDebugImage) =>
                 {
-                    var outputPath = Utils.GetOutputPath(input, "spc.decompressed_font", "spc");
+                    var outputPath = Utils.GetOutputPath(
+                        input,
+                        knownFormat.Extension,
+                        gameFormat.Extension
+                    );
+
+                    if (knownFormat.IsDirectory && !Directory.Exists(outputPath))
+                    {
+                        Directory.CreateDirectory(outputPath);
+                    }
+
                     driverInstance.Pack(input, outputPath, generateDebugImage);
                 },
                 inputArgument,
@@ -82,7 +107,10 @@ namespace HarmonyTools.Drivers
 
         protected static Command GetExtractCommand(FontDriver driverInstance)
         {
-            var command = new Command("extract", "Extracts a SPC archive into a directory");
+            var command = new Command(
+                "extract",
+                $"Extracts a {gameFormat.Description} into a {knownFormat.Description}"
+            );
 
             var inputArgument = GetInputArgument(gameFormat);
             var deleteOriginalOption = GetDeleteOriginalOption(gameFormat);
@@ -93,9 +121,13 @@ namespace HarmonyTools.Drivers
             command.SetHandler(
                 (FileSystemInfo input, bool deleteOriginal) =>
                 {
-                    var outputPath = Utils.GetOutputPath(input, "spc", "spc.decompressed_font");
+                    var outputPath = Utils.GetOutputPath(
+                        input,
+                        gameFormat.Extension,
+                        knownFormat.Extension
+                    );
 
-                    if (!Directory.Exists(outputPath))
+                    if (knownFormat.IsDirectory && !Directory.Exists(outputPath))
                     {
                         Directory.CreateDirectory(outputPath);
                     }
@@ -109,9 +141,12 @@ namespace HarmonyTools.Drivers
             return command;
         }
 
-        protected static Command GetReplaceWithFontCommand(FontDriver driverInstance)
+        protected static Command GetReplaceCommand(FontDriver driverInstance)
         {
-            var command = new Command("replace-with-font", "Packs a TTF file into a SPC archive");
+            var command = new Command(
+                "replace",
+                $"Packs a {replacementFormat.Description} into a {gameFormat.Description}"
+            );
 
             var inputArgument = GetInputArgument(knownFormat);
             var deleteOriginalOption = GetDeleteOriginalOption(knownFormat);
@@ -124,8 +159,18 @@ namespace HarmonyTools.Drivers
             command.SetHandler(
                 (FileSystemInfo input, bool deleteOriginal, bool generateDebugImage) =>
                 {
-                    var outputPath = Utils.GetOutputPath(input, "ttf", "spc");
-                    driverInstance.ReplaceWithFontFile(input, outputPath, generateDebugImage);
+                    var outputPath = Utils.GetOutputPath(
+                        input,
+                        replacementFormat.Extension,
+                        gameFormat.Extension
+                    );
+
+                    if (knownFormat.IsDirectory && !Directory.Exists(outputPath))
+                    {
+                        Directory.CreateDirectory(outputPath);
+                    }
+
+                    driverInstance.Replace(input, outputPath, generateDebugImage);
                 },
                 inputArgument,
                 deleteOriginalOption,
@@ -142,6 +187,9 @@ namespace HarmonyTools.Drivers
                 getDefaultValue: () => false
             );
 
+        #endregion
+
+        #region Command Handlers
         public void Extract(FileSystemInfo input, string output)
         {
             // Extracting the font is basically extracting the .SRD Archive
@@ -273,17 +321,13 @@ namespace HarmonyTools.Drivers
         /**
          * Original code of this function has been written by Paks
          *
-         * @author Paks <https://github.com/P4K5>
-         * @see https://github.com/P4K5/DanganV3FontsConverter
-         * @license GNU GPL 3.0 <https://github.com/P4K5/DanganV3FontsConverter/blob/master/LICENSE.txt
+         * Author: Paks <https://github.com/P4K5>
+         * See: https://github.com/P4K5/DanganV3FontsConverter
+         * License: GNU GPL 3.0 <https://github.com/P4K5/DanganV3FontsConverter/blob/master/LICENSE.txt>
          */
-        public void ReplaceWithFontFile(
-            FileSystemInfo inputFontFile,
-            string output,
-            bool generateDebugImage
-        )
+        public void Replace(FileSystemInfo input, string output, bool generateDebugImage)
         {
-            var spcPath = new FileInfo(Path.ChangeExtension(inputFontFile.FullName, "spc"));
+            var spcPath = new FileInfo(Path.ChangeExtension(input.FullName, "spc"));
 
             var oldSrdFile = SrdDriver.LoadSrdFile(spcPath, true, false);
             var fontBlock = GetFontBlock(oldSrdFile.Blocks);
@@ -309,12 +353,12 @@ namespace HarmonyTools.Drivers
             };
 
             var charsetFilePath = Path.Combine(
-                Path.GetDirectoryName(inputFontFile.FullName)!,
+                Path.GetDirectoryName(input.FullName)!,
                 "charset.txt"
             );
 
             var fontFileGlyphProvider = new FontFileGlyphProvider(
-                inputFontFile,
+                input,
                 new FileInfo(charsetFilePath)
             );
 
@@ -546,6 +590,10 @@ namespace HarmonyTools.Drivers
             Console.WriteLine($"SPC Font file has been successfully saved to \"{output}\".");
         }
 
+        #endregion
+
+        #region Helpers
+
         protected FontBlock? GetFontBlock(IEnumerable<Block> blocks)
         {
             var fontBlock = new FontBlock();
@@ -585,5 +633,7 @@ namespace HarmonyTools.Drivers
 
             return (null, null);
         }
+
+        #endregion
     }
 }

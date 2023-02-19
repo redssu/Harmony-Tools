@@ -1,4 +1,3 @@
-using System;
 using System.CommandLine;
 using HarmonyTools.Drivers;
 
@@ -23,6 +22,18 @@ namespace HarmonyTools
             rootCommand.AddCommand(WrdDriver.GetCommand());
 
             rootCommand.Invoke(args);
+
+            /**
+             * TODO --------------
+             * - Context-menu integration for Windows
+             * - Support for extracting and packing all files from a directory
+             * - Better error handling
+             * - L10n
+             * - Support for arbitrary output path
+             * - Support for audio files
+             * - Default charset for font replace command
+             * TODO --------------
+             */
         }
     }
 }

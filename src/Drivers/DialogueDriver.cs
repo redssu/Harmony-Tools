@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.IO;
 using System.Linq;
-using System.Reflection.Emit;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -17,7 +16,7 @@ namespace HarmonyTools.Drivers
     public class DialogueDriver : StandardDriver<DialogueDriver>, IStandardDriver
     {
         /**
-         * @author Paks <https://github.com/P4K5>
+         * Author: Paks <https://github.com/P4K5>
          */
         public static Dictionary<string, string> CharacterMap = new Dictionary<string, string>()
         {
@@ -114,13 +113,35 @@ namespace HarmonyTools.Drivers
             { "CHARA_HATENA", "???" }
         };
 
-        public static Command GetCommand() =>
-            GetCommand(
+        #region Specify Driver formats
+
+        public static readonly FSObjectFormat gameFormat = new FSObjectFormat(
+            FSObjectType.File,
+            extension: "stx"
+        );
+
+        public static readonly FSObjectFormat knownFormat = new FSObjectFormat(
+            FSObjectType.Directory,
+            extension: "stx.json"
+        );
+
+        #endregion
+
+        public static Command GetCommand()
+        {
+            var command = GetCommand(
                 "dialogue",
                 "A tool to work with specific STX files (the ones that contain dialogue lines).",
-                new FSObjectFormat(FSObjectType.File, extension: "stx"),
-                new FSObjectFormat(FSObjectType.File, extension: "stx.txt")
+                gameFormat,
+                knownFormat
             );
+
+            command.AddAlias("d");
+
+            return command;
+        }
+
+        #region Command Handlers
 
         public override void Extract(FileSystemInfo input, string output)
         {
@@ -310,7 +331,11 @@ namespace HarmonyTools.Drivers
             Console.WriteLine($"STX File has been saved successfully to \"{output}\".");
         }
 
-        private static bool AddCommandIfUseful(ref List<WrdCommand> commands, WrdCommand command)
+        #endregion
+
+        #region Helpers
+
+        protected static bool AddCommandIfUseful(ref List<WrdCommand> commands, WrdCommand command)
         {
             // LOC - Displays a dialogue line.
             // CHN - Changes the current speaking character.
@@ -370,7 +395,7 @@ namespace HarmonyTools.Drivers
             return true;
         }
 
-        private static int GetLocCommandIndexInCommands(List<WrdCommand> commands, uint stringId)
+        protected static int GetLocCommandIndexInCommands(List<WrdCommand> commands, uint stringId)
         {
             for (int index = 0; index < commands.Count; index++)
             {
@@ -387,7 +412,7 @@ namespace HarmonyTools.Drivers
             return -1;
         }
 
-        private static string PrepareCharacterKey(string characterKey)
+        protected static string PrepareCharacterKey(string characterKey)
         {
             characterKey = characterKey.ToUpper();
 
@@ -398,5 +423,7 @@ namespace HarmonyTools.Drivers
 
             return characterKey;
         }
+
+        #endregion
     }
 }
