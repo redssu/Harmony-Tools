@@ -89,12 +89,12 @@ namespace HarmonyTools.Drivers
                         knownFormat.Extension
                     );
 
-                    if (gameFormat.IsDirectory && !Directory.Exists(outputPath))
+                    if (knownFormat.IsDirectory && !Directory.Exists(outputPath))
                     {
                         Directory.CreateDirectory(outputPath);
                     }
 
-                    driver.Pack(input, outputPath);
+                    driver.Extract(input, outputPath);
                 },
                 inputArgument
             );

@@ -1,4 +1,5 @@
 using System.CommandLine;
+using System.Text;
 using HarmonyTools.Drivers;
 
 namespace HarmonyTools
@@ -7,6 +8,8 @@ namespace HarmonyTools
     {
         static void Main(string[] args)
         {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
             var rootCommand = new RootCommand(
                 description: "A set of tools for working with Danganronpa V3 game files."
             );

@@ -106,7 +106,7 @@ namespace HarmonyTools.Drivers
             var spcFile = new SpcFile();
             spcFile.Load(input.FullName);
 
-            if (Unknown1.SequenceEqual(spcFile.Unknown1))
+            if (!Unknown1.SequenceEqual(spcFile.Unknown1))
                 Console.WriteLine(
                     "WARNING: Unknown1 value of this SPC Archive is not equal to the expected value. Please report this to the developers."
                 );
