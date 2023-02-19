@@ -2,10 +2,10 @@ namespace HarmonyTools.Formats
 {
     public struct ContextMenuEntry
     {
-        public string SubKeyID;
-        public string Name;
-        public string Icon;
-        public string Command;
-        public FSObjectFormat ApplyTo;
+        public string SubKeyID { get; set; }
+        public string Name { get; set; }
+        public string Icon { get; set; }
+        public string Command { get; set; }
+        public FSObjectFormat ApplyTo { get; set; }
     }
 }

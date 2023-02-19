@@ -13,19 +13,6 @@ namespace HarmonyTools.Font
 {
     public class FontFileGlyphProvider : IGlyphProvider
     {
-        public struct GlyphInfoExternal
-        {
-            public string Glyph { get; set; }
-            public KerningInfoExternal Kerning { get; set; }
-        }
-
-        public struct KerningInfoExternal
-        {
-            public sbyte Left { get; set; }
-            public sbyte Right { get; set; }
-            public sbyte Vertical { get; set; }
-        }
-
         protected readonly FileSystemInfo fontFile;
         protected readonly FileSystemInfo charsetFile;
         protected readonly string charset;

@@ -33,12 +33,12 @@ namespace HarmonyTools.Drivers
 
         public static readonly FSObjectFormat gameFormat = new FSObjectFormat(
             FSObjectType.File,
-            extension: "spc"
+            extension: "stx"
         );
 
         public static readonly FSObjectFormat knownFormat = new FSObjectFormat(
             FSObjectType.Directory,
-            extension: "spc.decompressed_font"
+            extension: "stx.decompressed_font"
         );
 
         public static readonly FSObjectFormat replacementFormat = new FSObjectFormat(
@@ -53,25 +53,25 @@ namespace HarmonyTools.Drivers
             yield return new ContextMenuEntry
             {
                 SubKeyID = "ExtractFont",
-                Name = "Extract font file (SPC)",
+                Name = "Extract font file (STX)",
                 Icon = "Harmony-Tools-Extract-Icon.ico",
-                Command = "font pack \"%1\"",
+                Command = "font extract \"%1\"",
                 ApplyTo = gameFormat
             };
 
             yield return new ContextMenuEntry
             {
                 SubKeyID = "PackFont",
-                Name = "Pack this directory to Font file (SPC)",
+                Name = "Pack this directory to Font file (STX)",
                 Icon = "Harmony-Tools-Pack-Icon.ico",
-                Command = "font extract \"%1\"",
+                Command = "font pack \"%1\"",
                 ApplyTo = knownFormat
             };
 
             yield return new ContextMenuEntry
             {
                 SubKeyID = "ReplaceFont",
-                Name = "Replace font file (SPC) with TTF file",
+                Name = "Replace font file (STX) with TTF file",
                 Icon = "Harmony-Tools-Pack-Icon.ico",
                 Command = "font replace \"%1\"",
                 ApplyTo = replacementFormat
@@ -86,7 +86,7 @@ namespace HarmonyTools.Drivers
 
             var command = new Command(
                 "font",
-                "A tool to work with SPC files (DRV3 font archives)."
+                "A tool to work with STX files (DRV3 font archives)."
             );
 
             command.Add(GetPackCommand(driverInstance));
@@ -218,7 +218,7 @@ namespace HarmonyTools.Drivers
 
             // Font files also contains Bounding Boxes for each glyph
             // so we are making a JSON file with informations about each glyph
-            var srdFile = SrdDriver.LoadSrdFile(input, true, false);
+            var srdFile = SrdDriver.LoadSrdFile(input, true, true);
             var fontBlock = GetFontBlock(srdFile.Blocks);
 
             if (fontBlock == null)
@@ -296,10 +296,10 @@ namespace HarmonyTools.Drivers
 
                 glyphImage.Dispose();
 
-                var jsonInfo = new FontFileGlyphProvider.GlyphInfoExternal
+                var jsonInfo = new FileGlyphProvider.GlyphInfoExternal
                 {
                     Glyph = glyphInfo.Glyph.ToString(),
-                    Kerning = new FontFileGlyphProvider.KerningInfoExternal
+                    Kerning = new FileGlyphProvider.KerningInfoExternal
                     {
                         Left = glyphInfo.Kerning[0],
                         Right = glyphInfo.Kerning[1],
@@ -308,7 +308,7 @@ namespace HarmonyTools.Drivers
                 };
 
                 var options = new JsonSerializerOptions { WriteIndented = true };
-                var jsonString = JsonSerializer.Serialize<FontFileGlyphProvider.GlyphInfoExternal>(
+                var jsonString = JsonSerializer.Serialize<FileGlyphProvider.GlyphInfoExternal>(
                     jsonInfo,
                     options
                 );
@@ -350,7 +350,7 @@ namespace HarmonyTools.Drivers
         {
             var spcPath = new FileInfo(Path.ChangeExtension(input.FullName, "spc"));
 
-            var oldSrdFile = SrdDriver.LoadSrdFile(spcPath, true, false);
+            var oldSrdFile = SrdDriver.LoadSrdFile(spcPath, true, true);
             var fontBlock = GetFontBlock(oldSrdFile.Blocks);
 
             if (fontBlock == null)

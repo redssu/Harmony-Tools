@@ -292,7 +292,7 @@ namespace HarmonyTools.Drivers
                 MaxDepth = 3
             };
 
-            var json = JsonSerializer.Serialize(dialogueEntries, jsonOptions);
+            var json = JsonSerializer.Serialize<object>(dialogueEntries, jsonOptions);
 
             File.WriteAllText(output, json);
 

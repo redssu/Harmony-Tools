@@ -110,7 +110,7 @@ namespace HarmonyTools.Drivers
         {
             yield return new ContextMenuEntry
             {
-                SubKeyID = "ExtractSRD",
+                SubKeyID = "ExtractWRD",
                 Name = "Extract WRD file",
                 Icon = "Harmony-Tools-Extract-Icon.ico",
                 Command = "wrd extract \"%1\"",
