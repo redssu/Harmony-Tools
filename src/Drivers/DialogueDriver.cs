@@ -186,7 +186,6 @@ namespace HarmonyTools.Drivers
 
             var usefulCommands = new List<WrdCommand>();
 
-            // TODO: Refactor this loop
             // Filter and transform the commands.
             foreach (var command in wrdFile.Commands)
             {

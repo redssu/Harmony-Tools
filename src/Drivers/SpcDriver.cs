@@ -121,7 +121,7 @@ namespace HarmonyTools.Drivers
                 spcFile.ExtractSubfile(subfile.Name, output);
             }
 
-            Console.WriteLine($"Extracted all subfiles to \"{output}\".");
+            Console.WriteLine($"Extracted subfiles has been successfully saved in \"{output}\".");
         }
 
         public override void Pack(FileSystemInfo input, string output)

@@ -126,11 +126,10 @@ namespace HarmonyTools.Drivers
 
             var command = new Command(
                 "wrd",
-                "A tool to work with WRD files (DRV3 game-script files)"
+                "A tool to work with WRD files (DRV3 game-script files)."
             );
 
             var inputArgument = GetInputArgument(gameFormat);
-            var deleteOriginalOption = GetDeleteOriginalOption(gameFormat);
             var friendlyNamesOption = GetFriendlyNamesOption();
 
             var extractCommand = new Command(
@@ -140,11 +139,10 @@ namespace HarmonyTools.Drivers
             {
                 inputArgument,
                 friendlyNamesOption,
-                deleteOriginalOption,
             };
 
             extractCommand.SetHandler(
-                (FileSystemInfo input, bool friendlyNamesOption, bool deleteOriginal) =>
+                (FileSystemInfo input, bool friendlyNamesOption) =>
                 {
                     var outputPath = Utils.GetOutputPath(
                         input,
@@ -153,12 +151,9 @@ namespace HarmonyTools.Drivers
                     );
 
                     driver.Extract(input, outputPath, friendlyNamesOption);
-
-                    // TODO: Delete original file if deleteOriginal is true
                 },
                 inputArgument,
-                friendlyNamesOption,
-                deleteOriginalOption
+                friendlyNamesOption
             );
 
             command.AddCommand(extractCommand);

@@ -54,7 +54,7 @@ namespace HarmonyTools.Drivers
         public static Command GetCommand() =>
             GetCommand(
                 "srd",
-                "A tool to work with SPC files (DRV3 texture archives).",
+                "A tool to work with SRD files (DRV3 texture archives).",
                 gameFormat,
                 knownFormat
             );
@@ -137,7 +137,7 @@ namespace HarmonyTools.Drivers
                 }
             }
 
-            Console.WriteLine($"Extracted all images to \"{output}\".");
+            Console.WriteLine($"Extracted images has been successfully saved in \"{output}\".");
         }
 
         public override void Pack(FileSystemInfo input, string output)
@@ -238,6 +238,10 @@ namespace HarmonyTools.Drivers
             var srdvOutputPath = Path.ChangeExtension(output, "srdv");
 
             srdFile.Save(output, srdiOutputPath, srdvOutputPath);
+
+            Console.WriteLine(
+                $"SRD archive and it's additional files has been successfully saved to \"{output}\"."
+            );
         }
 
         #endregion

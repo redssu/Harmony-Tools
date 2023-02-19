@@ -35,28 +35,24 @@ namespace HarmonyTools.Drivers
             };
         }
 
-        #region Command Registration
-
         public static Command GetCommand()
         {
             var driver = new CpkDriver();
 
-            var command = new Command("cpk", "A tool to work with CPK files (DRV3 main archives)");
+            var command = new Command("cpk", "A tool to work with CPK files (DRV3 main archives).");
 
             var inputArgument = GetInputArgument(gameFormat);
-            var deleteOriginalOption = GetDeleteOriginalOption(gameFormat);
 
             var extractCommand = new Command(
                 "extract",
                 $"Extracts a {gameFormat.Description} to {knownFormat.Description}"
             )
             {
-                inputArgument,
-                deleteOriginalOption,
+                inputArgument
             };
 
             extractCommand.SetHandler(
-                (FileSystemInfo input, bool deleteOriginal) =>
+                (FileSystemInfo input) =>
                 {
                     var outputPath = Utils.GetOutputPath(
                         input,
@@ -66,16 +62,13 @@ namespace HarmonyTools.Drivers
 
                     driver.Extract(input, outputPath);
                 },
-                inputArgument,
-                deleteOriginalOption
+                inputArgument
             );
 
             command.AddCommand(extractCommand);
 
             return command;
         }
-
-        #endregion
 
         public void Extract(FileSystemInfo input, string output)
         {
@@ -111,6 +104,8 @@ namespace HarmonyTools.Drivers
                     writer.Write(extractedFile.Span);
                 }
             }
+
+            Console.WriteLine($"Extracted subfiles has been successfully saved in \"{output}\".");
         }
     }
 }

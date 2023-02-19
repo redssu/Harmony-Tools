@@ -104,15 +104,13 @@ namespace HarmonyTools.Drivers
             );
 
             var inputArgument = GetInputArgument(knownFormat);
-            var deleteOriginalOption = GetDeleteOriginalOption(knownFormat);
             var generateDebugImage = GetGenerateDebugImageOption();
 
             command.Add(inputArgument);
-            command.Add(deleteOriginalOption);
             command.Add(generateDebugImage);
 
             command.SetHandler(
-                (FileSystemInfo input, bool deleteOriginal, bool generateDebugImage) =>
+                (FileSystemInfo input, bool generateDebugImage) =>
                 {
                     var outputPath = Utils.GetOutputPath(
                         input,
@@ -128,7 +126,6 @@ namespace HarmonyTools.Drivers
                     driverInstance.Pack(input, outputPath, generateDebugImage);
                 },
                 inputArgument,
-                deleteOriginalOption,
                 generateDebugImage
             );
 
@@ -143,13 +140,10 @@ namespace HarmonyTools.Drivers
             );
 
             var inputArgument = GetInputArgument(gameFormat);
-            var deleteOriginalOption = GetDeleteOriginalOption(gameFormat);
-
             command.Add(inputArgument);
-            command.Add(deleteOriginalOption);
 
             command.SetHandler(
-                (FileSystemInfo input, bool deleteOriginal) =>
+                (FileSystemInfo input) =>
                 {
                     var outputPath = Utils.GetOutputPath(
                         input,
@@ -164,8 +158,7 @@ namespace HarmonyTools.Drivers
 
                     driverInstance.Extract(input, outputPath);
                 },
-                inputArgument,
-                deleteOriginalOption
+                inputArgument
             );
 
             return command;
@@ -179,15 +172,13 @@ namespace HarmonyTools.Drivers
             );
 
             var inputArgument = GetInputArgument(knownFormat);
-            var deleteOriginalOption = GetDeleteOriginalOption(knownFormat);
             var generateDebugImage = GetGenerateDebugImageOption();
 
             command.Add(inputArgument);
-            command.Add(deleteOriginalOption);
             command.Add(generateDebugImage);
 
             command.SetHandler(
-                (FileSystemInfo input, bool deleteOriginal, bool generateDebugImage) =>
+                (FileSystemInfo input, bool generateDebugImage) =>
                 {
                     var outputPath = Utils.GetOutputPath(
                         input,
@@ -203,7 +194,6 @@ namespace HarmonyTools.Drivers
                     driverInstance.Replace(input, outputPath, generateDebugImage);
                 },
                 inputArgument,
-                deleteOriginalOption,
                 generateDebugImage
             );
 
@@ -220,6 +210,7 @@ namespace HarmonyTools.Drivers
         #endregion
 
         #region Command Handlers
+
         public void Extract(FileSystemInfo input, string output)
         {
             // Extracting the font is basically extracting the .SRD Archive

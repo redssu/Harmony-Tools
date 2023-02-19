@@ -44,11 +44,8 @@ namespace HarmonyTools.Drivers
             var inputArgument = GetInputArgument(knownFormat);
             command.Add(inputArgument);
 
-            var deleteOriginalOption = GetDeleteOriginalOption(knownFormat);
-            command.Add(deleteOriginalOption);
-
             command.SetHandler(
-                (FileSystemInfo input, bool deleteOriginal) =>
+                (FileSystemInfo input) =>
                 {
                     var outputPath = Utils.GetOutputPath(
                         input,
@@ -62,11 +59,8 @@ namespace HarmonyTools.Drivers
                     }
 
                     driver.Pack(input, outputPath);
-
-                    // TODO: Delete original file if deleteOriginal is true
                 },
-                inputArgument,
-                deleteOriginalOption
+                inputArgument
             );
 
             return command;
@@ -86,11 +80,8 @@ namespace HarmonyTools.Drivers
             var inputArgument = GetInputArgument(gameFormat);
             command.Add(inputArgument);
 
-            var deleteOriginalOption = GetDeleteOriginalOption(gameFormat);
-            command.Add(deleteOriginalOption);
-
             command.SetHandler(
-                (FileSystemInfo input, bool deleteOriginal) =>
+                (FileSystemInfo input) =>
                 {
                     var outputPath = Utils.GetOutputPath(
                         input,
@@ -104,11 +95,8 @@ namespace HarmonyTools.Drivers
                     }
 
                     driver.Pack(input, outputPath);
-
-                    // TODO: Delete original file if deleteOriginal is true
                 },
-                inputArgument,
-                deleteOriginalOption
+                inputArgument
             );
 
             return command;

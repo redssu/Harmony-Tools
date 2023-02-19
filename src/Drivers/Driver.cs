@@ -15,11 +15,11 @@ namespace HarmonyTools.Drivers
                 .ExistingOnly()
                 .OnlyWithExtension(inputFormat.Extension);
 
-        protected static Option<bool> GetDeleteOriginalOption(FSObjectFormat inputFormat) =>
-            new Option<bool>(
-                aliases: new[] { "-d", "--delete-original" },
-                description: $"Whether to delete the original {inputFormat.Description} after operation",
-                getDefaultValue: () => false
-            );
+        // protected static Option<bool> GetDeleteOriginalOption(FSObjectFormat inputFormat) =>
+        //     new Option<bool>(
+        //         aliases: new[] { "-d", "--delete-original" },
+        //         description: $"Whether to delete the original {inputFormat.Description} after operation",
+        //         getDefaultValue: () => false
+        //     );
     }
 }
