@@ -1,3 +1,4 @@
+using System;
 using System.CommandLine;
 using System.CommandLine.Parsing;
 using System.IO;
@@ -42,7 +43,7 @@ namespace HarmonyTools.Extensions
             {
                 string token = result.Tokens[i].ToString();
 
-                if (Path.GetFileName(token)!.ToLower().EndsWith("." + extension.ToLower()))
+                if (!Path.GetFileName(token)!.ToLower().EndsWith("." + extension.ToLower()))
                 {
                     result.ErrorMessage =
                         $"File '{token}' does not have the extension '{extension}'.";
