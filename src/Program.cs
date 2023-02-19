@@ -21,6 +21,7 @@ namespace HarmonyTools
             rootCommand.AddCommand(DatDriver.GetCommand());
             rootCommand.AddCommand(WrdDriver.GetCommand());
             rootCommand.AddCommand(CpkDriver.GetCommand());
+            rootCommand.AddCommand(ContextMenuDriver.GetCommand());
 
             rootCommand.Invoke(args);
 

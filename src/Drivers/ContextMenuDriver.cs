@@ -22,9 +22,6 @@ namespace HarmonyTools.Drivers
             var registerCommand = new Command("register", "Registers context menu");
             var unregisterCommand = new Command("unregister", "Unregisters context menu");
 
-            registerCommand.AddAlias("r");
-            unregisterCommand.AddAlias("u");
-
             registerCommand.SetHandler(() => driverInstance.Register());
             unregisterCommand.SetHandler(() => driverInstance.Unregister());
 

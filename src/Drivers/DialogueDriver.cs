@@ -148,19 +148,13 @@ namespace HarmonyTools.Drivers
             };
         }
 
-        public static Command GetCommand()
-        {
-            var command = GetCommand(
+        public static Command GetCommand() =>
+            GetCommand(
                 "dialogue",
                 "A tool to work with specific STX files (the ones that contain dialogue lines).",
                 gameFormat,
                 knownFormat
             );
-
-            command.AddAlias("d");
-
-            return command;
-        }
 
         #region Command Handlers
 
