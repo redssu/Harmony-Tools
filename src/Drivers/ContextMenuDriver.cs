@@ -126,7 +126,7 @@ namespace HarmonyTools.Drivers
                             declaration.SubKeyID,
                             declaration.Name,
                             Path.Combine(installationPath, declaration.Icon),
-                            $"{binaryPath} {declaration.Command} \"%1\"",
+                            $"{binaryPath} {declaration.Command}",
                             hasSeparatorBelow: index == fileDeclarations.Count - 1
                         );
                     }
@@ -139,7 +139,7 @@ namespace HarmonyTools.Drivers
                             declaration.SubKeyID,
                             declaration.Name,
                             Path.Combine(installationPath, declaration.Icon),
-                            $"{binaryPath} {declaration.Command} \"%1\"",
+                            $"{binaryPath} {declaration.Command}",
                             hasSeparatorBelow: index == directoryDeclarations.Count - 1
                         );
                     }
