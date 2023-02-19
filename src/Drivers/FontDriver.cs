@@ -56,7 +56,7 @@ namespace HarmonyTools.Drivers
                 Name = "Extract font file (SPC)",
                 Icon = "Harmony-Tools-Extract-Icon.ico",
                 Command = "font pack \"%1\"",
-                ApplyTo = knownFormat
+                ApplyTo = gameFormat
             };
 
             yield return new ContextMenuEntry
@@ -65,7 +65,7 @@ namespace HarmonyTools.Drivers
                 Name = "Pack this directory to Font file (SPC)",
                 Icon = "Harmony-Tools-Pack-Icon.ico",
                 Command = "font extract \"%1\"",
-                ApplyTo = gameFormat
+                ApplyTo = knownFormat
             };
 
             yield return new ContextMenuEntry

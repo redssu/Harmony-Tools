@@ -105,7 +105,7 @@ namespace HarmonyTools.Drivers
                     {
                         var declaration = driverContextMenuDeclaration.ElementAt(index);
                         var htShell = declaration.ApplyTo.IsDirectory ? htDirShell : htFileShell;
-
+            
                         htShell.RegisterHTCommand(
                             declaration.Command,
                             declaration.Name,

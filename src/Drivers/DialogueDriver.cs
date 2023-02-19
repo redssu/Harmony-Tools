@@ -121,7 +121,7 @@ namespace HarmonyTools.Drivers
         );
 
         public static readonly FSObjectFormat knownFormat = new FSObjectFormat(
-            FSObjectType.Directory,
+            FSObjectType.File,
             extension: "stx.json"
         );
 

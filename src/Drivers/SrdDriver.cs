@@ -24,7 +24,7 @@ namespace HarmonyTools.Drivers
         );
 
         public static readonly FSObjectFormat knownFormat = new FSObjectFormat(
-            FSObjectType.File,
+            FSObjectType.Directory,
             extension: "srd.decompressed"
         );
 
