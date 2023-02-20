@@ -17,9 +17,9 @@ using V3Lib.Srd.BlockTypes;
 
 namespace HarmonyTools.Drivers
 {
-    public class FontDriver : Driver, IDriver, IContextMenu
+    public sealed class FontDriver : Driver, IDriver, IContextMenu
     {
-        protected struct FontInfo
+        public struct FontInfo
         {
             public string FontName { get; set; }
             public string Charset { get; set; }
@@ -27,7 +27,7 @@ namespace HarmonyTools.Drivers
             public List<string> Resources { get; set; }
         }
 
-        protected static readonly uint maxMasterImageWidth = 4096;
+        private static readonly uint maxMasterImageWidth = 4096;
 
         #region Specify Driver formats
 
@@ -96,7 +96,7 @@ namespace HarmonyTools.Drivers
             return command;
         }
 
-        protected static Command GetPackCommand(FontDriver driverInstance)
+        private static Command GetPackCommand(FontDriver driverInstance)
         {
             var command = new Command(
                 "pack",
@@ -132,7 +132,7 @@ namespace HarmonyTools.Drivers
             return command;
         }
 
-        protected static Command GetExtractCommand(FontDriver driverInstance)
+        private static Command GetExtractCommand(FontDriver driverInstance)
         {
             var command = new Command(
                 "extract",
@@ -167,7 +167,7 @@ namespace HarmonyTools.Drivers
             return command;
         }
 
-        protected static Command GetReplaceCommand(FontDriver driverInstance)
+        private static Command GetReplaceCommand(FontDriver driverInstance)
         {
             var command = new Command(
                 "replace",
@@ -203,7 +203,7 @@ namespace HarmonyTools.Drivers
             return command;
         }
 
-        protected static Option<bool> GetGenerateDebugImageOption() =>
+        private static Option<bool> GetGenerateDebugImageOption() =>
             new Option<bool>(
                 aliases: new[] { "-d", "--generate-debug-image" },
                 description: "Generate a debug image",
@@ -425,7 +425,7 @@ namespace HarmonyTools.Drivers
             Pack(fileGlyphProvider, fontInfo, output, generateDebugImage);
         }
 
-        protected void Pack(
+        public void Pack(
             IGlyphProvider glyphProvider,
             FontInfo fontInfo,
             string output,
@@ -623,7 +623,7 @@ namespace HarmonyTools.Drivers
 
         #region Helpers
 
-        protected FontBlock? GetFontBlock(IEnumerable<Block> blocks)
+        private FontBlock? GetFontBlock(IEnumerable<Block> blocks)
         {
             var fontBlock = new FontBlock();
             var isFontFile = false;
@@ -650,7 +650,7 @@ namespace HarmonyTools.Drivers
             return fontBlock;
         }
 
-        protected (TxrBlock?, RsiBlock?) GetResourceBlocks(IEnumerable<Block> blocks)
+        private (TxrBlock?, RsiBlock?) GetResourceBlocks(IEnumerable<Block> blocks)
         {
             foreach (var block in blocks)
             {

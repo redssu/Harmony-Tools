@@ -13,7 +13,10 @@ using V3Lib.Wrd;
 
 namespace HarmonyTools.Drivers
 {
-    public class DialogueDriver : StandardDriver<DialogueDriver>, IStandardDriver, IContextMenu
+    public sealed class DialogueDriver
+        : StandardDriver<DialogueDriver>,
+            IStandardDriver,
+            IContextMenu
     {
         /**
          * Author: Paks <https://github.com/P4K5>
@@ -349,7 +352,7 @@ namespace HarmonyTools.Drivers
 
         #region Helpers
 
-        protected static bool AddCommandIfUseful(ref List<WrdCommand> commands, WrdCommand command)
+        private static bool AddCommandIfUseful(ref List<WrdCommand> commands, WrdCommand command)
         {
             // LOC - Displays a dialogue line.
             // CHN - Changes the current speaking character.
@@ -409,7 +412,7 @@ namespace HarmonyTools.Drivers
             return true;
         }
 
-        protected static int GetLocCommandIndexInCommands(List<WrdCommand> commands, uint stringId)
+        private static int GetLocCommandIndexInCommands(List<WrdCommand> commands, uint stringId)
         {
             for (int index = 0; index < commands.Count; index++)
             {
@@ -426,7 +429,7 @@ namespace HarmonyTools.Drivers
             return -1;
         }
 
-        protected static string PrepareCharacterKey(string characterKey)
+        private static string PrepareCharacterKey(string characterKey)
         {
             characterKey = characterKey.ToUpper();
 

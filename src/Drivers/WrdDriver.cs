@@ -7,9 +7,9 @@ using V3Lib.Wrd;
 
 namespace HarmonyTools.Drivers
 {
-    public class WrdDriver : Driver, IDriver, IContextMenu
+    public sealed class WrdDriver : Driver, IDriver, IContextMenu
     {
-        protected static Dictionary<string, string> opcodeTranslationTable = new Dictionary<
+        private static Dictionary<string, string> opcodeTranslationTable = new Dictionary<
             string,
             string
         >()
@@ -161,7 +161,7 @@ namespace HarmonyTools.Drivers
             return command;
         }
 
-        protected static Option<bool> GetFriendlyNamesOption() =>
+        private static Option<bool> GetFriendlyNamesOption() =>
             new Option<bool>(
                 aliases: new[] { "--friendly-names", "-f" },
                 description: "Switches the conversion of operation codes to more human-friendly names.",

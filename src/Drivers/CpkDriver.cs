@@ -7,7 +7,7 @@ using HarmonyTools.Formats;
 
 namespace HarmonyTools.Drivers
 {
-    public class CpkDriver : Driver, IDriver, IContextMenu
+    public sealed class CpkDriver : Driver, IDriver, IContextMenu
     {
         #region Specify Driver formats
 

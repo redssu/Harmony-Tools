@@ -9,7 +9,7 @@ using V3Lib.Stx;
 
 namespace HarmonyTools.Drivers
 {
-    public class StxDriver : StandardDriver<StxDriver>, IStandardDriver, IContextMenu
+    public sealed class StxDriver : StandardDriver<StxDriver>, IStandardDriver, IContextMenu
     {
         #region Specify Driver formats
 

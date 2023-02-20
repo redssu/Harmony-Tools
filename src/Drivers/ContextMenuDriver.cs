@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.IO;
 using System.Linq;
-using System.Reflection;
+using System.Runtime.Versioning;
 using HarmonyTools.Exceptions;
 using HarmonyTools.Extensions;
 using HarmonyTools.Formats;
@@ -11,7 +11,8 @@ using Microsoft.Win32;
 
 namespace HarmonyTools.Drivers
 {
-    public class ContextMenuDriver : IDriver
+    [SupportedOSPlatform("windows")]
+    internal sealed class ContextMenuDriver : IDriver
     {
         public static Command GetCommand()
         {
@@ -31,8 +32,8 @@ namespace HarmonyTools.Drivers
             return command;
         }
 
-        protected readonly string binaryPath;
-        protected readonly string installationPath;
+        private readonly string binaryPath;
+        private readonly string installationPath;
 
         public ContextMenuDriver()
         {
@@ -45,7 +46,7 @@ namespace HarmonyTools.Drivers
             }
         }
 
-        protected void Register()
+        private void Register()
         {
             // csharpier-ignore-start
             Console.WriteLine("WARNING: Note that you should not delete or move HarmonyTools binary file.");
@@ -138,7 +139,7 @@ namespace HarmonyTools.Drivers
                         htDirShell.RegisterHTCommand(
                             declaration.SubKeyID,
                             declaration.Name,
-                            Path.Combine(installationPath, declaration.Icon),
+                            Path.Combine(installationPath, "Icons", declaration.Icon),
                             $"{binaryPath} {declaration.Command}",
                             hasSeparatorBelow: index == directoryDeclarations.Count - 1
                         );
@@ -334,7 +335,7 @@ namespace HarmonyTools.Drivers
             */
         }
 
-        protected void Unregister()
+        private void Unregister()
         {
             if (DoesKeyExists(@"*\shell\HarmonyTools"))
             {
@@ -352,7 +353,7 @@ namespace HarmonyTools.Drivers
             }
         }
 
-        protected bool DoesKeyExists(string keyName)
+        private bool DoesKeyExists(string keyName)
         {
             var key = Registry.ClassesRoot.OpenSubKey(keyName, false);
             return key != null;

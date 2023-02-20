@@ -8,11 +8,11 @@ using V3Lib.Spc;
 
 namespace HarmonyTools.Drivers
 {
-    public class SpcDriver : StandardDriver<SpcDriver>, IStandardDriver, IContextMenu
+    public sealed class SpcDriver : StandardDriver<SpcDriver>, IStandardDriver, IContextMenu
     {
         #region Unknown Constant Values
 
-        protected static readonly byte[] Unknown1 = new byte[]
+        private static readonly byte[] Unknown1 = new byte[]
         {
             0x00,
             0x00,
@@ -52,7 +52,7 @@ namespace HarmonyTools.Drivers
             0x00,
         };
 
-        protected static readonly int Unknown2 = 4;
+        private static readonly int Unknown2 = 4;
 
         #endregion
 

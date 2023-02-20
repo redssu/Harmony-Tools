@@ -3,7 +3,7 @@ using HarmonyTools.Formats;
 
 namespace HarmonyTools.Drivers
 {
-    public interface IContextMenu
+    internal interface IContextMenu
     {
         public static abstract IEnumerable<ContextMenuEntry> SetupContextMenu();
     }

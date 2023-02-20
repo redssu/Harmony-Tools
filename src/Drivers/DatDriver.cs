@@ -9,7 +9,7 @@ using V3Lib.Dat;
 
 namespace HarmonyTools.Drivers
 {
-    public class DatDriver : StandardDriver<DatDriver>, IStandardDriver, IContextMenu
+    public sealed class DatDriver : StandardDriver<DatDriver>, IStandardDriver, IContextMenu
     {
         #region Specify Driver formats
 
@@ -228,7 +228,7 @@ namespace HarmonyTools.Drivers
 
         #region Helpers
 
-        protected static string PrepareColumnValue(string text)
+        private static string PrepareColumnValue(string text)
         {
             return "\""
                 + text.Replace("\n", "\\n").Replace("\r", "\\r").Replace("\"", "\"\"")

@@ -1,11 +1,9 @@
-using System;
-using System.IO;
+using System.Runtime.Versioning;
 using Microsoft.Win32;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
 
 namespace HarmonyTools.Extensions
 {
+    [SupportedOSPlatform("windows")]
     public static class RegistryKeyExtensions
     {
         public static void RegisterHTCommand(

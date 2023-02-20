@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using HarmonyTools.Exceptions;
-using HarmonyTools.Formats;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 

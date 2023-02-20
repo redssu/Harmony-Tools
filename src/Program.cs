@@ -1,3 +1,4 @@
+using System;
 using System.CommandLine;
 using System.Text;
 using HarmonyTools.Drivers;
@@ -24,7 +25,11 @@ namespace HarmonyTools
             rootCommand.AddCommand(DatDriver.GetCommand());
             rootCommand.AddCommand(WrdDriver.GetCommand());
             rootCommand.AddCommand(CpkDriver.GetCommand());
-            rootCommand.AddCommand(ContextMenuDriver.GetCommand());
+
+            if (OperatingSystem.IsWindows())
+            {
+                rootCommand.AddCommand(ContextMenuDriver.GetCommand());
+            }
 
             rootCommand.Invoke(args);
 

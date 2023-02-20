@@ -14,7 +14,7 @@ using V3Lib.Srd.BlockTypes;
 
 namespace HarmonyTools.Drivers
 {
-    public class SrdDriver : StandardDriver<SrdDriver>, IStandardDriver, IContextMenu
+    public sealed class SrdDriver : StandardDriver<SrdDriver>, IStandardDriver, IContextMenu
     {
         #region Specify Driver formats
 
