@@ -389,16 +389,16 @@ namespace HarmonyTools.Drivers
             srdiPath = Path.ChangeExtension(srdPath, "srdi");
             srdvPath = Path.ChangeExtension(srdPath, "srdv");
 
-            srdPath = File.Exists(srdPath) ? srdPath : null;
-            srdiPath = File.Exists(srdiPath) ? srdiPath : null;
-            srdvPath = File.Exists(srdvPath) ? srdvPath : null;
+            var newSrdPath = File.Exists(srdPath) ? srdPath : null;
+            var newSrdiPath = File.Exists(srdiPath) ? srdiPath : null;
+            var newSrdvPath = File.Exists(srdvPath) ? srdvPath : null;
 
-            if (srdPath == null)
+            if (newSrdPath == null)
             {
                 throw new FileNotFoundException($"SRD file not found at \"{srdPath}\".");
             }
 
-            if (srdiPath == null)
+            if (newSrdiPath == null)
             {
                 if (ignoreMissingSrdi)
                 {
@@ -412,7 +412,7 @@ namespace HarmonyTools.Drivers
                 }
             }
 
-            if (srdvPath == null)
+            if (newSrdvPath == null)
             {
                 if (ignoreMissingSrdv)
                 {
@@ -428,6 +428,9 @@ namespace HarmonyTools.Drivers
 
             var srdFile = new SrdFile();
             srdFile.Load(srdPath, srdiPath ?? string.Empty, srdvPath ?? string.Empty);
+
+            srdiPath = newSrdiPath;
+            srdvPath = newSrdvPath;
 
             return srdFile;
         }

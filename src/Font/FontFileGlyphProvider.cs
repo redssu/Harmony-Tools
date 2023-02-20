@@ -70,20 +70,21 @@ namespace HarmonyTools.Font
                 }
 
                 var glyphSize = TextMeasurer.Measure(glyph.ToString(), textOptions);
+
                 var glyphWidth = (int)Math.Ceiling(glyphSize.Width);
                 var glyphHeight = (int)Math.Ceiling(glyphSize.Height);
 
                 using (var glyphImage = new Image<Rgba32>(glyphWidth, glyphHeight))
                 {
                     // draw the glyph
-                    var glyphPath = TextBuilder.GenerateGlyphs(glyph.ToString(), textOptions);
+                    glyphImage.Mutate(
+                        x => x.DrawText(glyph.ToString(), font, Color.White, new PointF(0, 0))
+                    );
 
-                    glyphImage.Mutate(x => x.Fill(Color.Black).Fill(Color.White, glyphPath));
-
-                    sbyte leftPadding = 0,
-                        rightPadding = 0,
-                        topPadding = 0,
-                        bottomPadding = 0;
+                    sbyte leftPadding = -1,
+                        rightPadding = -1,
+                        topPadding = -1,
+                        bottomPadding = -1;
 
                     for (sbyte x = 0; x < glyphWidth; x++)
                     {
@@ -95,17 +96,27 @@ namespace HarmonyTools.Font
                                 break;
                             }
                         }
+
+                        if (leftPadding != -1)
+                        {
+                            break;
+                        }
                     }
 
-                    for (sbyte x = (sbyte)glyphWidth; x >= leftPadding; x--)
+                    for (sbyte x = (sbyte)(glyphWidth - 1); x >= leftPadding; x--)
                     {
                         for (sbyte y = 0; y < glyphHeight; y++)
                         {
                             if (glyphImage[x, y].R != 0)
                             {
-                                rightPadding = x;
+                                rightPadding = (sbyte)(glyphWidth - 1 - x);
                                 break;
                             }
+                        }
+
+                        if (rightPadding != -1)
+                        {
+                            break;
                         }
                     }
 
@@ -119,17 +130,27 @@ namespace HarmonyTools.Font
                                 break;
                             }
                         }
+
+                        if (topPadding != -1)
+                        {
+                            break;
+                        }
                     }
 
-                    for (sbyte y = (sbyte)glyphHeight; y >= topPadding; y--)
+                    for (sbyte y = (sbyte)(glyphHeight - 1); y >= topPadding; y--)
                     {
                         for (sbyte x = 0; x < glyphWidth; x++)
                         {
                             if (glyphImage[x, y].R != 0)
                             {
-                                bottomPadding = y;
+                                bottomPadding = (sbyte)(glyphHeight - 1 - y);
                                 break;
                             }
+                        }
+
+                        if (bottomPadding != -1)
+                        {
+                            break;
                         }
                     }
 
@@ -139,8 +160,8 @@ namespace HarmonyTools.Font
                                 new Rectangle(
                                     leftPadding,
                                     topPadding,
-                                    rightPadding - leftPadding,
-                                    bottomPadding - topPadding
+                                    glyphWidth - leftPadding - rightPadding,
+                                    glyphHeight - topPadding - bottomPadding
                                 )
                             )
                     );
@@ -152,9 +173,9 @@ namespace HarmonyTools.Font
                             Glyph = glyph,
                             Kerning = new sbyte[3]
                             {
-                                (sbyte)(leftPadding - 17),
-                                (sbyte)(glyphWidth - rightPadding - 17),
-                                (sbyte)(topPadding - 18),
+                                leftPadding,
+                                (sbyte)(glyphWidth - rightPadding),
+                                topPadding
                             }
                         },
                         glyphImage

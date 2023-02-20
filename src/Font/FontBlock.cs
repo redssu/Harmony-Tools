@@ -38,7 +38,9 @@ namespace HarmonyTools.Font
                 writer.Write((byte)0);
             }
 
-            IndexTablePtr = (uint)stream.Position;
+            IndexTablePtr = BitFlagsPtr + (uint)BytesOccupiedByBitFlagsCount;
+
+            writer.Seek((int)IndexTablePtr, SeekOrigin.Begin);
 
             // We need to use additional BinaryReader to set specific bits
             // because BinaryWriter doesn't support bitwise operations
@@ -57,14 +59,14 @@ namespace HarmonyTools.Font
                 .ToList();
 
             // This variable is used to calculate offset of BBox Table
-            int BBoxTablePtr = 0;
+            BBoxTablePtr = 0;
 
             for (int index = 0; index < sortedGlyphs.Count; index++)
             {
                 sortedGlyphs[index].Index = (uint)index;
 
                 var charUnicodeIndex = (int)sortedGlyphs[index].Glyph;
-                int byteToWriteOffset = (charUnicodeIndex >> 3) + 0x2C;
+                var byteToWriteOffset = (uint)(charUnicodeIndex >> 3) + BitFlagsPtr;
                 int bitOffset = charUnicodeIndex & 0b111;
 
                 // Turn on bitflag for this character in BitFlags Section
@@ -73,7 +75,7 @@ namespace HarmonyTools.Font
                 var byteValue = reader.ReadByte();
                 byteValue |= (byte)(1 << bitOffset);
 
-                writer.Seek(byteToWriteOffset, SeekOrigin.Begin);
+                writer.Seek((int)byteToWriteOffset, SeekOrigin.Begin);
                 writer.Write(byteValue);
 
                 int charOffset = charUnicodeIndex / 8;
@@ -85,14 +87,18 @@ namespace HarmonyTools.Font
                     writer.Seek((int)IndexTablePtr + charOffset, SeekOrigin.Begin);
                     writer.Write((uint)index);
 
+                    Console.WriteLine($"Writing {index} at {(int)IndexTablePtr + charOffset}");
+
                     alreadyWrittenIndexes.Add(charOffset);
                 }
 
-                BBoxTablePtr = Math.Max(BBoxTablePtr, (int)IndexTablePtr + charOffset);
+                BBoxTablePtr = Math.Max(BBoxTablePtr, (uint)(IndexTablePtr + charOffset));
             }
 
             // Skip last index
             BBoxTablePtr += 4;
+
+            writer.Seek((int)BBoxTablePtr, SeekOrigin.Begin);
 
             // Write Glyphs BBoxes in BBox Table
             foreach (var glyphInfo in sortedGlyphs)
@@ -185,6 +191,10 @@ namespace HarmonyTools.Font
                     }
                 }
             }
+
+            Console.WriteLine(
+                "glyphsCount: " + glyphsCount + ", Charset.Length: " + Charset.Length
+            );
 
             // Add glyphs to the glyph dictionary
             for (uint charIndex = 0; charIndex < Charset.Length; charIndex++)

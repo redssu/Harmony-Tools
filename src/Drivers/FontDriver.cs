@@ -140,10 +140,12 @@ namespace HarmonyTools.Drivers
             );
 
             var inputArgument = GetInputArgument(gameFormat);
+            var generateDebugImage = GetGenerateDebugImageOption();
             command.Add(inputArgument);
+            command.Add(generateDebugImage);
 
             command.SetHandler(
-                (FileSystemInfo input) =>
+                (FileSystemInfo input, bool generateDebugImage) =>
                 {
                     var outputPath = Utils.GetOutputPath(
                         input,
@@ -156,9 +158,10 @@ namespace HarmonyTools.Drivers
                         Directory.CreateDirectory(outputPath);
                     }
 
-                    driverInstance.Extract(input, outputPath);
+                    driverInstance.Extract(input, outputPath, generateDebugImage);
                 },
-                inputArgument
+                inputArgument,
+                generateDebugImage
             );
 
             return command;
@@ -171,7 +174,7 @@ namespace HarmonyTools.Drivers
                 $"Packs a {replacementFormat.Description} into a {gameFormat.Description}"
             );
 
-            var inputArgument = GetInputArgument(knownFormat);
+            var inputArgument = GetInputArgument(replacementFormat);
             var generateDebugImage = GetGenerateDebugImageOption();
 
             command.Add(inputArgument);
@@ -186,7 +189,7 @@ namespace HarmonyTools.Drivers
                         gameFormat.Extension
                     );
 
-                    if (knownFormat.IsDirectory && !Directory.Exists(outputPath))
+                    if (gameFormat.IsDirectory && !Directory.Exists(outputPath))
                     {
                         Directory.CreateDirectory(outputPath);
                     }
@@ -211,7 +214,7 @@ namespace HarmonyTools.Drivers
 
         #region Command Handlers
 
-        public void Extract(FileSystemInfo input, string output)
+        public void Extract(FileSystemInfo input, string output, bool generateDebugImage)
         {
             // Extracting the font is basically extracting the .SRD Archive
             // this tool also splits glyphs into separate files
@@ -257,6 +260,11 @@ namespace HarmonyTools.Drivers
                 paletteData,
                 imageBinary.GetOutputPixelData(0)
             );
+
+            if (generateDebugImage)
+            {
+                image.Save(Path.Combine(output, "__DEBUG_IMAGE.bmp"));
+            }
 
             var mipmapName = rsi.ResourceStringList.First();
             var mipmapExtension = Path.GetExtension(mipmapName).ToUpper();
@@ -348,9 +356,9 @@ namespace HarmonyTools.Drivers
          */
         public void Replace(FileSystemInfo input, string output, bool generateDebugImage)
         {
-            var spcPath = new FileInfo(Path.ChangeExtension(input.FullName, "spc"));
+            var stxPath = new FileInfo(Path.ChangeExtension(input.FullName, "stx"));
 
-            var oldSrdFile = SrdDriver.LoadSrdFile(spcPath, true, true);
+            var oldSrdFile = SrdDriver.LoadSrdFile(stxPath, true, true);
             var fontBlock = GetFontBlock(oldSrdFile.Blocks);
 
             if (fontBlock == null)
@@ -484,7 +492,7 @@ namespace HarmonyTools.Drivers
                     x => x.DrawImage(glyphImage, new Point(masterX + 1, masterY + 1), 1f)
                 );
 
-                glyphInfo.Position = new short[2] { (short)masterX, (short)masterY };
+                glyphInfo.Position = new short[2] { (short)(masterX + 1), (short)(masterY + 1) };
                 glyphInfo.Size = new byte[2] { (byte)glyphImage.Width, (byte)glyphImage.Height };
                 glyphList.Add(glyphInfo.Index, glyphInfo);
 
@@ -497,7 +505,7 @@ namespace HarmonyTools.Drivers
 
             if (generateDebugImage)
             {
-                masterImage.Save(Path.Combine(Path.GetDirectoryName(output)!, "__DEBUG_IMAGE.png"));
+                masterImage.Save(Path.Combine(Path.GetDirectoryName(output)!, "__DEBUG_IMAGE.bmp"));
             }
 
             // Convert image to binary pixel data
@@ -608,7 +616,7 @@ namespace HarmonyTools.Drivers
                 Path.ChangeExtension(output, "srdv")
             );
 
-            Console.WriteLine($"SPC Font file has been successfully saved to \"{output}\".");
+            Console.WriteLine($"STX Font file has been successfully saved to \"{output}\".");
         }
 
         #endregion
