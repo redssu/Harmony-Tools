@@ -118,7 +118,7 @@ namespace HarmonyTools.Drivers
                         gameFormat.Extension
                     );
 
-                    if (knownFormat.IsDirectory && !Directory.Exists(outputPath))
+                    if (gameFormat.IsDirectory && !Directory.Exists(outputPath))
                     {
                         Directory.CreateDirectory(outputPath);
                     }

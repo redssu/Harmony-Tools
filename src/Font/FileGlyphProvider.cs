@@ -43,7 +43,7 @@ namespace HarmonyTools.Font
 
             foreach (var file in targetFiles)
             {
-                if (!file.EndsWith(".bmp"))
+                if (!file.ToLower().EndsWith(".bmp"))
                 {
                     continue;
                 }
