@@ -6,6 +6,7 @@ namespace HarmonyTools.Drivers
     {
         public Command GetCommand();
 
-        public string GetCommandName();
+        public string CommandName { get; }
+        public string CommandDescription { get; }
     }
 }

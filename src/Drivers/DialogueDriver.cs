@@ -13,19 +13,12 @@ using V3Lib.Wrd;
 
 namespace HarmonyTools.Drivers
 {
-    public sealed class DialogueDriver
-        : StandardDriver<DialogueDriver>,
-            IStandardDriver,
-            IContextMenuDriver
+    public sealed class DialogueDriver : StandardDriver, IStandardDriver, IContextMenuDriver
     {
-        public static string CommandName { get; } = "dialogue";
-
-        public string GetCommandName() => CommandName;
-
         /**
          * Author: Paks <https://github.com/P4K5>
          */
-        public static Dictionary<string, string> CharacterMap = new Dictionary<string, string>()
+        public static readonly Dictionary<string, string> CharacterMap = new Dictionary<string, string>()
         {
             { "C000_", "Shuichi Saihara" },
             { "C001_", "Kaito Momota" },
@@ -120,19 +113,15 @@ namespace HarmonyTools.Drivers
             { "CHARA_HATENA", "???" }
         };
 
-        #region Specify Driver formats
+        public override string CommandName => "dialogue";
+        public override string CommandDescription =>
+            "A tool to work with specific STX files (the ones that contain dialogue lines).";
 
-        public static readonly FSObjectFormat gameFormat = new FSObjectFormat(
-            FSObjectType.File,
-            extension: "stx"
-        );
+        private readonly FSObjectFormat gameFormat = new FSObjectFormat(FSObjectType.File, extension: "stx");
+        public override FSObjectFormat GameFormat => gameFormat;
 
-        public static readonly FSObjectFormat knownFormat = new FSObjectFormat(
-            FSObjectType.File,
-            extension: "stx.json"
-        );
-
-        #endregion
+        private readonly FSObjectFormat knownFormat = new FSObjectFormat(FSObjectType.File, extension: "stx.json");
+        public override FSObjectFormat KnownFormat => knownFormat;
 
         public IEnumerable<IContextMenuEntry> GetContextMenu()
         {
@@ -142,7 +131,7 @@ namespace HarmonyTools.Drivers
                 Name = "Extract Dialogue file (STX)",
                 Icon = "Harmony-Tools-Extract-Icon.ico",
                 Command = "dialogue extract \"%1\"",
-                ApplyTo = gameFormat
+                ApplyTo = GameFormat
             };
 
             yield return new ContextMenuEntry
@@ -151,19 +140,9 @@ namespace HarmonyTools.Drivers
                 Name = "Pack this file to Dialogue file (STX)",
                 Icon = "Harmony-Tools-Pack-Icon.ico",
                 Command = "dialogue pack \"%1\"",
-                ApplyTo = knownFormat
+                ApplyTo = KnownFormat
             };
         }
-
-        public Command GetCommand() =>
-            GetCommand(
-                CommandName,
-                "A tool to work with specific STX files (the ones that contain dialogue lines).",
-                gameFormat,
-                knownFormat
-            );
-
-        #region Command Handlers
 
         public override void Extract(FileSystemInfo input, string output)
         {
@@ -177,21 +156,16 @@ namespace HarmonyTools.Drivers
 
             if (!File.Exists(wrdPath))
             {
-                throw new ExtractionException(
-                    $"Required WRD file not found. (expected path: \"{wrdPath}\")."
-                );
+                throw new ExtractionException($"Required WRD file not found. (expected path: \"{wrdPath}\").");
             }
 
             var wrdFile = new WrdFile();
             wrdFile.Load(wrdPath);
 
-            var usefulCommands = new List<WrdCommand>();
-
-            // Filter and transform the commands.
-            foreach (var command in wrdFile.Commands)
-            {
-                AddCommandIfUseful(ref usefulCommands, command);
-            }
+            List<WrdCommand> usefulCommands = wrdFile.Commands
+                .Select(x => TransformCommandIfUseful(x))
+                .OfType<WrdCommand>()
+                .ToList();
 
             var stxFile = new StxFile();
             stxFile.Load(input.FullName);
@@ -251,11 +225,7 @@ namespace HarmonyTools.Drivers
                         break;
                     }
 
-                    if (
-                        paramsDirectlyRelated
-                        && currentCommand.Opcode == "CHK"
-                        && currentCommand.Arguments.Count >= 1
-                    )
+                    if (paramsDirectlyRelated && currentCommand.Opcode == "CHK" && currentCommand.Arguments.Count >= 1)
                     {
                         var firstArgument = currentCommand.Arguments.First();
 
@@ -303,9 +273,7 @@ namespace HarmonyTools.Drivers
 
             File.WriteAllText(output, json);
 
-            Console.WriteLine(
-                $"JSON file with dialogue lines has been successfully saved to \"{output}\"."
-            );
+            Console.WriteLine($"JSON file with dialogue lines has been successfully saved to \"{output}\".");
         }
 
         public override void Pack(FileSystemInfo input, string output)
@@ -320,9 +288,7 @@ namespace HarmonyTools.Drivers
 
                 if (deserialized == null)
                 {
-                    throw new PackException(
-                        "Deserialized JSON object from input file has an unexpected null value."
-                    );
+                    throw new PackException("Deserialized JSON object from input file has an unexpected null value.");
                 }
 
                 dialogueEntries = deserialized;
@@ -339,10 +305,7 @@ namespace HarmonyTools.Drivers
 
             foreach (var dialogueEntry in dialogueEntries)
             {
-                stringTable.Add(
-                    dialogueEntry.Id,
-                    dialogueEntry.Text.Replace(@"\n", "\n").Replace(@"\r", "\r")
-                );
+                stringTable.Add(dialogueEntry.Id, dialogueEntry.Text.Replace(@"\n", "\n").Replace(@"\r", "\r"));
             }
 
             stringTable = stringTable.OrderBy(x => x.Key).ToDictionary(x => x.Key, x => x.Value);
@@ -352,17 +315,13 @@ namespace HarmonyTools.Drivers
             Console.WriteLine($"STX File has been saved successfully to \"{output}\".");
         }
 
-        #endregion
-
-        #region Helpers
-
-        private bool AddCommandIfUseful(ref List<WrdCommand> commands, WrdCommand command)
+        private WrdCommand? TransformCommandIfUseful(WrdCommand command)
         {
             // LOC - Displays a dialogue line.
             // CHN - Changes the current speaking character.
             if (command.Opcode == "CHN" || command.Opcode == "LOC")
             {
-                commands.Add(command);
+                return command;
             }
             // WAK - Configures the engine, I guess that it's also used to set the current speaking character
             else if (
@@ -372,13 +331,11 @@ namespace HarmonyTools.Drivers
                 && command.Arguments[1] == "="
             )
             {
-                commands.Add(
-                    new WrdCommand
-                    {
-                        Opcode = "CHN",
-                        Arguments = new List<string> { command.Arguments[2] }
-                    }
-                );
+                return new WrdCommand
+                {
+                    Opcode = "CHN",
+                    Arguments = new List<string> { command.Arguments[2] }
+                };
             }
             // CHK - Checks if a condition is met, in this case, it's used to check if the player has answered a question.
             else if (
@@ -391,7 +348,7 @@ namespace HarmonyTools.Drivers
                 )
             )
             {
-                commands.Add(command);
+                return command;
             }
             // CHR - Changes parameters of the current speaking character
             else if (
@@ -400,20 +357,14 @@ namespace HarmonyTools.Drivers
                 && CharacterMap.ContainsKey(PrepareCharacterKey(command.Arguments[1]))
             )
             {
-                commands.Add(
-                    new WrdCommand
-                    {
-                        Opcode = "CHN",
-                        Arguments = new List<string> { command.Arguments[1] }
-                    }
-                );
-            }
-            else
-            {
-                return false;
+                return new WrdCommand
+                {
+                    Opcode = "CHN",
+                    Arguments = new List<string> { command.Arguments[1] }
+                };
             }
 
-            return true;
+            return null;
         }
 
         private int GetLocCommandIndexInCommands(List<WrdCommand> commands, uint stringId)
@@ -444,7 +395,5 @@ namespace HarmonyTools.Drivers
 
             return characterKey;
         }
-
-        #endregion
     }
 }

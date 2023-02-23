@@ -9,14 +9,7 @@ namespace HarmonyTools.Drivers
 {
     public sealed class WrdDriver : Driver, IDriver, IContextMenuDriver
     {
-        public static string CommandName { get; } = "wrd";
-
-        public string GetCommandName() => CommandName;
-
-        private static Dictionary<string, string> opcodeTranslationTable = new Dictionary<
-            string,
-            string
-        >()
+        private static readonly Dictionary<string, string> opcodeTranslationTable = new Dictionary<string, string>()
         {
             { "FLG", "Set_Flag" },
             { "IFF", "If_Flag" },
@@ -96,19 +89,11 @@ namespace HarmonyTools.Drivers
             { "JMN", "Jump_To_Branch" }
         };
 
-        #region Specify Driver formats
+        public string CommandName => "wrd";
+        public string CommandDescription => "A tool to work with WRD files (DRV3 game-script files).";
 
-        public static readonly FSObjectFormat gameFormat = new FSObjectFormat(
-            FSObjectType.File,
-            extension: "wrd"
-        );
-
-        public static readonly FSObjectFormat knownFormat = new FSObjectFormat(
-            FSObjectType.File,
-            extension: "wrd.txt"
-        );
-
-        #endregion
+        public readonly FSObjectFormat GameFormat = new FSObjectFormat(FSObjectType.File, extension: "wrd");
+        public readonly FSObjectFormat KnownFormat = new FSObjectFormat(FSObjectType.File, extension: "wrd.txt");
 
         public IEnumerable<IContextMenuEntry> GetContextMenu()
         {
@@ -118,45 +103,36 @@ namespace HarmonyTools.Drivers
                 Name = "Extract WRD file",
                 Icon = "Harmony-Tools-Extract-Icon.ico",
                 Command = "wrd extract \"%1\"",
-                ApplyTo = gameFormat
+                ApplyTo = GameFormat
             };
         }
 
-        #region Command Registration
-
         public Command GetCommand()
         {
-            var driver = new WrdDriver();
+            var command = new Command(CommandName, CommandDescription);
 
-            var command = new Command(
-                CommandName,
-                "A tool to work with WRD files (DRV3 game-script files)."
-            );
-
-            var inputOption = GetInputOption(gameFormat);
+            var inputOption = GetInputOption(GameFormat);
             var friendlyNamesOption = GetFriendlyNamesOption();
 
             var extractCommand = new Command(
                 "extract",
-                $"Extracts a {gameFormat.Description} to {knownFormat.Description}"
+                $"Extracts a {GameFormat.Description} to {KnownFormat.Description}"
             )
             {
                 inputOption,
                 friendlyNamesOption,
             };
 
+            extractCommand.SetHandler(ExtractHandler, inputOption, friendlyNamesOption);
             extractCommand.SetHandler(
                 (FileSystemInfo input, bool friendlyNamesOption) =>
                 {
-                    var outputPath = Utils.GetOutputPath(
-                        input,
-                        gameFormat.Extension,
-                        knownFormat.Extension
+                    CreateBatchTaskHandler(
+                        GameFormat,
+                        (FileSystemInfo input) => ExtractHandler(input, friendlyNamesOption)
                     );
-
-                    driver.Extract(input, outputPath, friendlyNamesOption);
                 },
-                inputOption,
+                Program.BatchOption,
                 friendlyNamesOption
             );
 
@@ -172,7 +148,12 @@ namespace HarmonyTools.Drivers
                 getDefaultValue: () => true
             );
 
-        #endregion
+        private void ExtractHandler(FileSystemInfo input, bool friendlyNames)
+        {
+            var outputPath = Utils.GetOutputPath(input, GameFormat, KnownFormat);
+
+            Extract(input, outputPath, friendlyNames);
+        }
 
         public void Extract(FileSystemInfo input, string output, bool friendlyNames)
         {
@@ -206,9 +187,7 @@ namespace HarmonyTools.Drivers
                 }
             }
 
-            Console.WriteLine(
-                $"TXT file with extracted game script has been successfully saved to \"{output}\" ."
-            );
+            Console.WriteLine($"TXT file with extracted game script has been successfully saved to \"{output}\" .");
         }
     }
 }

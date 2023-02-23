@@ -13,9 +13,8 @@ namespace HarmonyTools.Drivers
     [SupportedOSPlatform("windows")]
     internal sealed class ContextMenuDriver : IDriver
     {
-        public static string CommandName { get; } = "context-menu";
-
-        public string GetCommandName() => CommandName;
+        public string CommandName => "context-menu";
+        public string CommandDescription => "Manages custom context menu";
 
         private readonly string binaryPath;
         private readonly string installationPath;
@@ -33,15 +32,13 @@ namespace HarmonyTools.Drivers
 
         public Command GetCommand()
         {
-            var driverInstance = new ContextMenuDriver();
-
-            var command = new Command(CommandName, "Manages custom context menu");
+            var command = new Command(CommandName, CommandDescription);
 
             var registerCommand = new Command("register", "Registers context menu");
             var unregisterCommand = new Command("unregister", "Unregisters context menu");
 
-            registerCommand.SetHandler(() => driverInstance.Register());
-            unregisterCommand.SetHandler(() => driverInstance.Unregister());
+            registerCommand.SetHandler(Register);
+            unregisterCommand.SetHandler(Unregister);
 
             command.AddCommand(registerCommand);
             command.AddCommand(unregisterCommand);
@@ -87,9 +84,7 @@ namespace HarmonyTools.Drivers
             {
                 var htFileRoot = Registry.ClassesRoot.CreateSubKey(@"*\shell\HarmonyTools");
                 var htDirRoot = Registry.ClassesRoot.CreateSubKey(@"Directory\shell\HarmonyTools");
-                var htDirBgRoot = Registry.ClassesRoot.CreateSubKey(
-                    @"Directory\Background\shell\HarmonyTools"
-                );
+                var htDirBgRoot = Registry.ClassesRoot.CreateSubKey(@"Directory\Background\shell\HarmonyTools");
 
                 htFileRoot.SetValue("Icon", installationPath + @"\Harmony-Tools-Icon.ico");
                 htFileRoot.SetValue("MUIVerb", "Harmony Tools");
@@ -129,9 +124,7 @@ namespace HarmonyTools.Drivers
             }
             catch (System.UnauthorizedAccessException)
             {
-                throw new ContextMenuException(
-                    "You do not have permission to register the context menu."
-                );
+                throw new ContextMenuException("You do not have permission to register the context menu.");
             }
 
             /*

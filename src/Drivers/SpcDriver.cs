@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.CommandLine;
 using System.IO;
 using System.Linq;
 using HarmonyTools.Formats;
@@ -8,14 +7,8 @@ using V3Lib.Spc;
 
 namespace HarmonyTools.Drivers
 {
-    public sealed class SpcDriver : StandardDriver<SpcDriver>, IStandardDriver, IContextMenuDriver
+    public sealed class SpcDriver : StandardDriver, IStandardDriver, IContextMenuDriver
     {
-        public static string CommandName { get; } = "spc";
-
-        public string GetCommandName() => CommandName;
-
-        #region Unknown Constant Values
-
         private static readonly byte[] Unknown1 = new byte[]
         {
             0x00,
@@ -55,24 +48,19 @@ namespace HarmonyTools.Drivers
             0x00,
             0x00,
         };
-
         private static readonly int Unknown2 = 4;
 
-        #endregion
+        public override string CommandName => "spc";
+        public override string CommandDescription => "A tool to work with SPC files (DRV3 archives).";
 
-        #region Specify Driver formats
+        private readonly FSObjectFormat gameFormat = new FSObjectFormat(FSObjectType.File, extension: "spc");
+        public override FSObjectFormat GameFormat => gameFormat;
 
-        public static readonly FSObjectFormat gameFormat = new FSObjectFormat(
-            FSObjectType.File,
-            extension: "spc"
-        );
-
-        public static readonly FSObjectFormat knownFormat = new FSObjectFormat(
+        private readonly FSObjectFormat knownFormat = new FSObjectFormat(
             FSObjectType.Directory,
             extension: "spc.decompressed"
         );
-
-        #endregion
+        public override FSObjectFormat KnownFormat => knownFormat;
 
         public IEnumerable<IContextMenuEntry> GetContextMenu()
         {
@@ -82,7 +70,7 @@ namespace HarmonyTools.Drivers
                 Name = "Extract SPC file",
                 Icon = "Harmony-Tools-Extract-Icon.ico",
                 Command = "spc extract \"%1\"",
-                ApplyTo = gameFormat
+                ApplyTo = GameFormat
             };
 
             yield return new ContextMenuEntry
@@ -91,19 +79,9 @@ namespace HarmonyTools.Drivers
                 Name = "Pack this directory as SPC file",
                 Icon = "Harmony-Tools-Pack-Icon.ico",
                 Command = "spc pack \"%1\"",
-                ApplyTo = knownFormat
+                ApplyTo = KnownFormat
             };
         }
-
-        public Command GetCommand() =>
-            GetCommand(
-                CommandName,
-                "A tool to work with SPC files (DRV3 archives).",
-                gameFormat,
-                knownFormat
-            );
-
-        #region Command Handlers
 
         public override void Extract(FileSystemInfo input, string output)
         {
@@ -145,7 +123,5 @@ namespace HarmonyTools.Drivers
 
             Console.WriteLine($"SPC archive has been successfully saved to \"{output}\".");
         }
-
-        #endregion
     }
 }

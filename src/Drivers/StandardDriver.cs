@@ -4,8 +4,17 @@ using HarmonyTools.Formats;
 
 namespace HarmonyTools.Drivers
 {
-    public abstract class StandardDriver<T> : Driver where T : IStandardDriver, new()
+    public abstract class StandardDriver : Driver, IDriver
     {
+        public abstract string CommandName { get; }
+        public abstract string CommandDescription { get; }
+
+        public abstract FSObjectFormat GameFormat { get; }
+        public abstract FSObjectFormat KnownFormat { get; }
+
+        public Command GetCommand() =>
+            GetCommand(CommandName, CommandDescription, GameFormat, KnownFormat);
+
         protected Command GetCommand(
             string name,
             string description,
@@ -13,10 +22,8 @@ namespace HarmonyTools.Drivers
             FSObjectFormat knownFormat
         )
         {
-            var driver = new T();
-
-            var packCommand = GetPackCommand(gameFormat, knownFormat, driver);
-            var extractCommand = GetExtractCommand(gameFormat, knownFormat, driver);
+            var packCommand = GetPackCommand();
+            var extractCommand = GetExtractCommand();
 
             var command = new Command(name, description);
 
@@ -29,79 +36,78 @@ namespace HarmonyTools.Drivers
             return command;
         }
 
-        protected Command? GetPackCommand(
-            FSObjectFormat gameFormat,
-            FSObjectFormat knownFormat,
-            IStandardDriver driver
-        )
+        protected Command? GetPackCommand()
         {
             var command = new Command(
                 "pack",
-                $"Packs a {knownFormat.Description} into a {gameFormat.Description}"
+                $"Packs a {KnownFormat.Description} into a {GameFormat.Description}"
             );
 
-            var inputOption = GetInputOption(knownFormat);
+            var inputOption = GetInputOption(KnownFormat);
             command.Add(inputOption);
 
+            command.SetHandler(PackHandler, inputOption);
             command.SetHandler(
-                (FileSystemInfo input) =>
-                {
-                    var outputPath = Utils.GetOutputPath(
-                        input,
-                        knownFormat.Extension,
-                        gameFormat.Extension
-                    );
-
-                    if (gameFormat.IsDirectory && !Directory.Exists(outputPath))
-                    {
-                        Directory.CreateDirectory(outputPath);
-                    }
-
-                    driver.Pack(input, outputPath);
-                },
-                inputOption
+                CreateBatchTaskHandler(KnownFormat, PackHandler),
+                Program.BatchOption
             );
 
             return command;
         }
 
-        protected Command? GetExtractCommand(
-            FSObjectFormat gameFormat,
-            FSObjectFormat knownFormat,
-            IStandardDriver driver
-        )
+        protected Command? GetExtractCommand()
         {
             var command = new Command(
                 "extract",
-                $"Extracts a {gameFormat.Description} into a {knownFormat.Description}"
+                $"Extracts a {GameFormat.Description} into a {KnownFormat.Description}"
             );
 
-            var inputOption = GetInputOption(gameFormat);
+            var inputOption = GetInputOption(GameFormat);
             command.Add(inputOption);
 
+            command.SetHandler(ExtractHandler, inputOption);
             command.SetHandler(
-                (FileSystemInfo input) =>
-                {
-                    var outputPath = Utils.GetOutputPath(
-                        input,
-                        gameFormat.Extension,
-                        knownFormat.Extension
-                    );
-
-                    if (knownFormat.IsDirectory && !Directory.Exists(outputPath))
-                    {
-                        Directory.CreateDirectory(outputPath);
-                    }
-
-                    driver.Extract(input, outputPath);
-                },
-                inputOption
+                CreateBatchTaskHandler(GameFormat, ExtractHandler),
+                Program.BatchOption
             );
 
             return command;
         }
 
+        private void PackHandler(FileSystemInfo input)
+        {
+            var outputPath = Utils.GetOutputPath(
+                input,
+                KnownFormat.Extension,
+                GameFormat.Extension
+            );
+
+            if (GameFormat.IsDirectory && !Directory.Exists(outputPath))
+            {
+                Directory.CreateDirectory(outputPath);
+            }
+
+            Pack(input, outputPath);
+        }
+
+        private void ExtractHandler(FileSystemInfo input)
+        {
+            var outputPath = Utils.GetOutputPath(
+                input,
+                GameFormat.Extension,
+                KnownFormat.Extension
+            );
+
+            if (KnownFormat.IsDirectory && !Directory.Exists(outputPath))
+            {
+                Directory.CreateDirectory(outputPath);
+            }
+
+            Extract(input, outputPath);
+        }
+
         public abstract void Pack(FileSystemInfo input, string outputPath);
+
         public abstract void Extract(FileSystemInfo input, string outputPath);
     }
 }

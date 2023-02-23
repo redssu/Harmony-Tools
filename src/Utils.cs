@@ -1,4 +1,5 @@
 using System.IO;
+using HarmonyTools.Formats;
 
 namespace HarmonyTools
 {
@@ -19,6 +20,25 @@ namespace HarmonyTools
             }
 
             return inputName + outputExtension;
+        }
+
+        public static string GetOutputPath(
+            FileSystemInfo input,
+            FSObjectFormat inputFormat,
+            FSObjectFormat outputFormat,
+            bool createDirectoryIfNeeded = true
+        )
+        {
+            var outputPath = GetOutputPath(input, inputFormat.Extension, outputFormat.Extension);
+
+            if (
+                outputFormat.IsDirectory && !Directory.Exists(outputPath) && createDirectoryIfNeeded
+            )
+            {
+                Directory.CreateDirectory(outputPath);
+            }
+
+            return outputPath;
         }
     }
 }

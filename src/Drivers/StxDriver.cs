@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.CommandLine;
 using System.IO;
 using System.Linq;
 using HarmonyTools.Exceptions;
@@ -9,25 +8,16 @@ using V3Lib.Stx;
 
 namespace HarmonyTools.Drivers
 {
-    public sealed class StxDriver : StandardDriver<StxDriver>, IStandardDriver, IContextMenuDriver
+    public sealed class StxDriver : StandardDriver, IStandardDriver, IContextMenuDriver
     {
-        public static string CommandName { get; } = "stx";
+        public override string CommandName => "stx";
+        public override string CommandDescription => "A tool to work with STX files (DRV3 string tables).";
 
-        public string GetCommandName() => CommandName;
+        private readonly FSObjectFormat gameFormat = new FSObjectFormat(FSObjectType.File, extension: "stx");
+        public override FSObjectFormat GameFormat => gameFormat;
 
-        #region Specify Driver formats
-
-        public static readonly FSObjectFormat gameFormat = new FSObjectFormat(
-            FSObjectType.File,
-            extension: "stx"
-        );
-
-        public static readonly FSObjectFormat knownFormat = new FSObjectFormat(
-            FSObjectType.File,
-            extension: "stx.txt"
-        );
-
-        #endregion
+        private readonly FSObjectFormat knownFormat = new FSObjectFormat(FSObjectType.File, extension: "stx.txt");
+        public override FSObjectFormat KnownFormat => knownFormat;
 
         public IEnumerable<IContextMenuEntry> GetContextMenu()
         {
@@ -37,7 +27,7 @@ namespace HarmonyTools.Drivers
                 Name = "Extract STX file",
                 Icon = "Harmony-Tools-Extract-Icon.ico",
                 Command = "stx extract \"%1\"",
-                ApplyTo = gameFormat
+                ApplyTo = GameFormat
             };
 
             yield return new ContextMenuEntry
@@ -46,19 +36,9 @@ namespace HarmonyTools.Drivers
                 Name = "Pack this file as STX file",
                 Icon = "Harmony-Tools-Pack-Icon.ico",
                 Command = "stx pack \"%1\"",
-                ApplyTo = knownFormat
+                ApplyTo = KnownFormat
             };
         }
-
-        public Command GetCommand() =>
-            GetCommand(
-                CommandName,
-                "A tool to work with STX files (DRV3 string tables).",
-                gameFormat,
-                knownFormat
-            );
-
-        #region Command Handlers
 
         public override void Extract(FileSystemInfo input, string output)
         {
@@ -81,86 +61,72 @@ namespace HarmonyTools.Drivers
                 }
             }
 
-            Console.WriteLine(
-                $"TXT file with extracted strings has been successfully saved to \"{output}\"."
-            );
+            Console.WriteLine($"TXT file with extracted strings has been successfully saved to \"{output}\".");
         }
 
         public override void Pack(FileSystemInfo input, string output)
         {
             var stxFile = new StxFile();
 
-            using (var reader = new StreamReader(input.FullName))
+            using var reader = new StreamReader(input.FullName);
+
+            while (reader != null && !reader.EndOfStream)
             {
-                while (reader != null && !reader.EndOfStream)
+                if (reader.ReadLine()!.StartsWith("{"))
                 {
-                    if (reader.ReadLine()!.StartsWith("{"))
+                    var table = new Dictionary<uint, string>();
+
+                    while (true)
                     {
-                        var table = new Dictionary<uint, string>();
+                        string? line = reader.ReadLine();
 
-                        while (true)
+                        uint key = 0;
+                        string value = string.Empty;
+
+                        if (line == null || line.StartsWith("}"))
                         {
-                            string? line = reader.ReadLine();
+                            break;
+                        }
 
-                            uint key = 0;
-                            string value = string.Empty;
+                        if (line.StartsWith("["))
+                        {
+                            int index = line.IndexOf("]");
 
-                            if (line == null || line.StartsWith("}"))
-                            {
-                                break;
-                            }
-
-                            if (line.StartsWith("["))
-                            {
-                                int index = line.IndexOf("]");
-
-                                if (index == -1)
-                                    throw new PackException(
-                                        $"No valid key pattern found at the beginning of the line: {line}."
-                                    );
-
-                                try
-                                {
-                                    key = Convert.ToUInt32(line.Substring(1, index - 1));
-                                }
-                                catch (Exception)
-                                {
-                                    throw new PackException($"Key in line {line} is not valid.");
-                                }
-
-                                if (index + 1 < line.Length)
-                                {
-                                    value = line.Substring(index + 1).TrimStart(' ');
-                                }
-                                else
-                                {
-                                    value = string.Empty;
-                                }
-                            }
-                            else
-                            {
+                            if (index == -1 || index > line.Length - 1)
                                 throw new PackException(
                                     $"No valid key pattern found at the beginning of the line: {line}."
                                 );
+
+                            try
+                            {
+                                key = Convert.ToUInt32(line.Substring(1, index - 1));
+                            }
+                            catch (Exception)
+                            {
+                                throw new PackException($"Key in line {line} is not valid.");
                             }
 
-                            table.Add(key, value.Replace(@"\n", "\n").Replace(@"\r", "\r"));
+                            value = line.Substring(index + 1).TrimStart(' ');
+                        }
+                        else
+                        {
+                            throw new PackException(
+                                $"No valid key pattern found at the beginning of the line: {line}."
+                            );
                         }
 
-                        table = table
-                            .OrderBy(item => item.Key)
-                            .ToDictionary(item => item.Key, item => item.Value);
-
-                        stxFile.StringTables.Add(new StringTable(table, 8));
+                        table.Add(key, value.Replace(@"\n", "\n").Replace(@"\r", "\r"));
                     }
+
+                    table = table.OrderBy(item => item.Key).ToDictionary(item => item.Key, item => item.Value);
+
+                    stxFile.StringTables.Add(new StringTable(table, 8));
                 }
-
-                stxFile.Save(output);
-
-                Console.WriteLine($"STX File has been saved successfully to \"{output}\".");
             }
-        }
 
-        #endregion
+            stxFile.Save(output);
+
+            Console.WriteLine($"STX File has been saved successfully to \"{output}\".");
+        }
     }
 }

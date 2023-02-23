@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using CriFsV2Lib;
 using HarmonyTools.Formats;
 
@@ -11,23 +9,18 @@ namespace HarmonyTools.Drivers
 {
     public sealed class CpkDriver : Driver, IDriver, IContextMenuDriver
     {
-        public static string CommandName { get; } = "cpk";
+        private static readonly FSObjectFormat gameFormat = new FSObjectFormat(FSObjectType.File, extension: "cpk");
 
-        public string GetCommandName() => CommandName;
-
-        #region Specify Driver formats
-
-        public static readonly FSObjectFormat gameFormat = new FSObjectFormat(
-            FSObjectType.File,
-            extension: "cpk"
-        );
-
-        public static readonly FSObjectFormat knownFormat = new FSObjectFormat(
+        private static readonly FSObjectFormat knownFormat = new FSObjectFormat(
             FSObjectType.Directory,
             extension: "cpk.decompressed"
         );
 
-        #endregion
+        public string CommandName => "cpk";
+        public string CommandDescription => "A tool to work with CPK files (DRV3 main archives).";
+
+        public FSObjectFormat KnownFormat => knownFormat;
+        public FSObjectFormat GameFormat => gameFormat;
 
         public IEnumerable<IContextMenuEntry> GetContextMenu()
         {
@@ -37,56 +30,43 @@ namespace HarmonyTools.Drivers
                 Name = "Extract CPK file",
                 Icon = "Harmony-Tools-Extract-Icon.ico",
                 Command = "cpk extract \"%1\"",
-                ApplyTo = gameFormat
+                ApplyTo = GameFormat
             };
         }
 
         public Command GetCommand()
         {
             var driver = new CpkDriver();
+            var command = new Command(CommandName, CommandDescription);
 
-            var command = new Command(
-                CommandName,
-                "A tool to work with CPK files (DRV3 main archives)."
-            );
-
-            var inputArgument = GetInputOption(gameFormat);
+            var inputOption = GetInputOption(GameFormat);
 
             var extractCommand = new Command(
                 "extract",
-                $"Extracts a {gameFormat.Description} to {knownFormat.Description}"
+                $"Extracts a {GameFormat.Description} to {KnownFormat.Description}"
             )
             {
-                inputArgument
+                inputOption
             };
 
-            extractCommand.SetHandler(
-                (FileSystemInfo input) =>
-                {
-                    var outputPath = Utils.GetOutputPath(
-                        input,
-                        gameFormat.Extension,
-                        knownFormat.Extension
-                    );
-
-                    driver.Extract(input, outputPath);
-                },
-                inputArgument
-            );
+            extractCommand.SetHandler(PrepareExtract, inputOption);
+            extractCommand.SetHandler(CreateBatchTaskHandler(GameFormat, PrepareExtract), Program.BatchOption);
 
             command.AddCommand(extractCommand);
 
             return command;
         }
 
+        private void PrepareExtract(FileSystemInfo input)
+        {
+            var outputPath = Utils.GetOutputPath(input, GameFormat, KnownFormat);
+
+            Extract(input, outputPath);
+        }
+
         public void Extract(FileSystemInfo input, string output)
         {
-            using var reader = new FileStream(
-                input.FullName,
-                FileMode.Open,
-                FileAccess.Read,
-                FileShare.Read
-            );
+            using var reader = new FileStream(input.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
 
             using var cpkExtractor = CriFsLib.Instance.CreateCpkReader(reader, true);
 
@@ -110,14 +90,7 @@ namespace HarmonyTools.Drivers
 
                 var extractedFile = cpkExtractor.ExtractFile(file);
 
-                using (
-                    var writer = new FileStream(
-                        fileOutputPath,
-                        FileMode.Create,
-                        FileAccess.Write,
-                        FileShare.Read
-                    )
-                )
+                using (var writer = new FileStream(fileOutputPath, FileMode.Create, FileAccess.Write, FileShare.Read))
                 {
                     writer.Write(extractedFile.Span);
                 }

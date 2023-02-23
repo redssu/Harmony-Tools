@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.CommandLine;
 using System.IO;
 using System.Linq;
 using HarmonyTools.Exceptions;
@@ -14,25 +13,19 @@ using V3Lib.Srd.BlockTypes;
 
 namespace HarmonyTools.Drivers
 {
-    public sealed class SrdDriver : StandardDriver<SrdDriver>, IStandardDriver, IContextMenuDriver
+    public sealed class SrdDriver : StandardDriver, IStandardDriver, IContextMenuDriver
     {
-        public static string CommandName { get; } = "srd";
+        public override string CommandName => "srd";
+        public override string CommandDescription => "A tool to work with SRD files (DRV3 texture archives).";
 
-        public string GetCommandName() => CommandName;
+        private readonly FSObjectFormat gameFormat = new FSObjectFormat(FSObjectType.File, extension: "srd");
+        public override FSObjectFormat GameFormat => gameFormat;
 
-        #region Specify Driver formats
-
-        public static readonly FSObjectFormat gameFormat = new FSObjectFormat(
-            FSObjectType.File,
-            extension: "srd"
-        );
-
-        public static readonly FSObjectFormat knownFormat = new FSObjectFormat(
+        private readonly FSObjectFormat knownFormat = new FSObjectFormat(
             FSObjectType.Directory,
             extension: "srd.decompressed"
         );
-
-        #endregion
+        public override FSObjectFormat KnownFormat => knownFormat;
 
         public IEnumerable<IContextMenuEntry> GetContextMenu()
         {
@@ -42,7 +35,7 @@ namespace HarmonyTools.Drivers
                 Name = "Extract SRD file",
                 Icon = "Harmony-Tools-Extract-Icon.ico",
                 Command = "srd extract \"%1\"",
-                ApplyTo = gameFormat
+                ApplyTo = GameFormat
             };
 
             yield return new ContextMenuEntry
@@ -51,19 +44,9 @@ namespace HarmonyTools.Drivers
                 Name = "Pack this directory as SRD file",
                 Icon = "Harmony-Tools-Pack-Icon.ico",
                 Command = "srd pack \"%1\"",
-                ApplyTo = knownFormat
+                ApplyTo = KnownFormat
             };
         }
-
-        public Command GetCommand() =>
-            GetCommand(
-                CommandName,
-                "A tool to work with SRD files (DRV3 texture archives).",
-                gameFormat,
-                knownFormat
-            );
-
-        #region Command Handlers
 
         public override void Extract(FileSystemInfo input, string output)
         {
@@ -103,12 +86,7 @@ namespace HarmonyTools.Drivers
                     var mipWidth = Math.Max((ushort)1, displayWidth);
                     var mipHeight = Math.Max((ushort)1, displayHeight);
 
-                    var imageBinary = new ImageBinary(
-                        mipWidth,
-                        mipHeight,
-                        pixelFormat,
-                        inputImageData
-                    );
+                    var imageBinary = new ImageBinary(mipWidth, mipHeight, pixelFormat, inputImageData);
 
                     var image = SrdDriver.TransformPixelDataToImage(
                         mipWidth,
@@ -160,22 +138,13 @@ namespace HarmonyTools.Drivers
 
                 var textureName = Path.GetFileName(file);
 
-                using (
-                    var fileStream = new FileStream(
-                        file,
-                        FileMode.Open,
-                        FileAccess.Read,
-                        FileShare.Read
-                    )
-                )
+                using (var fileStream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
                     var image = Image.Load<Rgba32>(fileStream);
 
                     if (image == null)
                     {
-                        throw new PackException(
-                            $"Cannot pack texture \"{textureName}\": Failed to load image."
-                        );
+                        throw new PackException($"Cannot pack texture \"{textureName}\": Failed to load image.");
                     }
 
                     var pixelData = new List<byte>();
@@ -243,14 +212,10 @@ namespace HarmonyTools.Drivers
 
             srdFile.Save(output, srdiOutputPath, srdvOutputPath);
 
-            Console.WriteLine(
-                $"SRD archive and it's additional files has been successfully saved to \"{output}\"."
-            );
+            Console.WriteLine($"SRD archive and it's additional files has been successfully saved to \"{output}\".");
         }
 
-        #endregion
-
-        #region Helpers
+        // these are public because FontDriver uses them too
 
         public static (ushort, ushort) GetDimensions(TxrBlock txr, RsiBlock rsi)
         {
@@ -281,12 +246,7 @@ namespace HarmonyTools.Drivers
                 _ => PixelDataFormat.Undefined
             };
 
-        public static byte[] UnSwizzleTexture(
-            byte[] data,
-            ushort width,
-            ushort height,
-            ushort swizzleFlag
-        )
+        public static byte[] UnSwizzleTexture(byte[] data, ushort width, ushort height, ushort swizzleFlag)
         {
             if (swizzleFlag == 0 || swizzleFlag == 2 || swizzleFlag == 6)
             {
@@ -372,13 +332,7 @@ namespace HarmonyTools.Drivers
             string? srdiPath;
             string? srdvPath;
 
-            return LoadSrdFile(
-                srdFileInfo,
-                out srdiPath,
-                out srdvPath,
-                ignoreMissingSrdi,
-                ignoreMissingSrdv
-            );
+            return LoadSrdFile(srdFileInfo, out srdiPath, out srdvPath, ignoreMissingSrdi, ignoreMissingSrdv);
         }
 
         public static SrdFile LoadSrdFile(
@@ -410,9 +364,7 @@ namespace HarmonyTools.Drivers
                 }
                 else
                 {
-                    throw new FileNotFoundException(
-                        $"No corresponding SRDI file not found at \"{srdiPath}\"."
-                    );
+                    throw new FileNotFoundException($"No corresponding SRDI file not found at \"{srdiPath}\".");
                 }
             }
 
@@ -424,9 +376,7 @@ namespace HarmonyTools.Drivers
                 }
                 else
                 {
-                    throw new FileNotFoundException(
-                        $"No corresponding SRDV file not found at \"{srdvPath}\"."
-                    );
+                    throw new FileNotFoundException($"No corresponding SRDV file not found at \"{srdvPath}\".");
                 }
             }
 
@@ -438,7 +388,5 @@ namespace HarmonyTools.Drivers
 
             return srdFile;
         }
-
-        #endregion
     }
 }

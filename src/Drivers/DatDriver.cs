@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.CommandLine;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -9,30 +8,16 @@ using V3Lib.Dat;
 
 namespace HarmonyTools.Drivers
 {
-    public sealed class DatDriver : StandardDriver<DatDriver>, IStandardDriver, IContextMenuDriver
+    public sealed class DatDriver : StandardDriver, IStandardDriver, IContextMenuDriver
     {
-        public static string CommandName { get; } = "dat";
+        public override string CommandName => "dat";
+        public override string CommandDescription => "A tool to work with DAT files (DRV3 data tables).";
 
-        public string GetCommandName() => CommandName;
+        private readonly FSObjectFormat gameFormat = new FSObjectFormat(FSObjectType.File, extension: "dat");
+        public override FSObjectFormat GameFormat => gameFormat;
 
-        #region Specify Driver formats
-
-        public static readonly FSObjectFormat gameFormat = new FSObjectFormat(
-            FSObjectType.File,
-            extension: "dat"
-        );
-
-        public static readonly FSObjectFormat knownFormat = new FSObjectFormat(
-            FSObjectType.File,
-            extension: "dat.csv"
-        );
-
-        public static readonly FSObjectFormat replacementFormat = new FSObjectFormat(
-            FSObjectType.File,
-            extension: "ttf"
-        );
-
-        #endregion
+        private readonly FSObjectFormat knownFormat = new FSObjectFormat(FSObjectType.File, extension: "dat.csv");
+        public override FSObjectFormat KnownFormat => knownFormat;
 
         public IEnumerable<IContextMenuEntry> GetContextMenu()
         {
@@ -42,7 +27,7 @@ namespace HarmonyTools.Drivers
                 Name = "Extract DAT file",
                 Icon = "Harmony-Tools-Extract-Icon.ico",
                 Command = "dat extract \"%1\"",
-                ApplyTo = gameFormat
+                ApplyTo = GameFormat
             };
 
             yield return new ContextMenuEntry
@@ -51,19 +36,9 @@ namespace HarmonyTools.Drivers
                 Name = "Pack this file to DAT file",
                 Icon = "Harmony-Tools-Pack-Icon.ico",
                 Command = "dat pack \"%1\"",
-                ApplyTo = knownFormat
+                ApplyTo = KnownFormat
             };
         }
-
-        public Command GetCommand() =>
-            GetCommand(
-                CommandName,
-                "A tool to work with DAT files (DRV3 data tables).",
-                gameFormat,
-                knownFormat
-            );
-
-        #region Command Handlers
 
         public override void Extract(FileSystemInfo input, string output)
         {
@@ -99,9 +74,7 @@ namespace HarmonyTools.Drivers
                 writer.Write(csvOutput);
             }
 
-            Console.WriteLine(
-                $"CSV file with extracted data has been successfully saved to \"{output}\"."
-            );
+            Console.WriteLine($"CSV file with extracted data has been successfully saved to \"{output}\".");
         }
 
         public override void Pack(FileSystemInfo input, string output)
@@ -216,8 +189,7 @@ namespace HarmonyTools.Drivers
                         currentColDef.Type,
                         // One column can have multiple values separated by '|',
                         // we need to store maximum count of these values in one column.
-                        (ushort)
-                            Math.Max(currentColDef.Count, currentColumn.Count(c => c == '|') + 1)
+                        (ushort)Math.Max(currentColDef.Count, currentColumn.Count(c => c == '|') + 1)
                     );
                 }
             }
@@ -228,17 +200,9 @@ namespace HarmonyTools.Drivers
             Console.WriteLine($"DAT File has been saved successfully to \"{output}\".");
         }
 
-        #endregion
-
-        #region Helpers
-
         private static string PrepareColumnValue(string text)
         {
-            return "\""
-                + text.Replace("\n", "\\n").Replace("\r", "\\r").Replace("\"", "\"\"")
-                + "\"";
+            return "\"" + text.Replace("\n", "\\n").Replace("\r", "\\r").Replace("\"", "\"\"") + "\"";
         }
-
-        #endregion
     }
 }

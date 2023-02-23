@@ -27,30 +27,22 @@ namespace HarmonyTools.Drivers
             public List<string> Resources { get; set; }
         }
 
-        public static string CommandName { get; } = "font";
-
-        public string GetCommandName() => CommandName;
-
         private static readonly uint maxMasterImageWidth = 4096;
 
-        #region Specify Driver formats
+        public string CommandName => "font";
+        public string CommandDescription => "A tool to work with STX files (DRV3 font archives).";
 
-        public static readonly FSObjectFormat gameFormat = new FSObjectFormat(
-            FSObjectType.File,
-            extension: "stx"
-        );
+        private readonly FSObjectFormat gameFormat = new FSObjectFormat(FSObjectType.File, extension: "stx");
+        public FSObjectFormat GameFormat => gameFormat;
 
-        public static readonly FSObjectFormat knownFormat = new FSObjectFormat(
+        private readonly FSObjectFormat knownFormat = new FSObjectFormat(
             FSObjectType.Directory,
             extension: "stx.decompressed_font"
         );
+        public FSObjectFormat KnownFormat => knownFormat;
 
-        public static readonly FSObjectFormat replacementFormat = new FSObjectFormat(
-            FSObjectType.File,
-            extension: "ttf"
-        );
-
-        #endregion
+        private readonly FSObjectFormat replacementFormat = new FSObjectFormat(FSObjectType.File, extension: "ttf");
+        public FSObjectFormat ReplacementFormat => replacementFormat;
 
         public IEnumerable<IContextMenuEntry> GetContextMenu()
         {
@@ -60,7 +52,7 @@ namespace HarmonyTools.Drivers
                 Name = "Extract font file (STX)",
                 Icon = "Harmony-Tools-Extract-Icon.ico",
                 Command = "font extract \"%1\"",
-                ApplyTo = gameFormat
+                ApplyTo = GameFormat
             };
 
             yield return new ContextMenuEntry
@@ -69,7 +61,7 @@ namespace HarmonyTools.Drivers
                 Name = "Pack this directory to Font file (STX)",
                 Icon = "Harmony-Tools-Pack-Icon.ico",
                 Command = "font pack \"%1\"",
-                ApplyTo = knownFormat
+                ApplyTo = KnownFormat
             };
 
             yield return new ContextMenuEntry
@@ -78,129 +70,108 @@ namespace HarmonyTools.Drivers
                 Name = "Replace font file (STX) with TTF file",
                 Icon = "Harmony-Tools-Pack-Icon.ico",
                 Command = "font replace \"%1\"",
-                ApplyTo = replacementFormat
+                ApplyTo = ReplacementFormat
             };
         }
 
-        #region Command Registration
-
         public Command GetCommand()
         {
-            var driverInstance = new FontDriver();
+            var command = new Command(CommandName, CommandDescription);
 
-            var command = new Command(
-                CommandName,
-                "A tool to work with STX files (DRV3 font archives)."
-            );
-
-            command.Add(GetPackCommand(driverInstance));
-            command.Add(GetExtractCommand(driverInstance));
-            command.Add(GetReplaceCommand(driverInstance));
+            command.Add(GetPackCommand());
+            command.Add(GetExtractCommand());
+            command.Add(GetReplaceCommand());
 
             return command;
         }
 
-        private Command GetPackCommand(FontDriver driverInstance)
+        private Command GetPackCommand()
         {
-            var command = new Command(
-                "pack",
-                $"Packs a {knownFormat.Description} into a {gameFormat.Description}"
-            );
+            var command = new Command("pack", $"Packs a {KnownFormat.Description} into a {GameFormat.Description}");
 
-            var inputOption = GetInputOption(knownFormat);
+            var inputOption = GetInputOption(KnownFormat);
             var generateDebugImageOption = GetGenerateDebugImageOption();
 
             command.Add(inputOption);
             command.Add(generateDebugImageOption);
 
+            command.SetHandler(PackHandler, inputOption, generateDebugImageOption);
             command.SetHandler(
-                (FileSystemInfo input, bool generateDebugImage) =>
+                (DirectoryInfo directory, bool generateDebugImage) =>
                 {
-                    var outputPath = Utils.GetOutputPath(
-                        input,
-                        knownFormat.Extension,
-                        gameFormat.Extension
+                    CreateBatchTaskHandler(
+                        KnownFormat,
+                        (FileSystemInfo input) =>
+                        {
+                            PackHandler(input, generateDebugImage);
+                        }
                     );
-
-                    if (gameFormat.IsDirectory && !Directory.Exists(outputPath))
-                    {
-                        Directory.CreateDirectory(outputPath);
-                    }
-
-                    driverInstance.Pack(input, outputPath, generateDebugImage);
                 },
-                inputOption,
+                Program.BatchOption,
                 generateDebugImageOption
             );
 
             return command;
         }
 
-        private Command GetExtractCommand(FontDriver driverInstance)
+        private Command GetExtractCommand()
         {
             var command = new Command(
                 "extract",
-                $"Extracts a {gameFormat.Description} into a {knownFormat.Description}"
+                $"Extracts a {GameFormat.Description} into a {KnownFormat.Description}"
             );
 
-            var inputOption = GetInputOption(gameFormat);
+            var inputOption = GetInputOption(GameFormat);
             var generateDebugImageOption = GetGenerateDebugImageOption();
+
             command.Add(inputOption);
             command.Add(generateDebugImageOption);
 
+            command.SetHandler(ExtractHandler, inputOption, generateDebugImageOption);
             command.SetHandler(
-                (FileSystemInfo input, bool generateDebugImage) =>
+                (DirectoryInfo directory, bool generateDebugImage) =>
                 {
-                    var outputPath = Utils.GetOutputPath(
-                        input,
-                        gameFormat.Extension,
-                        knownFormat.Extension
+                    CreateBatchTaskHandler(
+                        GameFormat,
+                        (FileSystemInfo input) =>
+                        {
+                            ExtractHandler(input, generateDebugImage);
+                        }
                     );
-
-                    if (knownFormat.IsDirectory && !Directory.Exists(outputPath))
-                    {
-                        Directory.CreateDirectory(outputPath);
-                    }
-
-                    driverInstance.Extract(input, outputPath, generateDebugImage);
                 },
-                inputOption,
+                Program.BatchOption,
                 generateDebugImageOption
             );
 
             return command;
         }
 
-        private Command GetReplaceCommand(FontDriver driverInstance)
+        private Command GetReplaceCommand()
         {
             var command = new Command(
                 "replace",
-                $"Packs a {replacementFormat.Description} into a {gameFormat.Description}"
+                $"Packs a {ReplacementFormat.Description} into a {GameFormat.Description}"
             );
 
-            var inputOption = GetInputOption(replacementFormat);
+            var inputOption = GetInputOption(ReplacementFormat);
             var generateDebugImageOption = GetGenerateDebugImageOption();
 
             command.Add(inputOption);
             command.Add(generateDebugImageOption);
 
+            command.SetHandler(ReplaceHandler, inputOption, generateDebugImageOption);
             command.SetHandler(
-                (FileSystemInfo input, bool generateDebugImage) =>
+                (DirectoryInfo directory, bool generateDebugImage) =>
                 {
-                    var outputPath = Utils.GetOutputPath(
-                        input,
-                        replacementFormat.Extension,
-                        gameFormat.Extension
+                    CreateBatchTaskHandler(
+                        ReplacementFormat,
+                        (FileSystemInfo input) =>
+                        {
+                            ReplaceHandler(input, generateDebugImage);
+                        }
                     );
-
-                    if (gameFormat.IsDirectory && !Directory.Exists(outputPath))
-                    {
-                        Directory.CreateDirectory(outputPath);
-                    }
-
-                    driverInstance.Replace(input, outputPath, generateDebugImage);
                 },
-                inputOption,
+                Program.BatchOption,
                 generateDebugImageOption
             );
 
@@ -214,9 +185,26 @@ namespace HarmonyTools.Drivers
                 getDefaultValue: () => false
             );
 
-        #endregion
+        private void ExtractHandler(FileSystemInfo input, bool generateDebugImage)
+        {
+            var outputPath = Utils.GetOutputPath(input, GameFormat, KnownFormat);
 
-        #region Command Handlers
+            Extract(input, outputPath, generateDebugImage);
+        }
+
+        private void PackHandler(FileSystemInfo input, bool generateDebugImage)
+        {
+            var outputPath = Utils.GetOutputPath(input, KnownFormat, GameFormat);
+
+            Pack(input, outputPath, generateDebugImage);
+        }
+
+        private void ReplaceHandler(FileSystemInfo input, bool generateDebugImage)
+        {
+            var outputPath = Utils.GetOutputPath(input, ReplacementFormat, GameFormat);
+
+            Replace(input, outputPath, generateDebugImage);
+        }
 
         public void Extract(FileSystemInfo input, string output, bool generateDebugImage)
         {
@@ -245,12 +233,7 @@ namespace HarmonyTools.Drivers
             var (displayWidth, displayHeight) = SrdDriver.GetDimensions(txr, rsi);
             var pixelFormat = SrdDriver.GetPixelDataFormat(txr);
 
-            inputImageData = SrdDriver.UnSwizzleTexture(
-                inputImageData,
-                displayWidth,
-                displayHeight,
-                txr.Swizzle
-            );
+            inputImageData = SrdDriver.UnSwizzleTexture(inputImageData, displayWidth, displayHeight, txr.Swizzle);
 
             var mipWidth = Math.Max((ushort)1, displayWidth);
             var mipHeight = Math.Max((ushort)1, displayHeight);
@@ -320,10 +303,7 @@ namespace HarmonyTools.Drivers
                 };
 
                 var options = new JsonSerializerOptions { WriteIndented = true };
-                var jsonString = JsonSerializer.Serialize<FileGlyphProvider.GlyphInfoExternal>(
-                    jsonInfo,
-                    options
-                );
+                var jsonString = JsonSerializer.Serialize<FileGlyphProvider.GlyphInfoExternal>(jsonInfo, options);
 
                 File.WriteAllText(glyphInfoOutput, jsonString);
 
@@ -339,10 +319,7 @@ namespace HarmonyTools.Drivers
             };
 
             var fontInfoJsonOptions = new JsonSerializerOptions { WriteIndented = true };
-            var fontInfoJsonString = JsonSerializer.Serialize<FontInfo>(
-                fontInfo,
-                fontInfoJsonOptions
-            );
+            var fontInfoJsonString = JsonSerializer.Serialize<FontInfo>(fontInfo, fontInfoJsonOptions);
 
             var fontInfoOutput = Path.Combine(output, "__font_info.json");
 
@@ -385,15 +362,9 @@ namespace HarmonyTools.Drivers
                 Resources = rsi.ResourceStringList
             };
 
-            var charsetFilePath = Path.Combine(
-                Path.GetDirectoryName(input.FullName)!,
-                "charset.txt"
-            );
+            var charsetFilePath = Path.Combine(Path.GetDirectoryName(input.FullName)!, "charset.txt");
 
-            var fontFileGlyphProvider = new FontFileGlyphProvider(
-                input,
-                new FileInfo(charsetFilePath)
-            );
+            var fontFileGlyphProvider = new FontFileGlyphProvider(input, new FileInfo(charsetFilePath));
 
             Pack(fontFileGlyphProvider, fontInfo, output, generateDebugImage);
         }
@@ -429,12 +400,7 @@ namespace HarmonyTools.Drivers
             Pack(fileGlyphProvider, fontInfo, output, generateDebugImage);
         }
 
-        public void Pack(
-            IGlyphProvider glyphProvider,
-            FontInfo fontInfo,
-            string output,
-            bool generateDebugImage
-        )
+        public void Pack(IGlyphProvider glyphProvider, FontInfo fontInfo, string output, bool generateDebugImage)
         {
             var srdFile = new SrdFile();
             var masterImage = new Image<Rgba32>(1, 1);
@@ -475,26 +441,16 @@ namespace HarmonyTools.Drivers
                                 {
                                     Size = new Size(
                                         Math.Max(masterX + glyphImage.Width + 2, masterImage.Width),
-                                        Math.Max(
-                                            masterY + glyphImage.Height + 2,
-                                            masterImage.Height
-                                        )
+                                        Math.Max(masterY + glyphImage.Height + 2, masterImage.Height)
                                     ),
-                                    TargetRectangle = new Rectangle(
-                                        0,
-                                        0,
-                                        masterImage.Width,
-                                        masterImage.Height
-                                    ),
+                                    TargetRectangle = new Rectangle(0, 0, masterImage.Width, masterImage.Height),
                                     Mode = ResizeMode.Manual
                                 }
                             )
                     );
                 }
 
-                masterImage.Mutate(
-                    x => x.DrawImage(glyphImage, new Point(masterX + 1, masterY + 1), 1f)
-                );
+                masterImage.Mutate(x => x.DrawImage(glyphImage, new Point(masterX + 1, masterY + 1), 1f));
 
                 glyphInfo.Position = new short[2] { (short)(masterX + 1), (short)(masterY + 1) };
                 glyphInfo.Size = new byte[2] { (byte)glyphImage.Width, (byte)glyphImage.Height };
@@ -614,18 +570,10 @@ namespace HarmonyTools.Drivers
             srdFile.Blocks.Add(txrBlock);
             srdFile.Blocks.Add(ct0Block);
 
-            srdFile.Save(
-                output,
-                Path.ChangeExtension(output, "srdi"),
-                Path.ChangeExtension(output, "srdv")
-            );
+            srdFile.Save(output, Path.ChangeExtension(output, "srdi"), Path.ChangeExtension(output, "srdv"));
 
             Console.WriteLine($"STX Font file has been successfully saved to \"{output}\".");
         }
-
-        #endregion
-
-        #region Helpers
 
         private FontBlock? GetFontBlock(IEnumerable<Block> blocks)
         {
@@ -666,7 +614,5 @@ namespace HarmonyTools.Drivers
 
             return (null, null);
         }
-
-        #endregion
     }
 }

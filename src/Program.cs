@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.CommandLine;
+using System.IO;
 using System.Text;
 using HarmonyTools.Drivers;
 
@@ -19,6 +21,11 @@ namespace HarmonyTools
             new CpkDriver()
         };
 
+        public static Option<DirectoryInfo> BatchOption = new Option<DirectoryInfo>(
+            aliases: new[] { "-b", "--batch" },
+            description: "Runs specified driver for each file in the specified directory."
+        ).ExistingOnly();
+
         static void Main(string[] args)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -26,6 +33,8 @@ namespace HarmonyTools
             var rootCommand = new RootCommand(
                 description: "A set of tools for working with Danganronpa V3 game files."
             );
+
+            rootCommand.AddGlobalOption(BatchOption);
 
             rootCommand.SetHandler(() => rootCommand.Invoke("-h"));
 
@@ -45,7 +54,6 @@ namespace HarmonyTools
              * TODO --------------
              * - Get font name command in command driver
              * - Implement grouping for context menu driver
-             * - Support for extracting and packing all files from a directory
              * - Better error handling
              * - Delete original file option
              * - Default charset for font replace command
