@@ -2,13 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using CriFsV2Lib;
 using HarmonyTools.Formats;
 
 namespace HarmonyTools.Drivers
 {
-    public sealed class CpkDriver : Driver, IDriver, IContextMenu
+    public sealed class CpkDriver : Driver, IDriver, IContextMenuDriver
     {
+        public static string CommandName { get; } = "cpk";
+
+        public string GetCommandName() => CommandName;
+
         #region Specify Driver formats
 
         public static readonly FSObjectFormat gameFormat = new FSObjectFormat(
@@ -23,7 +29,7 @@ namespace HarmonyTools.Drivers
 
         #endregion
 
-        public static IEnumerable<ContextMenuEntry> SetupContextMenu()
+        public IEnumerable<IContextMenuEntry> GetContextMenu()
         {
             yield return new ContextMenuEntry
             {
@@ -35,13 +41,16 @@ namespace HarmonyTools.Drivers
             };
         }
 
-        public static Command GetCommand()
+        public Command GetCommand()
         {
             var driver = new CpkDriver();
 
-            var command = new Command("cpk", "A tool to work with CPK files (DRV3 main archives).");
+            var command = new Command(
+                CommandName,
+                "A tool to work with CPK files (DRV3 main archives)."
+            );
 
-            var inputArgument = GetInputArgument(gameFormat);
+            var inputArgument = GetInputOption(gameFormat);
 
             var extractCommand = new Command(
                 "extract",

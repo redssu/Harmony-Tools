@@ -6,7 +6,7 @@ namespace HarmonyTools.Drivers
 {
     public abstract class StandardDriver<T> : Driver where T : IStandardDriver, new()
     {
-        protected static Command GetCommand(
+        protected Command GetCommand(
             string name,
             string description,
             FSObjectFormat gameFormat,
@@ -29,7 +29,7 @@ namespace HarmonyTools.Drivers
             return command;
         }
 
-        protected static Command? GetPackCommand(
+        protected Command? GetPackCommand(
             FSObjectFormat gameFormat,
             FSObjectFormat knownFormat,
             IStandardDriver driver
@@ -40,8 +40,8 @@ namespace HarmonyTools.Drivers
                 $"Packs a {knownFormat.Description} into a {gameFormat.Description}"
             );
 
-            var inputArgument = GetInputArgument(knownFormat);
-            command.Add(inputArgument);
+            var inputOption = GetInputOption(knownFormat);
+            command.Add(inputOption);
 
             command.SetHandler(
                 (FileSystemInfo input) =>
@@ -59,13 +59,13 @@ namespace HarmonyTools.Drivers
 
                     driver.Pack(input, outputPath);
                 },
-                inputArgument
+                inputOption
             );
 
             return command;
         }
 
-        protected static Command? GetExtractCommand(
+        protected Command? GetExtractCommand(
             FSObjectFormat gameFormat,
             FSObjectFormat knownFormat,
             IStandardDriver driver
@@ -76,8 +76,8 @@ namespace HarmonyTools.Drivers
                 $"Extracts a {gameFormat.Description} into a {knownFormat.Description}"
             );
 
-            var inputArgument = GetInputArgument(gameFormat);
-            command.Add(inputArgument);
+            var inputOption = GetInputOption(gameFormat);
+            command.Add(inputOption);
 
             command.SetHandler(
                 (FileSystemInfo input) =>
@@ -95,7 +95,7 @@ namespace HarmonyTools.Drivers
 
                     driver.Extract(input, outputPath);
                 },
-                inputArgument
+                inputOption
             );
 
             return command;

@@ -8,8 +8,12 @@ using V3Lib.Spc;
 
 namespace HarmonyTools.Drivers
 {
-    public sealed class SpcDriver : StandardDriver<SpcDriver>, IStandardDriver, IContextMenu
+    public sealed class SpcDriver : StandardDriver<SpcDriver>, IStandardDriver, IContextMenuDriver
     {
+        public static string CommandName { get; } = "spc";
+
+        public string GetCommandName() => CommandName;
+
         #region Unknown Constant Values
 
         private static readonly byte[] Unknown1 = new byte[]
@@ -70,7 +74,7 @@ namespace HarmonyTools.Drivers
 
         #endregion
 
-        public static IEnumerable<ContextMenuEntry> SetupContextMenu()
+        public IEnumerable<IContextMenuEntry> GetContextMenu()
         {
             yield return new ContextMenuEntry
             {
@@ -91,9 +95,9 @@ namespace HarmonyTools.Drivers
             };
         }
 
-        public static Command GetCommand() =>
+        public Command GetCommand() =>
             GetCommand(
-                "spc",
+                CommandName,
                 "A tool to work with SPC files (DRV3 archives).",
                 gameFormat,
                 knownFormat

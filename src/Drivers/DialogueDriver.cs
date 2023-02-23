@@ -16,8 +16,12 @@ namespace HarmonyTools.Drivers
     public sealed class DialogueDriver
         : StandardDriver<DialogueDriver>,
             IStandardDriver,
-            IContextMenu
+            IContextMenuDriver
     {
+        public static string CommandName { get; } = "dialogue";
+
+        public string GetCommandName() => CommandName;
+
         /**
          * Author: Paks <https://github.com/P4K5>
          */
@@ -130,7 +134,7 @@ namespace HarmonyTools.Drivers
 
         #endregion
 
-        public static IEnumerable<ContextMenuEntry> SetupContextMenu()
+        public IEnumerable<IContextMenuEntry> GetContextMenu()
         {
             yield return new ContextMenuEntry
             {
@@ -151,9 +155,9 @@ namespace HarmonyTools.Drivers
             };
         }
 
-        public static Command GetCommand() =>
+        public Command GetCommand() =>
             GetCommand(
-                "dialogue",
+                CommandName,
                 "A tool to work with specific STX files (the ones that contain dialogue lines).",
                 gameFormat,
                 knownFormat
@@ -352,7 +356,7 @@ namespace HarmonyTools.Drivers
 
         #region Helpers
 
-        private static bool AddCommandIfUseful(ref List<WrdCommand> commands, WrdCommand command)
+        private bool AddCommandIfUseful(ref List<WrdCommand> commands, WrdCommand command)
         {
             // LOC - Displays a dialogue line.
             // CHN - Changes the current speaking character.
@@ -412,7 +416,7 @@ namespace HarmonyTools.Drivers
             return true;
         }
 
-        private static int GetLocCommandIndexInCommands(List<WrdCommand> commands, uint stringId)
+        private int GetLocCommandIndexInCommands(List<WrdCommand> commands, uint stringId)
         {
             for (int index = 0; index < commands.Count; index++)
             {
@@ -429,7 +433,7 @@ namespace HarmonyTools.Drivers
             return -1;
         }
 
-        private static string PrepareCharacterKey(string characterKey)
+        private string PrepareCharacterKey(string characterKey)
         {
             characterKey = characterKey.ToUpper();
 

@@ -4,6 +4,8 @@ namespace HarmonyTools.Drivers
 {
     public interface IDriver
     {
-        public static abstract Command GetCommand();
+        public Command GetCommand();
+
+        public string GetCommandName();
     }
 }

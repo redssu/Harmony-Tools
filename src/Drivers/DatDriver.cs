@@ -9,8 +9,12 @@ using V3Lib.Dat;
 
 namespace HarmonyTools.Drivers
 {
-    public sealed class DatDriver : StandardDriver<DatDriver>, IStandardDriver, IContextMenu
+    public sealed class DatDriver : StandardDriver<DatDriver>, IStandardDriver, IContextMenuDriver
     {
+        public static string CommandName { get; } = "dat";
+
+        public string GetCommandName() => CommandName;
+
         #region Specify Driver formats
 
         public static readonly FSObjectFormat gameFormat = new FSObjectFormat(
@@ -30,7 +34,7 @@ namespace HarmonyTools.Drivers
 
         #endregion
 
-        public static IEnumerable<ContextMenuEntry> SetupContextMenu()
+        public IEnumerable<IContextMenuEntry> GetContextMenu()
         {
             yield return new ContextMenuEntry
             {
@@ -51,9 +55,9 @@ namespace HarmonyTools.Drivers
             };
         }
 
-        public static Command GetCommand() =>
+        public Command GetCommand() =>
             GetCommand(
-                "dat",
+                CommandName,
                 "A tool to work with DAT files (DRV3 data tables).",
                 gameFormat,
                 knownFormat

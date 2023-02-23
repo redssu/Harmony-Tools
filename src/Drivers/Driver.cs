@@ -1,19 +1,16 @@
-using System.CommandLine;
 using System.IO;
-using HarmonyTools.Extensions;
+using System.CommandLine;
 using HarmonyTools.Formats;
 
 namespace HarmonyTools.Drivers
 {
     public abstract class Driver
     {
-        protected static Argument<FileSystemInfo> GetInputArgument(FSObjectFormat inputFormat) =>
-            new Argument<FileSystemInfo>(
+        protected static Option<FileSystemInfo> GetInputOption(FSObjectFormat inputFormat) =>
+            new Option<FileSystemInfo>(
                 name: "input",
                 description: $"The path of the {inputFormat.Description}"
-            )
-                .ExistingOnly()
-                .OnlyWithExtension(inputFormat.Extension);
+            ).ExistingOnly();
 
         // protected static Option<bool> GetDeleteOriginalOption(FSObjectFormat inputFormat) =>
         //     new Option<bool>(

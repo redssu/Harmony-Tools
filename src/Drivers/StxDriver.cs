@@ -9,8 +9,12 @@ using V3Lib.Stx;
 
 namespace HarmonyTools.Drivers
 {
-    public sealed class StxDriver : StandardDriver<StxDriver>, IStandardDriver, IContextMenu
+    public sealed class StxDriver : StandardDriver<StxDriver>, IStandardDriver, IContextMenuDriver
     {
+        public static string CommandName { get; } = "stx";
+
+        public string GetCommandName() => CommandName;
+
         #region Specify Driver formats
 
         public static readonly FSObjectFormat gameFormat = new FSObjectFormat(
@@ -25,7 +29,7 @@ namespace HarmonyTools.Drivers
 
         #endregion
 
-        public static IEnumerable<ContextMenuEntry> SetupContextMenu()
+        public IEnumerable<IContextMenuEntry> GetContextMenu()
         {
             yield return new ContextMenuEntry
             {
@@ -46,9 +50,9 @@ namespace HarmonyTools.Drivers
             };
         }
 
-        public static Command GetCommand() =>
+        public Command GetCommand() =>
             GetCommand(
-                "stx",
+                CommandName,
                 "A tool to work with STX files (DRV3 string tables).",
                 gameFormat,
                 knownFormat

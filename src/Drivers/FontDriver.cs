@@ -17,7 +17,7 @@ using V3Lib.Srd.BlockTypes;
 
 namespace HarmonyTools.Drivers
 {
-    public sealed class FontDriver : Driver, IDriver, IContextMenu
+    public sealed class FontDriver : Driver, IDriver, IContextMenuDriver
     {
         public struct FontInfo
         {
@@ -26,6 +26,10 @@ namespace HarmonyTools.Drivers
             public uint ScaleFlag { get; set; }
             public List<string> Resources { get; set; }
         }
+
+        public static string CommandName { get; } = "font";
+
+        public string GetCommandName() => CommandName;
 
         private static readonly uint maxMasterImageWidth = 4096;
 
@@ -48,7 +52,7 @@ namespace HarmonyTools.Drivers
 
         #endregion
 
-        public static IEnumerable<ContextMenuEntry> SetupContextMenu()
+        public IEnumerable<IContextMenuEntry> GetContextMenu()
         {
             yield return new ContextMenuEntry
             {
@@ -80,12 +84,12 @@ namespace HarmonyTools.Drivers
 
         #region Command Registration
 
-        public static Command GetCommand()
+        public Command GetCommand()
         {
             var driverInstance = new FontDriver();
 
             var command = new Command(
-                "font",
+                CommandName,
                 "A tool to work with STX files (DRV3 font archives)."
             );
 
@@ -96,18 +100,18 @@ namespace HarmonyTools.Drivers
             return command;
         }
 
-        private static Command GetPackCommand(FontDriver driverInstance)
+        private Command GetPackCommand(FontDriver driverInstance)
         {
             var command = new Command(
                 "pack",
                 $"Packs a {knownFormat.Description} into a {gameFormat.Description}"
             );
 
-            var inputArgument = GetInputArgument(knownFormat);
-            var generateDebugImage = GetGenerateDebugImageOption();
+            var inputOption = GetInputOption(knownFormat);
+            var generateDebugImageOption = GetGenerateDebugImageOption();
 
-            command.Add(inputArgument);
-            command.Add(generateDebugImage);
+            command.Add(inputOption);
+            command.Add(generateDebugImageOption);
 
             command.SetHandler(
                 (FileSystemInfo input, bool generateDebugImage) =>
@@ -125,24 +129,24 @@ namespace HarmonyTools.Drivers
 
                     driverInstance.Pack(input, outputPath, generateDebugImage);
                 },
-                inputArgument,
-                generateDebugImage
+                inputOption,
+                generateDebugImageOption
             );
 
             return command;
         }
 
-        private static Command GetExtractCommand(FontDriver driverInstance)
+        private Command GetExtractCommand(FontDriver driverInstance)
         {
             var command = new Command(
                 "extract",
                 $"Extracts a {gameFormat.Description} into a {knownFormat.Description}"
             );
 
-            var inputArgument = GetInputArgument(gameFormat);
-            var generateDebugImage = GetGenerateDebugImageOption();
-            command.Add(inputArgument);
-            command.Add(generateDebugImage);
+            var inputOption = GetInputOption(gameFormat);
+            var generateDebugImageOption = GetGenerateDebugImageOption();
+            command.Add(inputOption);
+            command.Add(generateDebugImageOption);
 
             command.SetHandler(
                 (FileSystemInfo input, bool generateDebugImage) =>
@@ -160,25 +164,25 @@ namespace HarmonyTools.Drivers
 
                     driverInstance.Extract(input, outputPath, generateDebugImage);
                 },
-                inputArgument,
-                generateDebugImage
+                inputOption,
+                generateDebugImageOption
             );
 
             return command;
         }
 
-        private static Command GetReplaceCommand(FontDriver driverInstance)
+        private Command GetReplaceCommand(FontDriver driverInstance)
         {
             var command = new Command(
                 "replace",
                 $"Packs a {replacementFormat.Description} into a {gameFormat.Description}"
             );
 
-            var inputArgument = GetInputArgument(replacementFormat);
-            var generateDebugImage = GetGenerateDebugImageOption();
+            var inputOption = GetInputOption(replacementFormat);
+            var generateDebugImageOption = GetGenerateDebugImageOption();
 
-            command.Add(inputArgument);
-            command.Add(generateDebugImage);
+            command.Add(inputOption);
+            command.Add(generateDebugImageOption);
 
             command.SetHandler(
                 (FileSystemInfo input, bool generateDebugImage) =>
@@ -196,14 +200,14 @@ namespace HarmonyTools.Drivers
 
                     driverInstance.Replace(input, outputPath, generateDebugImage);
                 },
-                inputArgument,
-                generateDebugImage
+                inputOption,
+                generateDebugImageOption
             );
 
             return command;
         }
 
-        private static Option<bool> GetGenerateDebugImageOption() =>
+        private Option<bool> GetGenerateDebugImageOption() =>
             new Option<bool>(
                 aliases: new[] { "-d", "--generate-debug-image" },
                 description: "Generate a debug image",

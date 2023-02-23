@@ -1,6 +1,6 @@
 namespace HarmonyTools.Formats
 {
-    struct DialogueEntry
+    public struct DialogueEntry
     {
         public uint Id { get; set; }
         public string? Choice { get; set; }

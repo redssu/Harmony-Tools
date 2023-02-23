@@ -7,8 +7,12 @@ using V3Lib.Wrd;
 
 namespace HarmonyTools.Drivers
 {
-    public sealed class WrdDriver : Driver, IDriver, IContextMenu
+    public sealed class WrdDriver : Driver, IDriver, IContextMenuDriver
     {
+        public static string CommandName { get; } = "wrd";
+
+        public string GetCommandName() => CommandName;
+
         private static Dictionary<string, string> opcodeTranslationTable = new Dictionary<
             string,
             string
@@ -106,7 +110,7 @@ namespace HarmonyTools.Drivers
 
         #endregion
 
-        public static IEnumerable<ContextMenuEntry> SetupContextMenu()
+        public IEnumerable<IContextMenuEntry> GetContextMenu()
         {
             yield return new ContextMenuEntry
             {
@@ -120,16 +124,16 @@ namespace HarmonyTools.Drivers
 
         #region Command Registration
 
-        public static Command GetCommand()
+        public Command GetCommand()
         {
             var driver = new WrdDriver();
 
             var command = new Command(
-                "wrd",
+                CommandName,
                 "A tool to work with WRD files (DRV3 game-script files)."
             );
 
-            var inputArgument = GetInputArgument(gameFormat);
+            var inputOption = GetInputOption(gameFormat);
             var friendlyNamesOption = GetFriendlyNamesOption();
 
             var extractCommand = new Command(
@@ -137,7 +141,7 @@ namespace HarmonyTools.Drivers
                 $"Extracts a {gameFormat.Description} to {knownFormat.Description}"
             )
             {
-                inputArgument,
+                inputOption,
                 friendlyNamesOption,
             };
 
@@ -152,7 +156,7 @@ namespace HarmonyTools.Drivers
 
                     driver.Extract(input, outputPath, friendlyNamesOption);
                 },
-                inputArgument,
+                inputOption,
                 friendlyNamesOption
             );
 
@@ -161,7 +165,7 @@ namespace HarmonyTools.Drivers
             return command;
         }
 
-        private static Option<bool> GetFriendlyNamesOption() =>
+        private Option<bool> GetFriendlyNamesOption() =>
             new Option<bool>(
                 aliases: new[] { "--friendly-names", "-f" },
                 description: "Switches the conversion of operation codes to more human-friendly names.",

@@ -1,6 +1,6 @@
 namespace HarmonyTools.Formats
 {
-    public struct ContextMenuEntry : IContextMenuEntry
+    public interface IContextMenuEntry
     {
         public string SubKeyID { get; set; }
         public string Name { get; set; }

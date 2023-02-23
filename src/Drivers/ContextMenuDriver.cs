@@ -6,7 +6,6 @@ using System.Linq;
 using System.Runtime.Versioning;
 using HarmonyTools.Exceptions;
 using HarmonyTools.Extensions;
-using HarmonyTools.Formats;
 using Microsoft.Win32;
 
 namespace HarmonyTools.Drivers
@@ -14,23 +13,9 @@ namespace HarmonyTools.Drivers
     [SupportedOSPlatform("windows")]
     internal sealed class ContextMenuDriver : IDriver
     {
-        public static Command GetCommand()
-        {
-            var driverInstance = new ContextMenuDriver();
+        public static string CommandName { get; } = "context-menu";
 
-            var command = new Command("context-menu", "Manages custom context menu");
-
-            var registerCommand = new Command("register", "Registers context menu");
-            var unregisterCommand = new Command("unregister", "Unregisters context menu");
-
-            registerCommand.SetHandler(() => driverInstance.Register());
-            unregisterCommand.SetHandler(() => driverInstance.Unregister());
-
-            command.AddCommand(registerCommand);
-            command.AddCommand(unregisterCommand);
-
-            return command;
-        }
+        public string GetCommandName() => CommandName;
 
         private readonly string binaryPath;
         private readonly string installationPath;
@@ -44,6 +29,24 @@ namespace HarmonyTools.Drivers
             {
                 throw new ContextMenuException("Could not get binary path.");
             }
+        }
+
+        public Command GetCommand()
+        {
+            var driverInstance = new ContextMenuDriver();
+
+            var command = new Command(CommandName, "Manages custom context menu");
+
+            var registerCommand = new Command("register", "Registers context menu");
+            var unregisterCommand = new Command("unregister", "Unregisters context menu");
+
+            registerCommand.SetHandler(() => driverInstance.Register());
+            unregisterCommand.SetHandler(() => driverInstance.Unregister());
+
+            command.AddCommand(registerCommand);
+            command.AddCommand(unregisterCommand);
+
+            return command;
         }
 
         private void Register()
@@ -68,16 +71,16 @@ namespace HarmonyTools.Drivers
                 throw new ContextMenuException("HarmonyTools context menu is already registered.");
             }
 
-            var driverContextMenuDeclarations = new List<IEnumerable<ContextMenuEntry>>()
+            var drivers = new List<IContextMenuDriver>()
             {
-                DialogueDriver.SetupContextMenu(),
-                StxDriver.SetupContextMenu(),
-                SpcDriver.SetupContextMenu(),
-                SrdDriver.SetupContextMenu(),
-                DatDriver.SetupContextMenu(),
-                FontDriver.SetupContextMenu(),
-                WrdDriver.SetupContextMenu(),
-                CpkDriver.SetupContextMenu(),
+                new DialogueDriver(),
+                new StxDriver(),
+                new SpcDriver(),
+                new SrdDriver(),
+                new DatDriver(),
+                new FontDriver(),
+                new WrdDriver(),
+                new CpkDriver(),
             };
 
             try
@@ -107,41 +110,19 @@ namespace HarmonyTools.Drivers
                 var htDirShell = htDirRoot.CreateSubKey("shell");
                 var htDirBgShell = htDirBgRoot.CreateSubKey("shell");
 
-                foreach (var driverContextMenuDeclaration in driverContextMenuDeclarations)
+                foreach (var driver in drivers)
                 {
-                    var driverDeclarations = driverContextMenuDeclaration.ToList();
+                    var contextMenuItems = driver.GetContextMenu().ToList();
 
-                    var directoryDeclarations = driverDeclarations
-                        .Where(declaration => declaration.ApplyTo.IsDirectory)
-                        .ToList();
-
-                    var fileDeclarations = driverDeclarations
-                        .Where(declaration => declaration.ApplyTo.IsFile)
-                        .ToList();
-
-                    for (int index = 0; index < fileDeclarations.Count; index++)
+                    foreach (var item in contextMenuItems)
                     {
-                        var declaration = fileDeclarations[index];
+                        var htShell = item.ApplyTo.IsDirectory ? htDirShell : htFileShell;
 
-                        htFileShell.RegisterHTCommand(
-                            declaration.SubKeyID,
-                            declaration.Name,
-                            Path.Combine(installationPath, declaration.Icon),
-                            $"{binaryPath} {declaration.Command}",
-                            hasSeparatorBelow: index == fileDeclarations.Count - 1
-                        );
-                    }
-
-                    for (int index = 0; index < directoryDeclarations.Count; index++)
-                    {
-                        var declaration = directoryDeclarations[index];
-
-                        htDirShell.RegisterHTCommand(
-                            declaration.SubKeyID,
-                            declaration.Name,
-                            Path.Combine(installationPath, "Icons", declaration.Icon),
-                            $"{binaryPath} {declaration.Command}",
-                            hasSeparatorBelow: index == directoryDeclarations.Count - 1
+                        htShell.RegisterHTCommand(
+                            item.SubKeyID,
+                            item.Name,
+                            Path.Combine(installationPath, item.Icon),
+                            $"{binaryPath} {item.Command}"
                         );
                     }
                 }
