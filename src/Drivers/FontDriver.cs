@@ -78,9 +78,22 @@ namespace HarmonyTools.Drivers
         {
             var command = new Command(CommandName, CommandDescription);
 
+            command.Add(GetNameCommand());
             command.Add(GetPackCommand());
             command.Add(GetExtractCommand());
             command.Add(GetReplaceCommand());
+
+            return command;
+        }
+
+        private Command GetNameCommand()
+        {
+            var command = new Command("name", "Gets the name of a included font");
+
+            var inputOption = GetInputOption(GameFormat);
+
+            command.Add(inputOption);
+            command.SetHandler(GetName, inputOption);
 
             return command;
         }
@@ -206,6 +219,19 @@ namespace HarmonyTools.Drivers
             Replace(input, outputPath, generateDebugImage);
         }
 
+        public void GetName(FileSystemInfo input)
+        {
+            var srdFile = SrdDriver.LoadSrdFile(input);
+            var fontBlock = GetFontBlock(srdFile.Blocks);
+
+            if (fontBlock == null)
+            {
+                throw new ExtractionException("Cannot get font name: Font block not found.");
+            }
+
+            Console.WriteLine($"Found font name: \"{fontBlock.FontName}\"");
+        }
+
         public void Extract(FileSystemInfo input, string output, bool generateDebugImage)
         {
             // Extracting the font is basically extracting the .SRD Archive
@@ -213,7 +239,7 @@ namespace HarmonyTools.Drivers
 
             // Font files also contains Bounding Boxes for each glyph
             // so we are making a JSON file with informations about each glyph
-            var srdFile = SrdDriver.LoadSrdFile(input, true, true);
+            var srdFile = SrdDriver.LoadSrdFile(input);
             var fontBlock = GetFontBlock(srdFile.Blocks);
 
             if (fontBlock == null)

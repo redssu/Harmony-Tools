@@ -53,9 +53,7 @@ namespace HarmonyTools.Font
 
                 if (usedIndexes.Contains(glyphIndex))
                 {
-                    throw new GlyphProviderException(
-                        $"Glyph index {glyphIndex} is already in use."
-                    );
+                    throw new GlyphProviderException($"Glyph index {glyphIndex} is already in use.");
                 }
 
                 var glyphInfoFilePath = Path.ChangeExtension(file, "json");
@@ -73,9 +71,7 @@ namespace HarmonyTools.Font
 
                 try
                 {
-                    externalGlyphInfo = JsonSerializer.Deserialize<GlyphInfoExternal>(
-                        glyphInfoFileJson
-                    );
+                    externalGlyphInfo = JsonSerializer.Deserialize<GlyphInfoExternal>(glyphInfoFileJson);
                 }
                 catch (JsonException)
                 {

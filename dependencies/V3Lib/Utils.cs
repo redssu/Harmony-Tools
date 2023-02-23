@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Text;
 
@@ -87,15 +87,6 @@ namespace V3Lib
                 Convert.ToByte(((y & 0xF) << 4) | ((x >> 8) & 0xF)),
                 Convert.ToByte((y >> 4) & 0xFF)
             };
-        }
-
-        public static void WaitForEnter(bool pauseAfterError)
-        {
-            if (pauseAfterError)
-            {
-                Console.WriteLine("Press <Enter> to close this window");
-                while (Console.ReadKey().Key != ConsoleKey.Enter) { }
-            }
         }
     }
 }

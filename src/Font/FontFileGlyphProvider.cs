@@ -76,9 +76,7 @@ namespace HarmonyTools.Font
                 using (var glyphImage = new Image<Rgba32>(glyphWidth, glyphHeight))
                 {
                     // draw the glyph
-                    glyphImage.Mutate(
-                        x => x.DrawText(glyph.ToString(), font, Color.White, new PointF(0, 0))
-                    );
+                    glyphImage.Mutate(x => x.DrawText(glyph.ToString(), font, Color.White, new PointF(0, 0)));
 
                     sbyte leftPadding = -1,
                         rightPadding = -1,
@@ -170,12 +168,7 @@ namespace HarmonyTools.Font
                         {
                             Index = glyphIndex,
                             Glyph = glyph,
-                            Kerning = new sbyte[3]
-                            {
-                                leftPadding,
-                                (sbyte)(glyphWidth - rightPadding),
-                                topPadding
-                            }
+                            Kerning = new sbyte[3] { leftPadding, (sbyte)(glyphWidth - rightPadding), topPadding }
                         },
                         glyphImage
                     );

@@ -11,7 +11,7 @@ namespace HarmonyTools.Drivers
     {
         protected static Option<FileSystemInfo> GetInputOption(FSObjectFormat inputFormat) =>
             new Option<FileSystemInfo>(
-                name: "input",
+                aliases: new[] { "-f", "--file", "--input-file" },
                 description: $"The path of the {inputFormat.Description}"
             ).ExistingOnly();
 
@@ -22,19 +22,13 @@ namespace HarmonyTools.Drivers
         //         getDefaultValue: () => false
         //     );
 
-        protected System.Action<DirectoryInfo> CreateBatchTaskHandler(
-            FSObjectFormat inputFormat,
-            BatchCallback handler
-        )
+        protected System.Action<DirectoryInfo> CreateBatchTaskHandler(FSObjectFormat inputFormat, BatchCallback handler)
         {
             return (DirectoryInfo input) =>
             {
                 if (inputFormat.IsDirectory)
                 {
-                    var directories = Directory.GetDirectories(
-                        input.FullName,
-                        $"*.{inputFormat.Extension}"
-                    );
+                    var directories = Directory.GetDirectories(input.FullName, $"*.{inputFormat.Extension}");
 
                     Parallel.ForEach(
                         directories,

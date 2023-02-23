@@ -16,20 +16,14 @@ namespace HarmonyTools.Extensions
             return argument;
         }
 
-        public static Argument<FileInfo> OnlyWithExtension(
-            this Argument<FileInfo> argument,
-            string extension
-        )
+        public static Argument<FileInfo> OnlyWithExtension(this Argument<FileInfo> argument, string extension)
         {
             argument.AddValidator((ArgumentResult result) => HasExtension(result, extension));
 
             return argument;
         }
 
-        public static Argument<DirectoryInfo> OnlyWithExtension(
-            this Argument<DirectoryInfo> argument,
-            string extension
-        )
+        public static Argument<DirectoryInfo> OnlyWithExtension(this Argument<DirectoryInfo> argument, string extension)
         {
             argument.AddValidator((ArgumentResult result) => HasExtension(result, extension));
 
@@ -44,8 +38,7 @@ namespace HarmonyTools.Extensions
 
                 if (!Path.GetFileName(token)!.ToLower().EndsWith("." + extension.ToLower()))
                 {
-                    result.ErrorMessage =
-                        $"File '{token}' does not have the extension '{extension}'.";
+                    result.ErrorMessage = $"File '{token}' does not have the extension '{extension}'.";
                 }
             }
         }

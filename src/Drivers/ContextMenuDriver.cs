@@ -56,8 +56,8 @@ namespace HarmonyTools.Drivers
             Console.WriteLine("         Then, move the binary file and register context menu again.");
             // csharpier-ignore-end
 
-            Console.WriteLine($"Considering \"{installationPath}\" as installation path.");
-            Console.WriteLine($"Considering \"{binaryPath}\" as binary path.");
+            Console.WriteLine($"Info: Setting \"{installationPath}\" as installation path.");
+            Console.WriteLine($"Info: Setting \"{binaryPath}\" as binary path.");
 
             if (
                 DoesKeyExists(@"*\shell\HarmonyTools")

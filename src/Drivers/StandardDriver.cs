@@ -12,8 +12,7 @@ namespace HarmonyTools.Drivers
         public abstract FSObjectFormat GameFormat { get; }
         public abstract FSObjectFormat KnownFormat { get; }
 
-        public Command GetCommand() =>
-            GetCommand(CommandName, CommandDescription, GameFormat, KnownFormat);
+        public Command GetCommand() => GetCommand(CommandName, CommandDescription, GameFormat, KnownFormat);
 
         protected Command GetCommand(
             string name,
@@ -38,19 +37,13 @@ namespace HarmonyTools.Drivers
 
         protected Command? GetPackCommand()
         {
-            var command = new Command(
-                "pack",
-                $"Packs a {KnownFormat.Description} into a {GameFormat.Description}"
-            );
+            var command = new Command("pack", $"Packs a {KnownFormat.Description} into a {GameFormat.Description}");
 
             var inputOption = GetInputOption(KnownFormat);
             command.Add(inputOption);
 
             command.SetHandler(PackHandler, inputOption);
-            command.SetHandler(
-                CreateBatchTaskHandler(KnownFormat, PackHandler),
-                Program.BatchOption
-            );
+            command.SetHandler(CreateBatchTaskHandler(KnownFormat, PackHandler), Program.BatchOption);
 
             return command;
         }
@@ -66,21 +59,14 @@ namespace HarmonyTools.Drivers
             command.Add(inputOption);
 
             command.SetHandler(ExtractHandler, inputOption);
-            command.SetHandler(
-                CreateBatchTaskHandler(GameFormat, ExtractHandler),
-                Program.BatchOption
-            );
+            command.SetHandler(CreateBatchTaskHandler(GameFormat, ExtractHandler), Program.BatchOption);
 
             return command;
         }
 
         private void PackHandler(FileSystemInfo input)
         {
-            var outputPath = Utils.GetOutputPath(
-                input,
-                KnownFormat.Extension,
-                GameFormat.Extension
-            );
+            var outputPath = Utils.GetOutputPath(input, KnownFormat.Extension, GameFormat.Extension);
 
             if (GameFormat.IsDirectory && !Directory.Exists(outputPath))
             {
@@ -92,11 +78,7 @@ namespace HarmonyTools.Drivers
 
         private void ExtractHandler(FileSystemInfo input)
         {
-            var outputPath = Utils.GetOutputPath(
-                input,
-                GameFormat.Extension,
-                KnownFormat.Extension
-            );
+            var outputPath = Utils.GetOutputPath(input, GameFormat.Extension, KnownFormat.Extension);
 
             if (KnownFormat.IsDirectory && !Directory.Exists(outputPath))
             {

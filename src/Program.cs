@@ -52,7 +52,6 @@ namespace HarmonyTools
 
             /**
              * TODO --------------
-             * - Get font name command in command driver
              * - Implement grouping for context menu driver
              * - Better error handling
              * - Delete original file option

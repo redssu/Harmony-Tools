@@ -53,10 +53,7 @@ namespace HarmonyTools.Font
             // then we should write the index of bounding box for a character with lowest unicode value
             // and the game expects that bounding boxes of other characters which are in collision
             // will have indexes that are directly after the first bounding box
-            var sortedGlyphs = Glyphs
-                .OrderBy(kvp => (int)kvp.Value.Glyph)
-                .Select(kvp => kvp.Value)
-                .ToList();
+            var sortedGlyphs = Glyphs.OrderBy(kvp => (int)kvp.Value.Glyph).Select(kvp => kvp.Value).ToList();
 
             // This variable is used to calculate offset of BBox Table
             BBoxTablePtr = 0;
@@ -192,10 +189,6 @@ namespace HarmonyTools.Font
                 }
             }
 
-            Console.WriteLine(
-                "glyphsCount: " + glyphsCount + ", Charset.Length: " + Charset.Length
-            );
-
             // Add glyphs to the glyph dictionary
             for (uint charIndex = 0; charIndex < Charset.Length; charIndex++)
             {
@@ -219,18 +212,9 @@ namespace HarmonyTools.Font
             {
                 var rawGlyphPosition = reader.ReadBytes(3);
                 var glyphSize = reader.ReadBytes(2);
-                var glyphKerning = new sbyte[3]
-                {
-                    reader.ReadSByte(),
-                    reader.ReadSByte(),
-                    reader.ReadSByte()
-                };
+                var glyphKerning = new sbyte[3] { reader.ReadSByte(), reader.ReadSByte(), reader.ReadSByte() };
 
-                var glyphPosition = V3Lib.Utils.abc2xy(
-                    rawGlyphPosition[0],
-                    rawGlyphPosition[1],
-                    rawGlyphPosition[2]
-                );
+                var glyphPosition = V3Lib.Utils.abc2xy(rawGlyphPosition[0], rawGlyphPosition[1], rawGlyphPosition[2]);
 
                 kerningList[glyphIndex] = new GlyphInfo()
                 {
