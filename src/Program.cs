@@ -39,6 +39,24 @@ namespace HarmonyTools
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
+            var rootCommand = CreateRootCommand();
+            var parser = BuildCommandLine(rootCommand);
+            return parser.Invoke(args);
+
+            /**
+             * TODO --------------
+             * - L10n
+             * - Unit tests
+             * - Delete original file option
+             * - Default charset for font replace command
+             * - Support for arbitrary output path
+             * - Support for audio files
+             * TODO --------------
+             */
+        }
+
+        private static RootCommand CreateRootCommand()
+        {
             var rootCommand = new RootCommand(
                 description: "A set of tools for working with Danganronpa V3 game files."
             );
@@ -58,7 +76,11 @@ namespace HarmonyTools
                 rootCommand.AddCommand(new ContextMenuDriver().GetCommand());
             }
 
-            var parser = new CommandLineBuilder(rootCommand)
+            return rootCommand;
+        }
+
+        private static Parser BuildCommandLine(RootCommand root) =>
+            new CommandLineBuilder(root)
                 .UseDefaults()
                 .UseExceptionHandler(
                     (exception, context) =>
@@ -73,19 +95,5 @@ namespace HarmonyTools
                     1
                 )
                 .Build();
-
-            return parser.Invoke(args);
-
-            /**
-             * TODO --------------
-             * - L10n
-             * - Unit tests
-             * - Delete original file option
-             * - Default charset for font replace command
-             * - Support for arbitrary output path
-             * - Support for audio files
-             * TODO --------------
-             */
-        }
     }
 }

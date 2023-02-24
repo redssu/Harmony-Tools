@@ -5,6 +5,7 @@
         <PublishSingleFile>true</PublishSingleFile>
         <SelfContained>true</SelfContained>
         <PublishReadyToRun>true</PublishReadyToRun>
+        <Version>2.0.0</Version>
     </PropertyGroup>
 
     <ItemGroup>
