@@ -1,8 +1,6 @@
-using System;
-
 namespace HarmonyTools.Exceptions
 {
-    public class PackException : Exception
+    public class PackException : HarmonyToolsException
     {
         public PackException(string message) : base(message) { }
     }

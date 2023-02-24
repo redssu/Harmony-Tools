@@ -299,7 +299,7 @@ namespace HarmonyTools.Drivers
 
             File.WriteAllText(output, json);
 
-            Console.WriteLine($"JSON file with dialogue lines has been successfully saved to \"{output}\".");
+            Logger.Success($"JSON file with dialogue lines has been successfully saved to \"{output}\".");
         }
 
         public override void Pack(FileSystemInfo input, string output)
@@ -338,7 +338,7 @@ namespace HarmonyTools.Drivers
             stxFile.StringTables.Add(new StringTable(stringTable, 8));
             stxFile.Save(output);
 
-            Console.WriteLine($"STX File has been saved successfully to \"{output}\".");
+            Logger.Success($"STX File has been saved successfully to \"{output}\".");
         }
 
         private WrdCommand? TransformCommandIfUseful(WrdCommand command)

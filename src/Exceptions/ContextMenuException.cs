@@ -1,8 +1,6 @@
-using System;
-
 namespace HarmonyTools.Exceptions
 {
-    internal class ContextMenuException : Exception
+    internal class ContextMenuException : HarmonyToolsException
     {
         public ContextMenuException(string message) : base(message) { }
     }

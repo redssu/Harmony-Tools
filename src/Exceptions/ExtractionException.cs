@@ -1,8 +1,6 @@
-using System;
-
 namespace HarmonyTools.Exceptions
 {
-    public class ExtractionException : Exception
+    public class ExtractionException : HarmonyToolsException
     {
         public ExtractionException(string message) : base(message) { }
     }

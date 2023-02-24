@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.CommandLine;
+using System.CommandLine.Builder;
+using System.CommandLine.Parsing;
 using System.IO;
 using System.Text;
 using HarmonyTools.Drivers;
+using HarmonyTools.Exceptions;
 
 namespace HarmonyTools
 {
@@ -21,18 +24,18 @@ namespace HarmonyTools
             new CpkDriver()
         };
 
-        public static Option<DirectoryInfo> BatchOption = new Option<DirectoryInfo>(
+        public static readonly Option<DirectoryInfo> BatchOption = new Option<DirectoryInfo>(
             aliases: new[] { "-b", "--batch" },
             description: "Runs specified driver for each file in the specified directory."
         ).ExistingOnly();
 
-        public static Option<bool> BatchCwdOption = new Option<bool>(
+        public static readonly Option<bool> BatchCwdOption = new Option<bool>(
             aliases: new[] { "-c", "--batch-cwd" },
             description: "Runs specified driver for each file in the current working directory.",
             getDefaultValue: () => false
         );
 
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
@@ -55,12 +58,26 @@ namespace HarmonyTools
                 rootCommand.AddCommand(new ContextMenuDriver().GetCommand());
             }
 
-            rootCommand.Invoke(args);
+            var parser = new CommandLineBuilder(rootCommand)
+                .UseDefaults()
+                .UseExceptionHandler(
+                    (exception, context) =>
+                    {
+                        if (exception is HarmonyToolsException)
+                        {
+                            Logger.Error($"{exception.GetType().Name}: {exception.Message}");
+                            Logger.Info("Press <Enter> key to continue.");
+                            while (Console.ReadKey().Key != ConsoleKey.Enter) { }
+                        }
+                    },
+                    1
+                )
+                .Build();
+
+            return parser.Invoke(args);
 
             /**
              * TODO --------------
-             * - Implement grouping for context menu driver
-             * - Better error handling
              * - L10n
              * - Unit tests
              * - Delete original file option

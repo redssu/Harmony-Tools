@@ -84,8 +84,6 @@ namespace HarmonyTools.Font
                     writer.Seek((int)IndexTablePtr + charOffset, SeekOrigin.Begin);
                     writer.Write((uint)index);
 
-                    Console.WriteLine($"Writing {index} at {(int)IndexTablePtr + charOffset}");
-
                     alreadyWrittenIndexes.Add(charOffset);
                 }
 

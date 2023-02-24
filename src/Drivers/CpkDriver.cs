@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.CommandLine;
 using System.IO;
 using CriFsV2Lib;
+using HarmonyTools.Exceptions;
 using HarmonyTools.Formats;
 
 namespace HarmonyTools.Drivers
@@ -79,7 +80,7 @@ namespace HarmonyTools.Drivers
                     }
                     else
                     {
-                        throw new Exception("No input object specified. (Use -f or -b option)");
+                        throw new BatchProcessException("No input object specified. (Use -f or -b option)");
                     }
                 },
                 inputOption,
@@ -129,7 +130,7 @@ namespace HarmonyTools.Drivers
                 }
             }
 
-            Console.WriteLine($"Extracted subfiles has been successfully saved in \"{output}\".");
+            Logger.Success($"Extracted subfiles has been successfully saved in \"{output}\".");
         }
     }
 }

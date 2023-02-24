@@ -50,15 +50,15 @@ namespace HarmonyTools.Drivers
         private void Register()
         {
             // csharpier-ignore-start
-            Console.WriteLine("WARNING: Note that you should not delete or move HarmonyTools binary file.");
-            Console.WriteLine("         Otherwise, context menu will not work properly.");
-            Console.WriteLine();
-            Console.WriteLine("         If you really need to move it somewhere else, you should unregister context menu first.");
-            Console.WriteLine("         Then, move the binary file and register context menu again.");
+            Logger.Warning("IMPORTANT: Note that you should not delete or move HarmonyTools binary file.");
+            Logger.Warning("           Otherwise, context menu will not work properly.");
+            Logger.Warning();
+            Logger.Warning("           If you really need to move it somewhere else, you should unregister context menu first.");
+            Logger.Warning("           Then, move the binary file and register context menu again.");
             // csharpier-ignore-end
 
-            Console.WriteLine($"Info: Setting \"{installationPath}\" as installation path.");
-            Console.WriteLine($"Info: Setting \"{binaryPath}\" as binary path.");
+            Logger.Info($"Setting \"{installationPath}\" as installation path.");
+            Logger.Info($"Setting \"{binaryPath}\" as binary path.");
 
             if (
                 DoesKeyExists(@"*\shell\HarmonyTools")

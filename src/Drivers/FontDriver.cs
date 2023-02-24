@@ -127,7 +127,7 @@ namespace HarmonyTools.Drivers
                     }
                     else
                     {
-                        throw new Exception("No input object specified. (Use -f or -b option)");
+                        throw new BatchProcessException("No input object specified. (Use -f or -b option)");
                     }
                 },
                 inputOption,
@@ -170,7 +170,7 @@ namespace HarmonyTools.Drivers
                     }
                     else
                     {
-                        throw new Exception("No input object specified. (Use -f or -b option)");
+                        throw new BatchProcessException("No input object specified. (Use -f or -b option)");
                     }
                 },
                 inputOption,
@@ -217,7 +217,7 @@ namespace HarmonyTools.Drivers
                     }
                     else
                     {
-                        throw new Exception("No input object specified. (Use -f or -b option)");
+                        throw new BatchProcessException("No input object specified. (Use -f or -b option)");
                     }
                 },
                 inputOption,
@@ -264,7 +264,7 @@ namespace HarmonyTools.Drivers
                 throw new ExtractionException("Cannot get font name: Font block not found.");
             }
 
-            Console.WriteLine($"Found font name: \"{fontBlock.FontName}\"");
+            Logger.Success($"Found font name: \"{fontBlock.FontName}\"");
         }
 
         public void Extract(FileSystemInfo input, string output, bool generateDebugImage)
@@ -386,7 +386,7 @@ namespace HarmonyTools.Drivers
 
             File.WriteAllText(fontInfoOutput, fontInfoJsonString);
 
-            Console.WriteLine($"Glyphs has been successfully extracted to \"{output}\".");
+            Logger.Success($"Glyphs has been successfully extracted to \"{output}\".");
         }
 
         /**
@@ -632,7 +632,7 @@ namespace HarmonyTools.Drivers
 
             srdFile.Save(output, Path.ChangeExtension(output, "srdi"), Path.ChangeExtension(output, "srdv"));
 
-            Console.WriteLine($"STX Font file has been successfully saved to \"{output}\".");
+            Logger.Success($"STX Font file has been successfully saved to \"{output}\".");
         }
 
         private FontBlock? GetFontBlock(IEnumerable<Block> blocks)

@@ -116,13 +116,13 @@ namespace HarmonyTools.Drivers
             spcFile.Load(input.FullName);
 
             if (!Unknown1.SequenceEqual(spcFile.Unknown1))
-                Console.WriteLine(
-                    "WARNING: Unknown1 value of this SPC Archive is not equal to the expected value. Please report this to the developers."
+                Logger.Warning(
+                    "Unknown1 value of this SPC Archive is not equal to the expected value. Please report this to the developers."
                 );
 
             if (Unknown2 != spcFile.Unknown2)
-                Console.WriteLine(
-                    "WARNING: Unknown2 value of this SPC Archive is not equal to the expected value. Please report this to the developers."
+                Logger.Warning(
+                    "Unknown2 value of this SPC Archive is not equal to the expected value. Please report this to the developers."
                 );
 
             Parallel.ForEach(
@@ -133,7 +133,7 @@ namespace HarmonyTools.Drivers
                 }
             );
 
-            Console.WriteLine($"Extracted subfiles has been successfully saved in \"{output}\".");
+            Logger.Success($"Extracted subfiles has been successfully saved in \"{output}\".");
         }
 
         public override void Pack(FileSystemInfo input, string output)
@@ -151,7 +151,7 @@ namespace HarmonyTools.Drivers
 
             spcFile.Save(output);
 
-            Console.WriteLine($"SPC archive has been successfully saved to \"{output}\".");
+            Logger.Success($"SPC archive has been successfully saved to \"{output}\".");
         }
     }
 }

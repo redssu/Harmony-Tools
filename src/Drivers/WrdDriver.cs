@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.IO;
+using HarmonyTools.Exceptions;
 using HarmonyTools.Formats;
 using V3Lib.Wrd;
 
@@ -129,7 +130,7 @@ namespace HarmonyTools.Drivers
                     }
                     else
                     {
-                        throw new Exception("No input object specified. (Use -f or -b option)");
+                        throw new BatchProcessException("No input object specified. (Use -f or -b option)");
                     }
                 },
                 inputOption,
@@ -163,7 +164,9 @@ namespace HarmonyTools.Drivers
             wrdFile.Load(input.FullName);
 
             if (friendlyNames)
-                Console.WriteLine("Info: Using friendly names for opcodes.");
+            {
+                Logger.Info("Using friendly names for opcodes.");
+            }
 
             using var writer = new StreamWriter(output, false);
 
@@ -188,7 +191,7 @@ namespace HarmonyTools.Drivers
                 writer.WriteLine(line);
             }
 
-            Console.WriteLine($"TXT file with extracted game script has been successfully saved to \"{output}\" .");
+            Logger.Success($"TXT file with extracted game script has been successfully saved to \"{output}\" .");
         }
     }
 }

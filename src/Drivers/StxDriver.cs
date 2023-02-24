@@ -87,7 +87,7 @@ namespace HarmonyTools.Drivers
                 }
             }
 
-            Console.WriteLine($"TXT file with extracted strings has been successfully saved to \"{output}\".");
+            Logger.Success($"TXT file with extracted strings has been successfully saved to \"{output}\".");
         }
 
         public override void Pack(FileSystemInfo input, string output)
@@ -152,7 +152,7 @@ namespace HarmonyTools.Drivers
 
             stxFile.Save(output);
 
-            Console.WriteLine($"STX File has been saved successfully to \"{output}\".");
+            Logger.Success($"STX File has been saved successfully to \"{output}\".");
         }
     }
 }

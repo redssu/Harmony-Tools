@@ -1,6 +1,8 @@
 using System;
 using System.CommandLine;
 using System.IO;
+using System.Threading;
+using HarmonyTools.Exceptions;
 using HarmonyTools.Formats;
 
 namespace HarmonyTools.Drivers
@@ -60,7 +62,7 @@ namespace HarmonyTools.Drivers
                     }
                     else
                     {
-                        throw new Exception("No input object specified. (Use -f or -b option)");
+                        throw new BatchProcessException("No input object specified. (Use -f or -b option)");
                     }
                 },
                 inputOption,
@@ -99,7 +101,7 @@ namespace HarmonyTools.Drivers
                     }
                     else
                     {
-                        throw new Exception("No input object specified. (Use -f or -b option)");
+                        throw new BatchProcessException("No input object specified. (Use -f or -b option)");
                     }
                 },
                 inputOption,

@@ -121,7 +121,7 @@ namespace HarmonyTools.Drivers
                 }
             }
 
-            Console.WriteLine($"Extracted images has been successfully saved in \"{output}\".");
+            Logger.Success($"Extracted images has been successfully saved in \"{output}\".");
         }
 
         public override void Pack(FileSystemInfo input, string output)
@@ -213,7 +213,7 @@ namespace HarmonyTools.Drivers
 
             srdFile.Save(output, srdiOutputPath, srdvOutputPath);
 
-            Console.WriteLine($"SRD archive and it's additional files has been successfully saved to \"{output}\".");
+            Logger.Success($"SRD archive and it's additional files has been successfully saved to \"{output}\".");
         }
 
         // these are public because FontDriver uses them too
@@ -255,7 +255,7 @@ namespace HarmonyTools.Drivers
             }
             else if (swizzleFlag != 1)
             {
-                Console.WriteLine("WARNING: Resource is swizzled.");
+                Logger.Warning("Found swizzled resource.");
             }
 
             return data;
@@ -361,7 +361,7 @@ namespace HarmonyTools.Drivers
             {
                 if (ignoreMissingSrdi)
                 {
-                    Console.WriteLine($"Info: No corresponding SRDI file found at \"{srdiPath}\".");
+                    Logger.Info($"No corresponding SRDI file found at \"{srdiPath}\".");
                 }
                 else
                 {
@@ -373,7 +373,7 @@ namespace HarmonyTools.Drivers
             {
                 if (ignoreMissingSrdv)
                 {
-                    Console.WriteLine($"Info: No corresponding SRDV file found at \"{srdvPath}\".");
+                    Logger.Info($"No corresponding SRDV file found at \"{srdvPath}\".");
                 }
                 else
                 {

@@ -100,7 +100,7 @@ namespace HarmonyTools.Drivers
                 writer.Write(csvOutput);
             }
 
-            Console.WriteLine($"CSV file with extracted data has been successfully saved to \"{output}\".");
+            Logger.Success($"CSV file with extracted data has been successfully saved to \"{output}\".");
         }
 
         public override void Pack(FileSystemInfo input, string output)
@@ -223,7 +223,7 @@ namespace HarmonyTools.Drivers
             datFile.ColumnDefinitions = columnDefinitions;
             datFile.Save(output);
 
-            Console.WriteLine($"DAT File has been saved successfully to \"{output}\".");
+            Logger.Success($"DAT File has been saved successfully to \"{output}\".");
         }
 
         private static string PrepareColumnValue(string text)
