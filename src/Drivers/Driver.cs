@@ -22,37 +22,34 @@ namespace HarmonyTools.Drivers
         //         getDefaultValue: () => false
         //     );
 
-        protected System.Action<DirectoryInfo> CreateBatchTaskHandler(FSObjectFormat inputFormat, BatchCallback handler)
+        protected void BatchTaskHandler(DirectoryInfo input, FSObjectFormat inputFormat, BatchCallback handler)
         {
-            return (DirectoryInfo input) =>
+            if (inputFormat.IsDirectory)
             {
-                if (inputFormat.IsDirectory)
-                {
-                    var directories = Directory.GetDirectories(input.FullName, $"*.{inputFormat.Extension}");
+                var directories = Directory.GetDirectories(input.FullName, $"*.{inputFormat.Extension}");
 
-                    Parallel.ForEach(
-                        directories,
-                        directory =>
-                        {
-                            var directoryInfo = new DirectoryInfo(directory);
-                            handler(directoryInfo);
-                        }
-                    );
-                }
-                else if (inputFormat.IsFile)
-                {
-                    var files = Directory.GetFiles(input.FullName, $"*.{inputFormat.Extension}");
+                Parallel.ForEach(
+                    directories,
+                    directory =>
+                    {
+                        var directoryInfo = new DirectoryInfo(directory);
+                        handler(directoryInfo);
+                    }
+                );
+            }
+            else if (inputFormat.IsFile)
+            {
+                var files = Directory.GetFiles(input.FullName, $"*.{inputFormat.Extension}");
 
-                    Parallel.ForEach(
-                        files,
-                        file =>
-                        {
-                            var fileInfo = new FileInfo(file);
-                            handler(fileInfo);
-                        }
-                    );
-                }
-            };
+                Parallel.ForEach(
+                    files,
+                    file =>
+                    {
+                        var fileInfo = new FileInfo(file);
+                        handler(fileInfo);
+                    }
+                );
+            }
         }
     }
 }

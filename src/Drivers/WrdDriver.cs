@@ -7,7 +7,7 @@ using V3Lib.Wrd;
 
 namespace HarmonyTools.Drivers
 {
-    public sealed class WrdDriver : Driver, IDriver, IContextMenuDriver
+    public sealed class WrdDriver : Driver, IDriver
     {
         private static readonly Dictionary<string, string> opcodeTranslationTable = new Dictionary<string, string>()
         {
@@ -95,18 +95,6 @@ namespace HarmonyTools.Drivers
         public readonly FSObjectFormat GameFormat = new FSObjectFormat(FSObjectType.File, extension: "wrd");
         public readonly FSObjectFormat KnownFormat = new FSObjectFormat(FSObjectType.File, extension: "wrd.txt");
 
-        public IEnumerable<IContextMenuEntry> GetContextMenu()
-        {
-            yield return new ContextMenuEntry
-            {
-                SubKeyID = "ExtractWRD",
-                Name = "Extract WRD file",
-                Icon = "Harmony-Tools-Extract-Icon.ico",
-                Command = "wrd extract \"%1\"",
-                ApplyTo = GameFormat
-            };
-        }
-
         public Command GetCommand()
         {
             var command = new Command(CommandName, CommandDescription);
@@ -123,16 +111,30 @@ namespace HarmonyTools.Drivers
                 friendlyNamesOption,
             };
 
-            extractCommand.SetHandler(ExtractHandler, inputOption, friendlyNamesOption);
-            extractCommand.SetHandler(
-                (FileSystemInfo input, bool friendlyNamesOption) =>
+            command.SetHandler(
+                (FileSystemInfo fileInput, DirectoryInfo batchInput, bool batchCwd, bool friendlyNames) =>
                 {
-                    CreateBatchTaskHandler(
-                        GameFormat,
-                        (FileSystemInfo input) => ExtractHandler(input, friendlyNamesOption)
-                    );
+                    if (batchCwd)
+                    {
+                        batchInput = new DirectoryInfo(Directory.GetCurrentDirectory());
+                    }
+
+                    if (batchInput != null)
+                    {
+                        BatchTaskHandler(batchInput, GameFormat, input => ExtractHandler(input, friendlyNames));
+                    }
+                    else if (fileInput != null)
+                    {
+                        ExtractHandler(fileInput, friendlyNames);
+                    }
+                    else
+                    {
+                        throw new Exception("No input object specified. (Use -f or -b option)");
+                    }
                 },
+                inputOption,
                 Program.BatchOption,
+                Program.BatchCwdOption,
                 friendlyNamesOption
             );
 
@@ -163,28 +165,27 @@ namespace HarmonyTools.Drivers
             if (friendlyNames)
                 Console.WriteLine("Info: Using friendly names for opcodes.");
 
-            using (var writer = new StreamWriter(output, false))
+            using var writer = new StreamWriter(output, false);
+
+            foreach (var command in wrdFile.Commands)
             {
-                foreach (var command in wrdFile.Commands)
+                string line;
+
+                if (friendlyNames && opcodeTranslationTable.ContainsKey(command.Opcode))
                 {
-                    string line;
-
-                    if (friendlyNames && opcodeTranslationTable.ContainsKey(command.Opcode))
-                    {
-                        line = $"({command.Opcode}) {opcodeTranslationTable[command.Opcode]}";
-                    }
-                    else
-                    {
-                        line = $"({command.Opcode}) ";
-                    }
-
-                    for (int i = 0; i < command.Arguments.Count; i++)
-                    {
-                        line += " \"" + command.Arguments[i].ToString() + "\"";
-                    }
-
-                    writer.WriteLine(line);
+                    line = $"({command.Opcode}) {opcodeTranslationTable[command.Opcode]}";
                 }
+                else
+                {
+                    line = $"({command.Opcode}) ";
+                }
+
+                for (int i = 0; i < command.Arguments.Count; i++)
+                {
+                    line += " \"" + command.Arguments[i].ToString() + "\"";
+                }
+
+                writer.WriteLine(line);
             }
 
             Console.WriteLine($"TXT file with extracted game script has been successfully saved to \"{output}\" .");

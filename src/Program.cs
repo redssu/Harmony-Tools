@@ -26,6 +26,12 @@ namespace HarmonyTools
             description: "Runs specified driver for each file in the specified directory."
         ).ExistingOnly();
 
+        public static Option<bool> BatchCwdOption = new Option<bool>(
+            aliases: new[] { "-c", "--batch-cwd" },
+            description: "Runs specified driver for each file in the current working directory.",
+            getDefaultValue: () => false
+        );
+
         static void Main(string[] args)
         {
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -35,6 +41,7 @@ namespace HarmonyTools
             );
 
             rootCommand.AddGlobalOption(BatchOption);
+            rootCommand.AddGlobalOption(BatchCwdOption);
 
             rootCommand.SetHandler(() => rootCommand.Invoke("-h"));
 
@@ -54,9 +61,10 @@ namespace HarmonyTools
              * TODO --------------
              * - Implement grouping for context menu driver
              * - Better error handling
+             * - L10n
+             * - Unit tests
              * - Delete original file option
              * - Default charset for font replace command
-             * - L10n
              * - Support for arbitrary output path
              * - Support for audio files
              * TODO --------------

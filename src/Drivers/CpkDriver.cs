@@ -26,19 +26,31 @@ namespace HarmonyTools.Drivers
         {
             yield return new ContextMenuEntry
             {
-                SubKeyID = "ExtractCPK",
-                Name = "Extract CPK file",
+                SubKeyID = "Extract_CPK",
+                Name = "Extract as .CPK file",
+                Group = 5,
                 Icon = "Harmony-Tools-Extract-Icon.ico",
-                Command = "cpk extract \"%1\"",
+                Command = "cpk extract -f \"%1\"",
                 ApplyTo = GameFormat
+            };
+
+            // batch
+
+            yield return new ContextMenuEntry
+            {
+                SubKeyID = "Extract_CPK_Batch",
+                Name = "Extract all .CPK files",
+                Group = 0,
+                Icon = "Harmony-Tools-Extract-Icon.ico",
+                Command = "cpk extract -c",
+                ApplyTo = GameFormat,
+                IsBatch = true
             };
         }
 
         public Command GetCommand()
         {
-            var driver = new CpkDriver();
             var command = new Command(CommandName, CommandDescription);
-
             var inputOption = GetInputOption(GameFormat);
 
             var extractCommand = new Command(
@@ -49,25 +61,46 @@ namespace HarmonyTools.Drivers
                 inputOption
             };
 
-            extractCommand.SetHandler(PrepareExtract, inputOption);
-            extractCommand.SetHandler(CreateBatchTaskHandler(GameFormat, PrepareExtract), Program.BatchOption);
+            extractCommand.SetHandler(
+                (FileSystemInfo fileInput, DirectoryInfo batchInput, bool batchCwd) =>
+                {
+                    if (batchCwd)
+                    {
+                        batchInput = new DirectoryInfo(Directory.GetCurrentDirectory());
+                    }
+
+                    if (batchInput != null)
+                    {
+                        BatchTaskHandler(batchInput, GameFormat, ExtractHandler);
+                    }
+                    else if (fileInput != null)
+                    {
+                        ExtractHandler(fileInput);
+                    }
+                    else
+                    {
+                        throw new Exception("No input object specified. (Use -f or -b option)");
+                    }
+                },
+                inputOption,
+                Program.BatchOption,
+                Program.BatchCwdOption
+            );
 
             command.AddCommand(extractCommand);
 
             return command;
         }
 
-        private void PrepareExtract(FileSystemInfo input)
+        private void ExtractHandler(FileSystemInfo input)
         {
             var outputPath = Utils.GetOutputPath(input, GameFormat, KnownFormat);
-
             Extract(input, outputPath);
         }
 
         public void Extract(FileSystemInfo input, string output)
         {
             using var reader = new FileStream(input.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
-
             using var cpkExtractor = CriFsLib.Instance.CreateCpkReader(reader, true);
 
             var files = cpkExtractor.GetFiles();

@@ -1,3 +1,4 @@
+using System;
 using System.CommandLine;
 using System.IO;
 using HarmonyTools.Formats;
@@ -38,12 +39,34 @@ namespace HarmonyTools.Drivers
         protected Command? GetPackCommand()
         {
             var command = new Command("pack", $"Packs a {KnownFormat.Description} into a {GameFormat.Description}");
-
             var inputOption = GetInputOption(KnownFormat);
-            command.Add(inputOption);
 
-            command.SetHandler(PackHandler, inputOption);
-            command.SetHandler(CreateBatchTaskHandler(KnownFormat, PackHandler), Program.BatchOption);
+            command.Add(inputOption);
+            command.SetHandler(
+                (FileSystemInfo fileInput, DirectoryInfo batchInput, bool batchCwd) =>
+                {
+                    if (batchCwd)
+                    {
+                        batchInput = new DirectoryInfo(Directory.GetCurrentDirectory());
+                    }
+
+                    if (batchInput != null)
+                    {
+                        BatchTaskHandler(batchInput, KnownFormat, ExtractHandler);
+                    }
+                    else if (fileInput != null)
+                    {
+                        ExtractHandler(fileInput);
+                    }
+                    else
+                    {
+                        throw new Exception("No input object specified. (Use -f or -b option)");
+                    }
+                },
+                inputOption,
+                Program.BatchOption,
+                Program.BatchCwdOption
+            );
 
             return command;
         }
@@ -58,8 +81,31 @@ namespace HarmonyTools.Drivers
             var inputOption = GetInputOption(GameFormat);
             command.Add(inputOption);
 
-            command.SetHandler(ExtractHandler, inputOption);
-            command.SetHandler(CreateBatchTaskHandler(GameFormat, ExtractHandler), Program.BatchOption);
+            command.SetHandler(
+                (FileSystemInfo fileInput, DirectoryInfo batchInput, bool batchCwd) =>
+                {
+                    if (batchCwd)
+                    {
+                        batchInput = new DirectoryInfo(Directory.GetCurrentDirectory());
+                    }
+
+                    if (batchInput != null)
+                    {
+                        BatchTaskHandler(batchInput, GameFormat, ExtractHandler);
+                    }
+                    else if (fileInput != null)
+                    {
+                        ExtractHandler(fileInput);
+                    }
+                    else
+                    {
+                        throw new Exception("No input object specified. (Use -f or -b option)");
+                    }
+                },
+                inputOption,
+                Program.BatchOption,
+                Program.BatchCwdOption
+            );
 
             return command;
         }

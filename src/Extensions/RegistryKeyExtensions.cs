@@ -12,7 +12,7 @@ namespace HarmonyTools.Extensions
             string name,
             string icon,
             string command,
-            bool hasSeparatorBelow = false
+            bool hasSeparatorAbove = false
         )
         {
             var itemSubKey = key.CreateSubKey(subKeyID);
@@ -22,9 +22,9 @@ namespace HarmonyTools.Extensions
             var commandSubKey = itemSubKey.CreateSubKey("command");
             commandSubKey.SetValue("", command);
 
-            if (hasSeparatorBelow)
+            if (hasSeparatorAbove)
             {
-                itemSubKey.SetValue("CommandFlags", (uint)0x40, RegistryValueKind.DWord);
+                itemSubKey.SetValue("CommandFlags", (uint)0x30, RegistryValueKind.DWord);
             }
         }
     }

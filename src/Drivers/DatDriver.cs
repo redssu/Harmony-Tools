@@ -23,20 +23,46 @@ namespace HarmonyTools.Drivers
         {
             yield return new ContextMenuEntry
             {
-                SubKeyID = "ExtractDAT",
-                Name = "Extract DAT file",
-                Icon = "Harmony-Tools-Extract-Icon.ico",
-                Command = "dat extract \"%1\"",
+                SubKeyID = "Extract_DAT",
+                Name = "Extract as .DAT file",
+                Group = 2,
+                Icon = "Harmony-Tools-Extract-File-Icon.ico",
+                Command = "dat extract -f \"%1\"",
                 ApplyTo = GameFormat
             };
 
             yield return new ContextMenuEntry
             {
-                SubKeyID = "PackDAT",
-                Name = "Pack this file to DAT file",
-                Icon = "Harmony-Tools-Pack-Icon.ico",
-                Command = "dat pack \"%1\"",
+                SubKeyID = "Pack_DAT",
+                Name = "Pack as .DAT file",
+                Group = 2,
+                Icon = "Harmony-Tools-Pack-File-Icon.ico",
+                Command = "dat pack -f \"%1\"",
                 ApplyTo = KnownFormat
+            };
+
+            // batch
+
+            yield return new ContextMenuEntry
+            {
+                SubKeyID = "Extract_DAT_Batch",
+                Name = "Extract all .DAT files",
+                Group = 1,
+                Icon = "Harmony-Tools-Extract-File-Icon.ico",
+                Command = "dat extract -c",
+                ApplyTo = GameFormat,
+                IsBatch = true
+            };
+
+            yield return new ContextMenuEntry
+            {
+                SubKeyID = "Pack_DAT_Batch",
+                Name = $"Pack all .DAT.CSV files as .DAT files",
+                Group = 1,
+                Icon = "Harmony-Tools-Pack-File-Icon.ico",
+                Command = "dat pack -c",
+                ApplyTo = KnownFormat,
+                IsBatch = true
             };
         }
 

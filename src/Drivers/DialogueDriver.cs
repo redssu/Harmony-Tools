@@ -127,20 +127,46 @@ namespace HarmonyTools.Drivers
         {
             yield return new ContextMenuEntry
             {
-                SubKeyID = "ExtractDialogue",
-                Name = "Extract Dialogue file (STX)",
-                Icon = "Harmony-Tools-Extract-Icon.ico",
-                Command = "dialogue extract \"%1\"",
+                SubKeyID = "Extract_Dialogue",
+                Name = "Extract as .STX Dialogue file",
+                Group = 0,
+                Icon = "Harmony-Tools-Extract-File-Icon.ico",
+                Command = "dialogue extract -f \"%1\"",
                 ApplyTo = GameFormat
             };
 
             yield return new ContextMenuEntry
             {
-                SubKeyID = "PackDialogue",
-                Name = "Pack this file to Dialogue file (STX)",
-                Icon = "Harmony-Tools-Pack-Icon.ico",
-                Command = "dialogue pack \"%1\"",
+                SubKeyID = "Pack_Dialogue",
+                Name = "Pack as .STX.JSON Dialogue file",
+                Group = 0,
+                Icon = "Harmony-Tools-Pack-File-Icon.ico",
+                Command = "dialogue pack -f \"%1\"",
                 ApplyTo = KnownFormat
+            };
+
+            // batch
+
+            yield return new ContextMenuEntry
+            {
+                SubKeyID = "Extract_Dialogue_Batch",
+                Name = "Extract all .STX Dialogue files",
+                Group = 2,
+                Icon = "Harmony-Tools-Extract-File-Icon.ico",
+                Command = "dialogue extract -c",
+                ApplyTo = GameFormat,
+                IsBatch = true
+            };
+
+            yield return new ContextMenuEntry
+            {
+                SubKeyID = "Pack_Dialogue_Batch",
+                Name = "Pack all .STX.JSON files as .STX Dialogue files",
+                Group = 2,
+                Icon = "Harmony-Tools-Pack-File-Icon.ico",
+                Command = "dialogue pack -c",
+                ApplyTo = KnownFormat,
+                IsBatch = true
             };
         }
 

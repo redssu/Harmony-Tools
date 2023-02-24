@@ -31,19 +31,21 @@ namespace HarmonyTools.Drivers
         {
             yield return new ContextMenuEntry
             {
-                SubKeyID = "ExtractSRD",
-                Name = "Extract SRD file",
+                SubKeyID = "Extract_SRD",
+                Name = "Extract as .SRD file",
+                Group = 3,
                 Icon = "Harmony-Tools-Extract-Icon.ico",
-                Command = "srd extract \"%1\"",
+                Command = "srd extract -f \"%1\"",
                 ApplyTo = GameFormat
             };
 
             yield return new ContextMenuEntry
             {
-                SubKeyID = "PackSRD",
-                Name = "Pack this directory as SRD file",
+                SubKeyID = "Pack_SRD",
+                Name = "Pack as .SRD file",
+                Group = 0,
                 Icon = "Harmony-Tools-Pack-Icon.ico",
-                Command = "srd pack \"%1\"",
+                Command = "srd pack -f \"%1\"",
                 ApplyTo = KnownFormat
             };
         }
@@ -126,7 +128,6 @@ namespace HarmonyTools.Drivers
         {
             var targetFiles = Directory.GetFiles(input.FullName);
             var srdPath = Path.Combine(input.FullName, "_.srd");
-
             var srdFile = LoadSrdFile(new FileInfo(srdPath), true, true);
 
             foreach (var file in targetFiles)

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using HarmonyTools.Formats;
 using V3Lib.Spc;
 
@@ -66,20 +67,46 @@ namespace HarmonyTools.Drivers
         {
             yield return new ContextMenuEntry
             {
-                SubKeyID = "ExtractSPC",
-                Name = "Extract SPC file",
+                SubKeyID = "Extract_SPC",
+                Name = "Extract as .SPC archive",
+                Group = 3,
                 Icon = "Harmony-Tools-Extract-Icon.ico",
-                Command = "spc extract \"%1\"",
+                Command = "spc extract -f \"%1\"",
                 ApplyTo = GameFormat
             };
 
             yield return new ContextMenuEntry
             {
-                SubKeyID = "PackSPC",
-                Name = "Pack this directory as SPC file",
+                SubKeyID = "Pack_SPC",
+                Name = "Pack as .SPC archive",
+                Group = 0,
                 Icon = "Harmony-Tools-Pack-Icon.ico",
-                Command = "spc pack \"%1\"",
+                Command = "spc pack -f \"%1\"",
                 ApplyTo = KnownFormat
+            };
+
+            // batch
+
+            yield return new ContextMenuEntry
+            {
+                SubKeyID = "Extract_SPC_Batch",
+                Name = "Extract all .SPC archives",
+                Group = 3,
+                Icon = "Harmony-Tools-Extract-Icon.ico",
+                Command = "spc extract -c",
+                ApplyTo = GameFormat,
+                IsBatch = true
+            };
+
+            yield return new ContextMenuEntry
+            {
+                SubKeyID = "Pack_SPC_Batch",
+                Name = "Pack all .SPC.DECOMPRESSED files as .SPC archives",
+                Group = 3,
+                Icon = "Harmony-Tools-Pack-Icon.ico",
+                Command = "spc pack -c",
+                ApplyTo = KnownFormat,
+                IsBatch = true
             };
         }
 
@@ -98,10 +125,13 @@ namespace HarmonyTools.Drivers
                     "WARNING: Unknown2 value of this SPC Archive is not equal to the expected value. Please report this to the developers."
                 );
 
-            foreach (var subfile in spcFile.Subfiles)
-            {
-                spcFile.ExtractSubfile(subfile.Name, output);
-            }
+            Parallel.ForEach(
+                spcFile.Subfiles,
+                subfile =>
+                {
+                    spcFile.ExtractSubfile(subfile.Name, output);
+                }
+            );
 
             Console.WriteLine($"Extracted subfiles has been successfully saved in \"{output}\".");
         }

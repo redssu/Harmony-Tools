@@ -23,20 +23,46 @@ namespace HarmonyTools.Drivers
         {
             yield return new ContextMenuEntry
             {
-                SubKeyID = "ExtractSTX",
-                Name = "Extract STX file",
-                Icon = "Harmony-Tools-Extract-Icon.ico",
-                Command = "stx extract \"%1\"",
+                SubKeyID = "Extract_STX",
+                Name = "Extract as .STX file",
+                Group = 1,
+                Icon = "Harmony-Tools-Extract-File-Icon.ico",
+                Command = "stx extract -f \"%1\"",
                 ApplyTo = GameFormat
             };
 
             yield return new ContextMenuEntry
             {
-                SubKeyID = "PackSTX",
-                Name = "Pack this file as STX file",
-                Icon = "Harmony-Tools-Pack-Icon.ico",
-                Command = "stx pack \"%1\"",
+                SubKeyID = "Pack_STX",
+                Name = "Pack as .STX file",
+                Group = 1,
+                Icon = "Harmony-Tools-Pack-File-Icon.ico",
+                Command = "stx pack -f \"%1\"",
                 ApplyTo = KnownFormat
+            };
+
+            // batch
+
+            yield return new ContextMenuEntry
+            {
+                SubKeyID = "Extract_STX_Batch",
+                Name = "Extract all .STX files",
+                Group = 4,
+                Icon = "Harmony-Tools-Extract-File-Icon.ico",
+                Command = "stx extract -c",
+                ApplyTo = GameFormat,
+                IsBatch = true
+            };
+
+            yield return new ContextMenuEntry
+            {
+                SubKeyID = "Pack_STX_Batch",
+                Name = "Pack .STX.TXT files as .STX files",
+                Group = 4,
+                Icon = "Harmony-Tools-Pack-File-Icon.ico",
+                Command = "stx pack -c",
+                ApplyTo = KnownFormat,
+                IsBatch = true
             };
         }
 
