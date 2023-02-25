@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
-namespace HarmonyTools.Font
+namespace HarmonyTools.Drivers.Font
 {
     public interface IGlyphProvider
     {

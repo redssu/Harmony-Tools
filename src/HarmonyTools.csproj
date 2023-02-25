@@ -13,7 +13,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <!-- <PackageReference Include="Microsoft.Win32.Registry" Version="4.0.0" /> -->
         <PackageReference Include="CriFsV2Lib" Version="2.1.0" />
         <PackageReference Include="SixLabors.Fonts" Version="1.0.0-beta19" />
         <PackageReference Include="SixLabors.ImageSharp" Version="2.1.3" />

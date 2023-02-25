@@ -1,4 +1,4 @@
-namespace HarmonyTools.Font
+namespace HarmonyTools.Drivers.Font
 {
     public class GlyphInfo
     {

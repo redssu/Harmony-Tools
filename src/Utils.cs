@@ -5,12 +5,7 @@ namespace HarmonyTools
 {
     public class Utils
     {
-        // TODO: Add support for arbitrary output path
-        public static string GetOutputPath(
-            FileSystemInfo input,
-            string inputExtension,
-            string outputExtension
-        )
+        public static string GetOutputPath(FileSystemInfo input, string inputExtension, string outputExtension)
         {
             var inputName = Path.TrimEndingDirectorySeparator(input.FullName);
 
@@ -31,9 +26,7 @@ namespace HarmonyTools
         {
             var outputPath = GetOutputPath(input, inputFormat.Extension, outputFormat.Extension);
 
-            if (
-                outputFormat.IsDirectory && !Directory.Exists(outputPath) && createDirectoryIfNeeded
-            )
+            if (outputFormat.IsDirectory && !Directory.Exists(outputPath) && createDirectoryIfNeeded)
             {
                 Directory.CreateDirectory(outputPath);
             }

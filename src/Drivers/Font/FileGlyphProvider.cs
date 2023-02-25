@@ -5,7 +5,7 @@ using HarmonyTools.Exceptions;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
-namespace HarmonyTools.Font
+namespace HarmonyTools.Drivers.Font
 {
     public class FileGlyphProvider : IGlyphProvider
     {

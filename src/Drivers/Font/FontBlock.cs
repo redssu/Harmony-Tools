@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace HarmonyTools.Font
+namespace HarmonyTools.Drivers.Font
 {
     public sealed class FontBlock
     {

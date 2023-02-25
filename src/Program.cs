@@ -1,10 +1,9 @@
 using System;
+using System.Text;
 using System.Collections.Generic;
 using System.CommandLine;
 using System.CommandLine.Builder;
 using System.CommandLine.Parsing;
-using System.IO;
-using System.Text;
 using HarmonyTools.Drivers;
 using HarmonyTools.Exceptions;
 
@@ -23,8 +22,6 @@ namespace HarmonyTools
             new WrdDriver(),
             new CpkDriver()
         };
-
-        
 
         static int Main(string[] args)
         {

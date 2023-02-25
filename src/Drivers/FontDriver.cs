@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text.Json;
 using HarmonyTools.Exceptions;
 using HarmonyTools.Extensions;
-using HarmonyTools.Font;
+using HarmonyTools.Drivers.Font;
 using HarmonyTools.Formats;
 using Scarlet.Drawing;
 using SixLabors.ImageSharp;
