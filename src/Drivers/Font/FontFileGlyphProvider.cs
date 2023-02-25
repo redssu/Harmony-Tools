@@ -1,6 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
+using System.Collections.Generic;
+using HarmonyTools.Formats;
 using HarmonyTools.Exceptions;
 using SixLabors.Fonts;
 using SixLabors.ImageSharp;
@@ -15,17 +16,18 @@ namespace HarmonyTools.Drivers.Font
         protected readonly FileSystemInfo fontFile;
         protected readonly FileSystemInfo charsetFile;
         protected readonly string charset;
+        protected readonly bool deleteOriginal;
 
-        public FontFileGlyphProvider(FileSystemInfo fontFile, FileSystemInfo charsetFile)
+        public FontFileGlyphProvider(FileSystemInfo fontFile, FileSystemInfo charsetFile, bool deleteOriginal = false)
         {
-            if (!fontFile.Exists)
+            if (!File.Exists(fontFile.FullName))
             {
                 throw new GlyphProviderException(
                     $"Input font file not found. (expected path: \"{fontFile.FullName}\")"
                 );
             }
 
-            if (!charsetFile.Exists)
+            if (!File.Exists(charsetFile.FullName))
             {
                 throw new GlyphProviderException(
                     $"Input charset file not found. (expected path: \"{charsetFile.FullName}\")"
@@ -34,6 +36,7 @@ namespace HarmonyTools.Drivers.Font
 
             this.fontFile = fontFile;
             this.charsetFile = charsetFile;
+            this.deleteOriginal = deleteOriginal;
 
             charset = File.ReadAllText(charsetFile.FullName);
         }
@@ -178,6 +181,15 @@ namespace HarmonyTools.Drivers.Font
             }
 
             yield break;
+        }
+
+        public void DeleteOriginal()
+        {
+            if (deleteOriginal)
+            {
+                Utils.DeleteOriginal(FSObjectType.File, fontFile);
+                Utils.DeleteOriginal(FSObjectType.File, charsetFile);
+            }
         }
     }
 }

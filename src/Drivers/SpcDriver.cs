@@ -1,8 +1,8 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using HarmonyTools.Formats;
 using V3Lib.Spc;
 
@@ -110,19 +110,19 @@ namespace HarmonyTools.Drivers
             };
         }
 
-        public override void Extract(FileSystemInfo input, string output)
+        public override void Extract(FileSystemInfo input, string output, bool deleteOriginal = false)
         {
             var spcFile = new SpcFile();
             spcFile.Load(input.FullName);
 
             if (!Unknown1.SequenceEqual(spcFile.Unknown1))
                 Logger.Warning(
-                    "Unknown1 value of this SPC Archive is not equal to the expected value. Please report this to the developers."
+                    "Unknown1 value of this SPC archive is not equal to the expected value. Please report this to the developers."
                 );
 
             if (Unknown2 != spcFile.Unknown2)
                 Logger.Warning(
-                    "Unknown2 value of this SPC Archive is not equal to the expected value. Please report this to the developers."
+                    "Unknown2 value of this SPC archive is not equal to the expected value. Please report this to the developers."
                 );
 
             Parallel.ForEach(
@@ -134,9 +134,14 @@ namespace HarmonyTools.Drivers
             );
 
             Logger.Success($"Extracted subfiles has been successfully saved in \"{output}\".");
+
+            if (deleteOriginal)
+            {
+                Utils.DeleteOriginal(GameFormat, input);
+            }
         }
 
-        public override void Pack(FileSystemInfo input, string output)
+        public override void Pack(FileSystemInfo input, string output, bool deleteOriginal = false)
         {
             var spcFile = new SpcFile();
             spcFile.Unknown1 = Unknown1;
@@ -152,6 +157,11 @@ namespace HarmonyTools.Drivers
             spcFile.Save(output);
 
             Logger.Success($"SPC archive has been successfully saved to \"{output}\".");
+
+            if (deleteOriginal)
+            {
+                Utils.DeleteOriginal(KnownFormat, input);
+            }
         }
     }
 }

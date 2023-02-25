@@ -1,9 +1,7 @@
-using System;
-using System.CommandLine;
 using System.IO;
-using System.Threading;
-using HarmonyTools.Exceptions;
+using System.CommandLine;
 using HarmonyTools.Formats;
+using HarmonyTools.Exceptions;
 
 namespace HarmonyTools.Drivers
 {
@@ -41,14 +39,17 @@ namespace HarmonyTools.Drivers
         protected Command? GetPackCommand()
         {
             var command = new Command("pack", $"Packs a {KnownFormat.Description} into a {GameFormat.Description}");
+
             var inputOption = GetInputOption(KnownFormat);
+            var deleteOriginalOption = GetDeleteOriginalOption(KnownFormat);
 
             command.Add(inputOption);
             command.Add(BatchOption);
             command.Add(BatchCwdOption);
+            command.Add(deleteOriginalOption);
 
             command.SetHandler(
-                (FileSystemInfo fileInput, DirectoryInfo batchInput, bool batchCwd) =>
+                (FileSystemInfo fileInput, DirectoryInfo batchInput, bool batchCwd, bool deleteOriginal) =>
                 {
                     if (batchCwd)
                     {
@@ -57,11 +58,11 @@ namespace HarmonyTools.Drivers
 
                     if (batchInput != null)
                     {
-                        BatchTaskHandler(batchInput, KnownFormat, ExtractHandler);
+                        BatchTaskHandler(batchInput, KnownFormat, ExtractHandler, deleteOriginal);
                     }
                     else if (fileInput != null)
                     {
-                        ExtractHandler(fileInput);
+                        ExtractHandler(fileInput, deleteOriginal);
                     }
                     else
                     {
@@ -70,7 +71,8 @@ namespace HarmonyTools.Drivers
                 },
                 inputOption,
                 BatchOption,
-                BatchCwdOption
+                BatchCwdOption,
+                deleteOriginalOption
             );
 
             return command;
@@ -84,12 +86,15 @@ namespace HarmonyTools.Drivers
             );
 
             var inputOption = GetInputOption(GameFormat);
+            var deleteOriginalOption = GetDeleteOriginalOption(GameFormat);
+
             command.Add(inputOption);
             command.Add(BatchOption);
             command.Add(BatchCwdOption);
+            command.Add(deleteOriginalOption);
 
             command.SetHandler(
-                (FileSystemInfo fileInput, DirectoryInfo batchInput, bool batchCwd) =>
+                (FileSystemInfo fileInput, DirectoryInfo batchInput, bool batchCwd, bool deleteOriginal) =>
                 {
                     if (batchCwd)
                     {
@@ -98,11 +103,11 @@ namespace HarmonyTools.Drivers
 
                     if (batchInput != null)
                     {
-                        BatchTaskHandler(batchInput, GameFormat, ExtractHandler);
+                        BatchTaskHandler(batchInput, GameFormat, ExtractHandler, deleteOriginal);
                     }
                     else if (fileInput != null)
                     {
-                        ExtractHandler(fileInput);
+                        ExtractHandler(fileInput, deleteOriginal);
                     }
                     else
                     {
@@ -111,13 +116,14 @@ namespace HarmonyTools.Drivers
                 },
                 inputOption,
                 BatchOption,
-                BatchCwdOption
+                BatchCwdOption,
+                deleteOriginalOption
             );
 
             return command;
         }
 
-        private void PackHandler(FileSystemInfo input)
+        private void PackHandler(FileSystemInfo input, bool deleteOriginal)
         {
             var outputPath = Utils.GetOutputPath(input, KnownFormat.Extension, GameFormat.Extension);
 
@@ -126,10 +132,10 @@ namespace HarmonyTools.Drivers
                 Directory.CreateDirectory(outputPath);
             }
 
-            Pack(input, outputPath);
+            Pack(input, outputPath, deleteOriginal);
         }
 
-        private void ExtractHandler(FileSystemInfo input)
+        private void ExtractHandler(FileSystemInfo input, bool deleteOriginal)
         {
             var outputPath = Utils.GetOutputPath(input, GameFormat.Extension, KnownFormat.Extension);
 
@@ -138,11 +144,11 @@ namespace HarmonyTools.Drivers
                 Directory.CreateDirectory(outputPath);
             }
 
-            Extract(input, outputPath);
+            Extract(input, outputPath, deleteOriginal);
         }
 
-        public abstract void Pack(FileSystemInfo input, string outputPath);
+        public abstract void Pack(FileSystemInfo input, string outputPath, bool deleteOriginal);
 
-        public abstract void Extract(FileSystemInfo input, string outputPath);
+        public abstract void Extract(FileSystemInfo input, string outputPath, bool deleteOriginal);
     }
 }

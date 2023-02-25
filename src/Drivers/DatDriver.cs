@@ -1,8 +1,8 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Collections.Generic;
 using HarmonyTools.Formats;
 using V3Lib.Dat;
 
@@ -66,7 +66,7 @@ namespace HarmonyTools.Drivers
             };
         }
 
-        public override void Extract(FileSystemInfo input, string output)
+        public override void Extract(FileSystemInfo input, string output, bool deleteOriginal)
         {
             var datFile = new DatFile();
             datFile.Load(input.FullName);
@@ -101,9 +101,14 @@ namespace HarmonyTools.Drivers
             }
 
             Logger.Success($"CSV file with extracted data has been successfully saved to \"{output}\".");
+
+            if (deleteOriginal)
+            {
+                Utils.DeleteOriginal(GameFormat, input);
+            }
         }
 
-        public override void Pack(FileSystemInfo input, string output)
+        public override void Pack(FileSystemInfo input, string output, bool deleteOriginal)
         {
             var datFile = new DatFile();
             var rowData = new List<List<String>>();
@@ -224,6 +229,11 @@ namespace HarmonyTools.Drivers
             datFile.Save(output);
 
             Logger.Success($"DAT File has been saved successfully to \"{output}\".");
+
+            if (deleteOriginal)
+            {
+                Utils.DeleteOriginal(KnownFormat, input);
+            }
         }
 
         private static string PrepareColumnValue(string text)

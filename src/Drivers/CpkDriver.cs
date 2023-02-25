@@ -1,10 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.CommandLine;
 using System.IO;
-using CriFsV2Lib;
+using System.CommandLine;
+using System.Collections.Generic;
 using HarmonyTools.Exceptions;
 using HarmonyTools.Formats;
+using CriFsV2Lib;
 
 namespace HarmonyTools.Drivers
 {
@@ -53,6 +52,7 @@ namespace HarmonyTools.Drivers
         {
             var command = new Command(CommandName, CommandDescription);
             var inputOption = GetInputOption(GameFormat);
+            var deleteOriginalOption = GetDeleteOriginalOption(GameFormat);
 
             var extractCommand = new Command(
                 "extract",
@@ -61,11 +61,12 @@ namespace HarmonyTools.Drivers
             {
                 inputOption,
                 BatchOption,
-                BatchCwdOption
+                BatchCwdOption,
+                deleteOriginalOption
             };
 
             extractCommand.SetHandler(
-                (FileSystemInfo fileInput, DirectoryInfo batchInput, bool batchCwd) =>
+                (FileSystemInfo fileInput, DirectoryInfo batchInput, bool batchCwd, bool deleteOriginal) =>
                 {
                     if (batchCwd)
                     {
@@ -74,11 +75,11 @@ namespace HarmonyTools.Drivers
 
                     if (batchInput != null)
                     {
-                        BatchTaskHandler(batchInput, GameFormat, ExtractHandler);
+                        BatchTaskHandler(batchInput, GameFormat, ExtractHandler, deleteOriginal);
                     }
                     else if (fileInput != null)
                     {
-                        ExtractHandler(fileInput);
+                        ExtractHandler(fileInput, deleteOriginal);
                     }
                     else
                     {
@@ -87,7 +88,8 @@ namespace HarmonyTools.Drivers
                 },
                 inputOption,
                 BatchOption,
-                BatchCwdOption
+                BatchCwdOption,
+                deleteOriginalOption
             );
 
             command.AddCommand(extractCommand);
@@ -95,44 +97,53 @@ namespace HarmonyTools.Drivers
             return command;
         }
 
-        private void ExtractHandler(FileSystemInfo input)
+        private void ExtractHandler(FileSystemInfo input, bool deleteOriginal)
         {
             var outputPath = Utils.GetOutputPath(input, GameFormat, KnownFormat);
-            Extract(input, outputPath);
+            Extract(input, outputPath, deleteOriginal);
         }
 
-        public void Extract(FileSystemInfo input, string output)
+        public void Extract(FileSystemInfo input, string output, bool deleteOriginal)
         {
-            using var reader = new FileStream(input.FullName, FileMode.Open, FileAccess.Read, FileShare.Read);
-            using var cpkExtractor = CriFsLib.Instance.CreateCpkReader(reader, true);
-
-            var files = cpkExtractor.GetFiles();
-
-            foreach (var file in files)
+            using (var reader = new FileStream(input.FullName, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
-                var fileOutputPath = output;
+                using var cpkExtractor = CriFsLib.Instance.CreateCpkReader(reader, true);
 
-                if (file.Directory != null)
+                var files = cpkExtractor.GetFiles();
+
+                foreach (var file in files)
                 {
-                    fileOutputPath = Path.Combine(fileOutputPath, file.Directory);
+                    var fileOutputPath = output;
 
-                    if (!Directory.Exists(fileOutputPath))
+                    if (file.Directory != null)
                     {
-                        Directory.CreateDirectory(fileOutputPath);
+                        fileOutputPath = Path.Combine(fileOutputPath, file.Directory);
+
+                        if (!Directory.Exists(fileOutputPath))
+                        {
+                            Directory.CreateDirectory(fileOutputPath);
+                        }
+                    }
+
+                    fileOutputPath = Path.Combine(fileOutputPath, file.FileName);
+
+                    var extractedFile = cpkExtractor.ExtractFile(file);
+
+                    using (
+                        var writer = new FileStream(fileOutputPath, FileMode.Create, FileAccess.Write, FileShare.Read)
+                    )
+                    {
+                        writer.Write(extractedFile.Span);
                     }
                 }
 
-                fileOutputPath = Path.Combine(fileOutputPath, file.FileName);
-
-                var extractedFile = cpkExtractor.ExtractFile(file);
-
-                using (var writer = new FileStream(fileOutputPath, FileMode.Create, FileAccess.Write, FileShare.Read))
-                {
-                    writer.Write(extractedFile.Span);
-                }
+                Logger.Success($"Extracted subfiles has been successfully saved in \"{output}\".");
             }
 
-            Logger.Success($"Extracted subfiles has been successfully saved in \"{output}\".");
+            if (deleteOriginal)
+            {
+                Utils.DeleteOriginal(GameFormat, input);
+            }
         }
     }
 }

@@ -1,6 +1,7 @@
-using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
+using System.Collections.Generic;
+using HarmonyTools.Formats;
 using HarmonyTools.Exceptions;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -23,10 +24,11 @@ namespace HarmonyTools.Drivers.Font
         }
 
         protected readonly FileSystemInfo directory;
+        protected readonly bool deleteOriginal;
 
-        public FileGlyphProvider(FileSystemInfo directory)
+        public FileGlyphProvider(FileSystemInfo directory, bool deleteOriginal = false)
         {
-            if (!directory.Exists)
+            if (!Directory.Exists(directory.FullName))
             {
                 throw new GlyphProviderException(
                     $"Input directory not found. (expected path: \"{directory.FullName}\")"
@@ -34,6 +36,7 @@ namespace HarmonyTools.Drivers.Font
             }
 
             this.directory = directory;
+            this.deleteOriginal = deleteOriginal;
         }
 
         public IEnumerable<(GlyphInfo, Image<Rgba32>)> GetGlyphs()
@@ -98,6 +101,14 @@ namespace HarmonyTools.Drivers.Font
             }
 
             yield break;
+        }
+
+        public void DeleteOriginal()
+        {
+            if (deleteOriginal)
+            {
+                Utils.DeleteOriginal(FSObjectType.Directory, directory);
+            }
         }
     }
 }

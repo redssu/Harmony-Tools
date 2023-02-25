@@ -1,11 +1,9 @@
-using System;
-using System.Collections.Generic;
-using System.CommandLine;
 using System.IO;
 using System.Linq;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Collections.Generic;
 using HarmonyTools.Exceptions;
 using HarmonyTools.Formats;
 using V3Lib.Stx;
@@ -170,10 +168,10 @@ namespace HarmonyTools.Drivers
             };
         }
 
-        public override void Extract(FileSystemInfo input, string output)
+        public override void Extract(FileSystemInfo input, string output, bool deleteOriginal)
         {
             // To create a dialogue file, we need to load both STX and WRD files.
-            // The WRD file contains character names and the STX file contains the actual dialogue.
+            // The WRD file contains character names and the STX file contains the actual dialogue lines.
             // It's pretty simple to tell which WRD file belongs to which STX file, since they have the same name.
             string wrdPath =
                 input.Extension.ToUpper() == ".STX"
@@ -300,9 +298,15 @@ namespace HarmonyTools.Drivers
             File.WriteAllText(output, json);
 
             Logger.Success($"JSON file with dialogue lines has been successfully saved to \"{output}\".");
+
+            if (deleteOriginal)
+            {
+                Utils.DeleteOriginal(GameFormat, input);
+                Utils.DeleteOriginal(FSObjectType.File, wrdPath);
+            }
         }
 
-        public override void Pack(FileSystemInfo input, string output)
+        public override void Pack(FileSystemInfo input, string output, bool deleteOriginal)
         {
             var dialogueJson = File.ReadAllText(input.FullName);
 
@@ -339,6 +343,11 @@ namespace HarmonyTools.Drivers
             stxFile.Save(output);
 
             Logger.Success($"STX File has been saved successfully to \"{output}\".");
+
+            if (deleteOriginal)
+            {
+                Utils.DeleteOriginal(KnownFormat, input);
+            }
         }
 
         private WrdCommand? TransformCommandIfUseful(WrdCommand command)

@@ -1,9 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.CommandLine;
 using System.IO;
-using HarmonyTools.Exceptions;
+using System.CommandLine;
+using System.Collections.Generic;
 using HarmonyTools.Formats;
+using HarmonyTools.Exceptions;
 using V3Lib.Wrd;
 
 namespace HarmonyTools.Drivers
@@ -102,6 +101,7 @@ namespace HarmonyTools.Drivers
 
             var inputOption = GetInputOption(GameFormat);
             var friendlyNamesOption = GetFriendlyNamesOption();
+            var deleteOriginalOption = GetDeleteOriginalOption(GameFormat);
 
             var extractCommand = new Command(
                 "extract",
@@ -111,11 +111,18 @@ namespace HarmonyTools.Drivers
                 inputOption,
                 BatchOption,
                 BatchCwdOption,
-                friendlyNamesOption
+                friendlyNamesOption,
+                deleteOriginalOption
             };
 
             command.SetHandler(
-                (FileSystemInfo fileInput, DirectoryInfo batchInput, bool batchCwd, bool friendlyNames) =>
+                (
+                    FileSystemInfo fileInput,
+                    DirectoryInfo batchInput,
+                    bool batchCwd,
+                    bool friendlyNames,
+                    bool deleteOriginal
+                ) =>
                 {
                     if (batchCwd)
                     {
@@ -124,11 +131,16 @@ namespace HarmonyTools.Drivers
 
                     if (batchInput != null)
                     {
-                        BatchTaskHandler(batchInput, GameFormat, input => ExtractHandler(input, friendlyNames));
+                        BatchTaskHandler(
+                            batchInput,
+                            GameFormat,
+                            (input, deleteOriginal) => ExtractHandler(input, friendlyNames, deleteOriginal),
+                            deleteOriginal
+                        );
                     }
                     else if (fileInput != null)
                     {
-                        ExtractHandler(fileInput, friendlyNames);
+                        ExtractHandler(fileInput, friendlyNames, deleteOriginal);
                     }
                     else
                     {
@@ -138,7 +150,8 @@ namespace HarmonyTools.Drivers
                 inputOption,
                 BatchOption,
                 BatchCwdOption,
-                friendlyNamesOption
+                friendlyNamesOption,
+                deleteOriginalOption
             );
 
             command.AddCommand(extractCommand);
@@ -153,14 +166,14 @@ namespace HarmonyTools.Drivers
                 getDefaultValue: () => true
             );
 
-        private void ExtractHandler(FileSystemInfo input, bool friendlyNames)
+        private void ExtractHandler(FileSystemInfo input, bool friendlyNames, bool deleteOriginal)
         {
             var outputPath = Utils.GetOutputPath(input, GameFormat, KnownFormat);
 
-            Extract(input, outputPath, friendlyNames);
+            Extract(input, outputPath, friendlyNames, deleteOriginal);
         }
 
-        public void Extract(FileSystemInfo input, string output, bool friendlyNames)
+        public void Extract(FileSystemInfo input, string output, bool friendlyNames, bool deleteOriginal)
         {
             var wrdFile = new WrdFile();
             wrdFile.Load(input.FullName);
@@ -170,30 +183,36 @@ namespace HarmonyTools.Drivers
                 Logger.Info("Using friendly names for opcodes.");
             }
 
-            using var writer = new StreamWriter(output, false);
-
-            foreach (var command in wrdFile.Commands)
+            using (var writer = new StreamWriter(output, false))
             {
-                string line;
-
-                if (friendlyNames && opcodeTranslationTable.ContainsKey(command.Opcode))
+                foreach (var command in wrdFile.Commands)
                 {
-                    line = $"({command.Opcode}) {opcodeTranslationTable[command.Opcode]}";
-                }
-                else
-                {
-                    line = $"({command.Opcode}) ";
+                    string line;
+
+                    if (friendlyNames && opcodeTranslationTable.ContainsKey(command.Opcode))
+                    {
+                        line = $"({command.Opcode}) {opcodeTranslationTable[command.Opcode]}";
+                    }
+                    else
+                    {
+                        line = $"({command.Opcode}) ";
+                    }
+
+                    for (int i = 0; i < command.Arguments.Count; i++)
+                    {
+                        line += " \"" + command.Arguments[i].ToString() + "\"";
+                    }
+
+                    writer.WriteLine(line);
                 }
 
-                for (int i = 0; i < command.Arguments.Count; i++)
-                {
-                    line += " \"" + command.Arguments[i].ToString() + "\"";
-                }
-
-                writer.WriteLine(line);
+                Logger.Success($"TXT file with extracted game script has been successfully saved to \"{output}\".");
             }
 
-            Logger.Success($"TXT file with extracted game script has been successfully saved to \"{output}\" .");
+            if (deleteOriginal)
+            {
+                Utils.DeleteOriginal(GameFormat, input);
+            }
         }
     }
 }

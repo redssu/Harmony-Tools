@@ -1,7 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Collections.Generic;
 using HarmonyTools.Exceptions;
 using HarmonyTools.Formats;
 using V3Lib.Stx;
@@ -66,7 +66,7 @@ namespace HarmonyTools.Drivers
             };
         }
 
-        public override void Extract(FileSystemInfo input, string output)
+        public override void Extract(FileSystemInfo input, string output, bool deleteOriginal)
         {
             var stxFile = new StxFile();
             stxFile.Load(input.FullName);
@@ -88,71 +88,82 @@ namespace HarmonyTools.Drivers
             }
 
             Logger.Success($"TXT file with extracted strings has been successfully saved to \"{output}\".");
+
+            if (deleteOriginal)
+            {
+                Utils.DeleteOriginal(GameFormat, input);
+            }
         }
 
-        public override void Pack(FileSystemInfo input, string output)
+        public override void Pack(FileSystemInfo input, string output, bool deleteOriginal)
         {
             var stxFile = new StxFile();
 
-            using var reader = new StreamReader(input.FullName);
-
-            while (reader != null && !reader.EndOfStream)
+            using (var reader = new StreamReader(input.FullName))
             {
-                if (reader.ReadLine()!.StartsWith("{"))
+                while (reader != null && !reader.EndOfStream)
                 {
-                    var table = new Dictionary<uint, string>();
-
-                    while (true)
+                    if (reader.ReadLine()!.StartsWith("{"))
                     {
-                        string? line = reader.ReadLine();
+                        var table = new Dictionary<uint, string>();
 
-                        uint key = 0;
-                        string value = string.Empty;
-
-                        if (line == null || line.StartsWith("}"))
+                        while (true)
                         {
-                            break;
-                        }
+                            string? line = reader.ReadLine();
 
-                        if (line.StartsWith("["))
-                        {
-                            int index = line.IndexOf("]");
+                            uint key = 0;
+                            string value = string.Empty;
 
-                            if (index == -1 || index > line.Length - 1)
+                            if (line == null || line.StartsWith("}"))
+                            {
+                                break;
+                            }
+
+                            if (line.StartsWith("["))
+                            {
+                                int index = line.IndexOf("]");
+
+                                if (index == -1 || index > line.Length - 1)
+                                    throw new PackException(
+                                        $"No valid key pattern found at the beginning of the line: {line}."
+                                    );
+
+                                try
+                                {
+                                    key = Convert.ToUInt32(line.Substring(1, index - 1));
+                                }
+                                catch (Exception)
+                                {
+                                    throw new PackException($"Key in line {line} is not valid.");
+                                }
+
+                                value = line.Substring(index + 1).TrimStart(' ');
+                            }
+                            else
+                            {
                                 throw new PackException(
                                     $"No valid key pattern found at the beginning of the line: {line}."
                                 );
-
-                            try
-                            {
-                                key = Convert.ToUInt32(line.Substring(1, index - 1));
-                            }
-                            catch (Exception)
-                            {
-                                throw new PackException($"Key in line {line} is not valid.");
                             }
 
-                            value = line.Substring(index + 1).TrimStart(' ');
-                        }
-                        else
-                        {
-                            throw new PackException(
-                                $"No valid key pattern found at the beginning of the line: {line}."
-                            );
+                            table.Add(key, value.Replace(@"\n", "\n").Replace(@"\r", "\r"));
                         }
 
-                        table.Add(key, value.Replace(@"\n", "\n").Replace(@"\r", "\r"));
+                        table = table.OrderBy(item => item.Key).ToDictionary(item => item.Key, item => item.Value);
+
+                        stxFile.StringTables.Add(new StringTable(table, 8));
                     }
-
-                    table = table.OrderBy(item => item.Key).ToDictionary(item => item.Key, item => item.Value);
-
-                    stxFile.StringTables.Add(new StringTable(table, 8));
                 }
             }
 
             stxFile.Save(output);
 
             Logger.Success($"STX File has been saved successfully to \"{output}\".");
+
+            if (deleteOriginal)
+            {
+                Utils.DeleteOriginal(KnownFormat, input);
+            }
         }
     }
 }

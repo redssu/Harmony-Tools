@@ -1,8 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.CommandLine;
 using System.IO;
 using System.Linq;
+using System.CommandLine;
+using System.Collections.Generic;
 using System.Runtime.Versioning;
 using HarmonyTools.Exceptions;
 using HarmonyTools.Extensions;
@@ -35,10 +34,15 @@ namespace HarmonyTools.Drivers
         {
             var command = new Command(CommandName, CommandDescription);
 
-            var registerCommand = new Command("register", "Registers context menu");
+            var deleteOriginalOption = new Option<bool>(
+                "--delete-original",
+                "Registers context menu commands with \"--delete-original\" option."
+            );
+
+            var registerCommand = new Command("register", "Registers context menu") { deleteOriginalOption };
             var unregisterCommand = new Command("unregister", "Unregisters context menu");
 
-            registerCommand.SetHandler(Register);
+            registerCommand.SetHandler(Register, deleteOriginalOption);
             unregisterCommand.SetHandler(Unregister);
 
             command.AddCommand(registerCommand);
@@ -47,7 +51,7 @@ namespace HarmonyTools.Drivers
             return command;
         }
 
-        private void Register()
+        private void Register(bool deleteOriginal)
         {
             // csharpier-ignore-start
             Logger.Warning("IMPORTANT: Note that you should not delete or move HarmonyTools binary file.");
@@ -94,6 +98,8 @@ namespace HarmonyTools.Drivers
                 .ToList();
             var dirBgItems = contextMenuItems.Where(item => item.IsBatch).OrderBy(item => item.Group).ToList();
 
+            var deleteOriginalAppendix = deleteOriginal ? " --delete-original" : "";
+
             try
             {
                 var htFileRoot = Registry.ClassesRoot.CreateSubKey(@"*\shell\HarmonyTools");
@@ -128,7 +134,7 @@ namespace HarmonyTools.Drivers
                         subKeyID: CreateRegistryID(subKeyIndex, item),
                         name: item.Name,
                         icon: Path.Combine(iconsPath, item.Icon),
-                        command: $"{binaryPath} {item.Command}",
+                        command: $"{binaryPath} {item.Command} {deleteOriginalAppendix}",
                         hasSeparatorAbove: item.Group != previousGroup
                     );
 
@@ -145,7 +151,7 @@ namespace HarmonyTools.Drivers
                         subKeyID: CreateRegistryID(subKeyIndex, item),
                         name: item.Name,
                         icon: Path.Combine(iconsPath, item.Icon),
-                        command: $"{binaryPath} {item.Command}",
+                        command: $"{binaryPath} {item.Command} {deleteOriginalAppendix}",
                         hasSeparatorAbove: item.Group != previousGroup
                     );
 
@@ -162,7 +168,7 @@ namespace HarmonyTools.Drivers
                         subKeyID: CreateRegistryID(subKeyIndex, item),
                         name: item.Name,
                         icon: Path.Combine(iconsPath, item.Icon),
-                        command: $"{binaryPath} {item.Command}",
+                        command: $"{binaryPath} {item.Command} {deleteOriginalAppendix}",
                         hasSeparatorAbove: item.Group != previousGroup
                     );
 
@@ -175,6 +181,8 @@ namespace HarmonyTools.Drivers
                 Unregister();
                 throw new ContextMenuException("You do not have permission to register the context menu.");
             }
+
+            Logger.Success("Context menu has been successfully registered.");
         }
 
         private void Unregister()
@@ -200,6 +208,8 @@ namespace HarmonyTools.Drivers
             {
                 throw new ContextMenuException("You do not have permission to unregister the context menu.");
             }
+
+            Logger.Success("Context menu has been successfully unregistered.");
         }
 
         private bool DoesKeyExists(string keyName) => Registry.ClassesRoot.OpenSubKey(keyName, false) != null;

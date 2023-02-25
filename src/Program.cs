@@ -35,7 +35,6 @@ namespace HarmonyTools
              * TODO --------------
              * - L10n
              * - Unit tests
-             * - Delete original file option
              * - Default charset for font replace command
              * - Support for arbitrary output path
              * - Support for audio files
@@ -73,6 +72,13 @@ namespace HarmonyTools
                         if (exception is HarmonyToolsException)
                         {
                             Logger.Error($"{exception.GetType().Name}: {exception.Message}");
+                            Logger.Info("Press <Enter> key to continue.");
+                            while (Console.ReadKey().Key != ConsoleKey.Enter) { }
+                        }
+                        else
+                        {
+                            Logger.Error($"Unhandled exception: {exception.GetType().Name}: {exception.Message}");
+                            Logger.Error(exception.StackTrace ?? "No stack trace available.");
                             Logger.Info("Press <Enter> key to continue.");
                             while (Console.ReadKey().Key != ConsoleKey.Enter) { }
                         }

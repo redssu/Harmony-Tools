@@ -7,5 +7,6 @@ namespace HarmonyTools.Drivers.Font
     public interface IGlyphProvider
     {
         public IEnumerable<(GlyphInfo, Image<Rgba32>)> GetGlyphs();
+        public void DeleteOriginal();
     }
 }

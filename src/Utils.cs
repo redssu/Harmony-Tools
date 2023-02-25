@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using HarmonyTools.Formats;
 
@@ -33,5 +34,28 @@ namespace HarmonyTools
 
             return outputPath;
         }
+
+        public static void DeleteOriginal(FSObjectType objectType, string objectPath)
+        {
+            if (objectType == FSObjectType.Directory)
+            {
+                Directory.Delete(objectPath, true);
+                Logger.Success($"Original directory \"{objectPath}\" has been deleted.");
+            }
+            else if (objectType == FSObjectType.File)
+            {
+                File.Delete(objectPath);
+                Logger.Success($"Original file \"{objectPath}\" has been deleted.");
+            }
+        }
+
+        public static void DeleteOriginal(FSObjectFormat objectFormat, string objectPath) =>
+            DeleteOriginal(objectFormat.Type, objectPath);
+
+        public static void DeleteOriginal(FSObjectFormat objectFormat, FileSystemInfo objectInfo) =>
+            DeleteOriginal(objectFormat.Type, objectInfo.FullName);
+
+        public static void DeleteOriginal(FSObjectType objectType, FileSystemInfo objectInfo) =>
+            DeleteOriginal(objectType, objectInfo.FullName);
     }
 }

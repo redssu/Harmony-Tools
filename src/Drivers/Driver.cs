@@ -1,11 +1,11 @@
 using System.IO;
 using System.CommandLine;
-using HarmonyTools.Formats;
 using System.Threading.Tasks;
+using HarmonyTools.Formats;
 
 namespace HarmonyTools.Drivers
 {
-    public delegate void BatchCallback(FileSystemInfo input);
+    public delegate void BatchCallback(FileSystemInfo input, bool deleteOriginal);
 
     public abstract class Driver
     {
@@ -33,7 +33,12 @@ namespace HarmonyTools.Drivers
                 getDefaultValue: () => false
             );
 
-        protected void BatchTaskHandler(DirectoryInfo input, FSObjectFormat inputFormat, BatchCallback handler)
+        protected void BatchTaskHandler(
+            DirectoryInfo input,
+            FSObjectFormat inputFormat,
+            BatchCallback handler,
+            bool deleteOriginal
+        )
         {
             if (inputFormat.IsDirectory)
             {
@@ -44,7 +49,7 @@ namespace HarmonyTools.Drivers
                     directory =>
                     {
                         var directoryInfo = new DirectoryInfo(directory);
-                        handler(directoryInfo);
+                        handler(directoryInfo, deleteOriginal);
                     }
                 );
             }
@@ -57,7 +62,7 @@ namespace HarmonyTools.Drivers
                     file =>
                     {
                         var fileInfo = new FileInfo(file);
-                        handler(fileInfo);
+                        handler(fileInfo, deleteOriginal);
                     }
                 );
             }

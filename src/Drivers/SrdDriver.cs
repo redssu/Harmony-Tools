@@ -1,15 +1,15 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Collections.Generic;
 using HarmonyTools.Exceptions;
 using HarmonyTools.Extensions;
 using HarmonyTools.Formats;
+using V3Lib.Srd;
+using V3Lib.Srd.BlockTypes;
 using Scarlet.Drawing;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using V3Lib.Srd;
-using V3Lib.Srd.BlockTypes;
 
 namespace HarmonyTools.Drivers
 {
@@ -50,7 +50,7 @@ namespace HarmonyTools.Drivers
             };
         }
 
-        public override void Extract(FileSystemInfo input, string output)
+        public override void Extract(FileSystemInfo input, string output, bool deleteOriginal)
         {
             string? srdiPath = null;
             string? srdvPath = null;
@@ -122,9 +122,24 @@ namespace HarmonyTools.Drivers
             }
 
             Logger.Success($"Extracted images has been successfully saved in \"{output}\".");
+
+            if (deleteOriginal)
+            {
+                Utils.DeleteOriginal(GameFormat, input);
+
+                if (srdiPath != null)
+                {
+                    Utils.DeleteOriginal(FSObjectType.File, srdiPath);
+                }
+
+                if (srdvPath != null)
+                {
+                    Utils.DeleteOriginal(FSObjectType.File, srdvPath);
+                }
+            }
         }
 
-        public override void Pack(FileSystemInfo input, string output)
+        public override void Pack(FileSystemInfo input, string output, bool deleteOriginal)
         {
             var targetFiles = Directory.GetFiles(input.FullName);
             var srdPath = Path.Combine(input.FullName, "_.srd");
@@ -214,6 +229,11 @@ namespace HarmonyTools.Drivers
             srdFile.Save(output, srdiOutputPath, srdvOutputPath);
 
             Logger.Success($"SRD archive and it's additional files has been successfully saved to \"{output}\".");
+
+            if (deleteOriginal)
+            {
+                Utils.DeleteOriginal(KnownFormat, input);
+            }
         }
 
         // these are public because FontDriver uses them too

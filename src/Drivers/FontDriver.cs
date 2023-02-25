@@ -1,19 +1,19 @@
 using System;
-using System.Collections.Generic;
-using System.CommandLine;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.CommandLine;
+using System.Collections.Generic;
 using HarmonyTools.Exceptions;
 using HarmonyTools.Extensions;
 using HarmonyTools.Drivers.Font;
 using HarmonyTools.Formats;
+using V3Lib.Srd;
+using V3Lib.Srd.BlockTypes;
 using Scarlet.Drawing;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
-using V3Lib.Srd;
-using V3Lib.Srd.BlockTypes;
 
 namespace HarmonyTools.Drivers
 {
@@ -91,10 +91,9 @@ namespace HarmonyTools.Drivers
 
         private Command GetNameCommand()
         {
-            var command = new Command("name", "Gets the name of a included font");
             var inputOption = GetInputOption(GameFormat);
+            var command = new Command("name", "Gets the name of a included font") { inputOption };
 
-            command.Add(inputOption);
             command.SetHandler(GetName, inputOption);
 
             return command;
@@ -102,17 +101,27 @@ namespace HarmonyTools.Drivers
 
         private Command GetPackCommand()
         {
-            var command = new Command("pack", $"Packs a {KnownFormat.Description} into a {GameFormat.Description}");
             var inputOption = GetInputOption(KnownFormat);
             var generateDebugImageOption = GetGenerateDebugImageOption();
+            var deleteOriginalOption = GetDeleteOriginalOption(KnownFormat);
 
-            command.Add(inputOption);
-            command.Add(BatchOption);
-            command.Add(BatchCwdOption);
-            command.Add(generateDebugImageOption);
+            var command = new Command("pack", $"Packs a {KnownFormat.Description} into a {GameFormat.Description}")
+            {
+                inputOption,
+                BatchOption,
+                BatchCwdOption,
+                generateDebugImageOption,
+                deleteOriginalOption
+            };
 
             command.SetHandler(
-                (FileSystemInfo fileInput, DirectoryInfo batchInput, bool batchCwd, bool generateDebugImage) =>
+                (
+                    FileSystemInfo fileInput,
+                    DirectoryInfo batchInput,
+                    bool batchCwd,
+                    bool generateDebugImage,
+                    bool deleteOriginal
+                ) =>
                 {
                     if (batchCwd)
                     {
@@ -121,11 +130,16 @@ namespace HarmonyTools.Drivers
 
                     if (batchInput != null)
                     {
-                        BatchTaskHandler(batchInput, KnownFormat, input => PackHandler(input, generateDebugImage));
+                        BatchTaskHandler(
+                            batchInput,
+                            KnownFormat,
+                            (input, deleteOriginal) => PackHandler(input, generateDebugImage, deleteOriginal),
+                            deleteOriginal
+                        );
                     }
                     else if (fileInput != null)
                     {
-                        PackHandler(fileInput, generateDebugImage);
+                        PackHandler(fileInput, generateDebugImage, deleteOriginal);
                     }
                     else
                     {
@@ -135,7 +149,8 @@ namespace HarmonyTools.Drivers
                 inputOption,
                 BatchOption,
                 BatchCwdOption,
-                generateDebugImageOption
+                generateDebugImageOption,
+                deleteOriginalOption
             );
 
             return command;
@@ -143,21 +158,30 @@ namespace HarmonyTools.Drivers
 
         private Command GetExtractCommand()
         {
+            var inputOption = GetInputOption(GameFormat);
+            var generateDebugImageOption = GetGenerateDebugImageOption();
+            var deleteOriginalOption = GetDeleteOriginalOption(GameFormat);
+
             var command = new Command(
                 "extract",
                 $"Extracts a {GameFormat.Description} into a {KnownFormat.Description}"
-            );
-
-            var inputOption = GetInputOption(GameFormat);
-            var generateDebugImageOption = GetGenerateDebugImageOption();
-
-            command.Add(inputOption);
-            command.Add(BatchOption);
-            command.Add(BatchCwdOption);
-            command.Add(generateDebugImageOption);
+            )
+            {
+                inputOption,
+                BatchOption,
+                BatchCwdOption,
+                generateDebugImageOption,
+                deleteOriginalOption
+            };
 
             command.SetHandler(
-                (FileSystemInfo fileInput, DirectoryInfo batchInput, bool batchCwd, bool generateDebugImage) =>
+                (
+                    FileSystemInfo fileInput,
+                    DirectoryInfo batchInput,
+                    bool batchCwd,
+                    bool generateDebugImage,
+                    bool deleteOriginal
+                ) =>
                 {
                     if (batchCwd)
                     {
@@ -166,11 +190,16 @@ namespace HarmonyTools.Drivers
 
                     if (batchInput != null)
                     {
-                        BatchTaskHandler(batchInput, GameFormat, input => ExtractHandler(input, generateDebugImage));
+                        BatchTaskHandler(
+                            batchInput,
+                            GameFormat,
+                            (input, deleteOriginal) => ExtractHandler(input, generateDebugImage, deleteOriginal),
+                            deleteOriginal
+                        );
                     }
                     else if (fileInput != null)
                     {
-                        ExtractHandler(fileInput, generateDebugImage);
+                        ExtractHandler(fileInput, generateDebugImage, deleteOriginal);
                     }
                     else
                     {
@@ -180,7 +209,8 @@ namespace HarmonyTools.Drivers
                 inputOption,
                 BatchOption,
                 BatchCwdOption,
-                generateDebugImageOption
+                generateDebugImageOption,
+                deleteOriginalOption
             );
 
             return command;
@@ -188,21 +218,30 @@ namespace HarmonyTools.Drivers
 
         private Command GetReplaceCommand()
         {
+            var inputOption = GetInputOption(ReplacementFormat);
+            var generateDebugImageOption = GetGenerateDebugImageOption();
+            var deleteOriginalOption = GetDeleteOriginalOption(ReplacementFormat);
+
             var command = new Command(
                 "replace",
                 $"Packs a {ReplacementFormat.Description} into a {GameFormat.Description}"
-            );
-
-            var inputOption = GetInputOption(ReplacementFormat);
-            var generateDebugImageOption = GetGenerateDebugImageOption();
-
-            command.Add(inputOption);
-            command.Add(BatchOption);
-            command.Add(BatchCwdOption);
-            command.Add(generateDebugImageOption);
+            )
+            {
+                inputOption,
+                BatchOption,
+                BatchCwdOption,
+                generateDebugImageOption,
+                deleteOriginalOption
+            };
 
             command.SetHandler(
-                (FileSystemInfo fileInput, DirectoryInfo batchInput, bool batchCwd, bool generateDebugImage) =>
+                (
+                    FileSystemInfo fileInput,
+                    DirectoryInfo batchInput,
+                    bool batchCwd,
+                    bool generateDebugImage,
+                    bool deleteOriginal
+                ) =>
                 {
                     if (batchCwd)
                     {
@@ -214,12 +253,13 @@ namespace HarmonyTools.Drivers
                         BatchTaskHandler(
                             batchInput,
                             ReplacementFormat,
-                            input => ReplaceHandler(input, generateDebugImage)
+                            (input, deleteOriginal) => ReplaceHandler(input, generateDebugImage, deleteOriginal),
+                            deleteOriginal
                         );
                     }
                     else if (fileInput != null)
                     {
-                        ReplaceHandler(fileInput, generateDebugImage);
+                        ReplaceHandler(fileInput, generateDebugImage, deleteOriginal);
                     }
                     else
                     {
@@ -229,7 +269,8 @@ namespace HarmonyTools.Drivers
                 inputOption,
                 BatchOption,
                 BatchCwdOption,
-                generateDebugImageOption
+                generateDebugImageOption,
+                deleteOriginalOption
             );
 
             return command;
@@ -242,22 +283,22 @@ namespace HarmonyTools.Drivers
                 getDefaultValue: () => false
             );
 
-        private void ExtractHandler(FileSystemInfo input, bool generateDebugImage)
+        private void ExtractHandler(FileSystemInfo input, bool generateDebugImage, bool deleteOriginal)
         {
             var outputPath = Utils.GetOutputPath(input, GameFormat, KnownFormat);
-            Extract(input, outputPath, generateDebugImage);
+            Extract(input, outputPath, generateDebugImage, deleteOriginal);
         }
 
-        private void PackHandler(FileSystemInfo input, bool generateDebugImage)
+        private void PackHandler(FileSystemInfo input, bool generateDebugImage, bool deleteOriginal)
         {
             var outputPath = Utils.GetOutputPath(input, KnownFormat, GameFormat);
-            Pack(input, outputPath, generateDebugImage);
+            Pack(input, outputPath, generateDebugImage, deleteOriginal);
         }
 
-        private void ReplaceHandler(FileSystemInfo input, bool generateDebugImage)
+        private void ReplaceHandler(FileSystemInfo input, bool generateDebugImage, bool deleteOriginal)
         {
             var outputPath = Utils.GetOutputPath(input, ReplacementFormat, GameFormat);
-            Replace(input, outputPath, generateDebugImage);
+            Replace(input, outputPath, generateDebugImage, deleteOriginal);
         }
 
         public void GetName(FileSystemInfo input)
@@ -273,14 +314,17 @@ namespace HarmonyTools.Drivers
             Logger.Success($"Found font name: \"{fontBlock.FontName}\"");
         }
 
-        public void Extract(FileSystemInfo input, string output, bool generateDebugImage)
+        public void Extract(FileSystemInfo input, string output, bool generateDebugImage, bool deleteOriginal)
         {
             // Extracting the font is basically extracting the .SRD Archive
             // this tool also splits glyphs into separate files
 
             // Font files also contains Bounding Boxes for each glyph
             // so we are making a JSON file with informations about each glyph
-            var srdFile = SrdDriver.LoadSrdFile(input);
+            string? srdiPath;
+            string? srdvPath;
+
+            var srdFile = SrdDriver.LoadSrdFile(input, out srdiPath, out srdvPath);
             var fontBlock = GetFontBlock(srdFile.Blocks);
 
             if (fontBlock == null)
@@ -393,6 +437,21 @@ namespace HarmonyTools.Drivers
             File.WriteAllText(fontInfoOutput, fontInfoJsonString);
 
             Logger.Success($"Glyphs has been successfully extracted to \"{output}\".");
+
+            if (deleteOriginal)
+            {
+                Utils.DeleteOriginal(GameFormat, input);
+
+                if (srdiPath != null)
+                {
+                    Utils.DeleteOriginal(FSObjectType.File, srdiPath);
+                }
+
+                if (srdvPath != null)
+                {
+                    Utils.DeleteOriginal(FSObjectType.File, srdvPath);
+                }
+            }
         }
 
         /**
@@ -402,7 +461,7 @@ namespace HarmonyTools.Drivers
          * See: https://github.com/P4K5/DanganV3FontsConverter
          * License: GNU GPL 3.0 <https://github.com/P4K5/DanganV3FontsConverter/blob/master/LICENSE.txt>
          */
-        public void Replace(FileSystemInfo input, string output, bool generateDebugImage)
+        public void Replace(FileSystemInfo input, string output, bool generateDebugImage, bool deleteOriginal)
         {
             var stxPath = new FileInfo(Path.ChangeExtension(input.FullName, "stx"));
             var oldSrdFile = SrdDriver.LoadSrdFile(stxPath, true, true);
@@ -430,12 +489,12 @@ namespace HarmonyTools.Drivers
 
             var charsetFilePath = Path.Combine(Path.GetDirectoryName(input.FullName)!, "charset.txt");
 
-            var fontFileGlyphProvider = new FontFileGlyphProvider(input, new FileInfo(charsetFilePath));
+            var fontFileGlyphProvider = new FontFileGlyphProvider(input, new FileInfo(charsetFilePath), deleteOriginal);
 
             Pack(fontFileGlyphProvider, fontInfo, output, generateDebugImage);
         }
 
-        public void Pack(FileSystemInfo input, string output, bool generateDebugImage)
+        public void Pack(FileSystemInfo input, string output, bool generateDebugImage, bool deleteOriginal = false)
         {
             var fontInfoPath = Path.Combine(input.FullName, "__font_info.json");
 
@@ -461,7 +520,7 @@ namespace HarmonyTools.Drivers
                 );
             }
 
-            var fileGlyphProvider = new FileGlyphProvider(input);
+            var fileGlyphProvider = new FileGlyphProvider(input, deleteOriginal);
 
             Pack(fileGlyphProvider, fontInfo, output, generateDebugImage);
         }
@@ -639,6 +698,8 @@ namespace HarmonyTools.Drivers
             srdFile.Save(output, Path.ChangeExtension(output, "srdi"), Path.ChangeExtension(output, "srdv"));
 
             Logger.Success($"STX Font file has been successfully saved to \"{output}\".");
+
+            glyphProvider.DeleteOriginal();
         }
 
         private FontBlock? GetFontBlock(IEnumerable<Block> blocks)
