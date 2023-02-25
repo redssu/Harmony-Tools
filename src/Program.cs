@@ -30,14 +30,6 @@ namespace HarmonyTools
             var rootCommand = CreateRootCommand();
             var parser = BuildCommandLine(rootCommand);
             return parser.Invoke(args);
-
-            /**
-             * TODO --------------
-             * - Unit tests
-             * - Support for arbitrary output path
-             * - Support for audio files
-             * TODO --------------
-             */
         }
 
         private static RootCommand CreateRootCommand()
