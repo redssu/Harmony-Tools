@@ -33,9 +33,7 @@ namespace HarmonyTools
 
             /**
              * TODO --------------
-             * - L10n
              * - Unit tests
-             * - Default charset for font replace command
              * - Support for arbitrary output path
              * - Support for audio files
              * TODO --------------

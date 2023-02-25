@@ -14,11 +14,26 @@ namespace HarmonyTools.Drivers.Font
     public class FontFileGlyphProvider : IGlyphProvider
     {
         protected readonly FileSystemInfo fontFile;
-        protected readonly FileSystemInfo charsetFile;
+        protected readonly FileSystemInfo? charsetFile;
         protected readonly string charset;
         protected readonly bool deleteOriginal;
 
-        public FontFileGlyphProvider(FileSystemInfo fontFile, FileSystemInfo charsetFile, bool deleteOriginal = false)
+        public FontFileGlyphProvider(FileSystemInfo fontFile, string charset, bool deleteOriginal)
+        {
+            if (!File.Exists(fontFile.FullName))
+            {
+                throw new GlyphProviderException(
+                    $"Input font file not found. (expected path: \"{fontFile.FullName}\")"
+                );
+            }
+
+            this.fontFile = fontFile;
+            this.charset = charset;
+            this.deleteOriginal = deleteOriginal;
+            charsetFile = null;
+        }
+
+        public FontFileGlyphProvider(FileSystemInfo fontFile, FileSystemInfo charsetFile, bool deleteOriginal)
         {
             if (!File.Exists(fontFile.FullName))
             {
@@ -188,7 +203,11 @@ namespace HarmonyTools.Drivers.Font
             if (deleteOriginal)
             {
                 Utils.DeleteOriginal(FSObjectType.File, fontFile);
-                Utils.DeleteOriginal(FSObjectType.File, charsetFile);
+
+                if (charsetFile != null)
+                {
+                    Utils.DeleteOriginal(FSObjectType.File, charsetFile);
+                }
             }
         }
     }

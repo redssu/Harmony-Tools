@@ -26,7 +26,7 @@ namespace HarmonyTools.Drivers.Font
         protected readonly FileSystemInfo directory;
         protected readonly bool deleteOriginal;
 
-        public FileGlyphProvider(FileSystemInfo directory, bool deleteOriginal = false)
+        public FileGlyphProvider(FileSystemInfo directory, bool deleteOriginal)
         {
             if (!Directory.Exists(directory.FullName))
             {

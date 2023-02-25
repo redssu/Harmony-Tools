@@ -222,6 +222,12 @@ namespace HarmonyTools.Drivers
             var generateDebugImageOption = GetGenerateDebugImageOption();
             var deleteOriginalOption = GetDeleteOriginalOption(ReplacementFormat);
 
+            var languageCharsetOption = new Option<string?>(
+                aliases: new[] { "--use-language-charset", "-l" },
+                description: "Use the default language charset",
+                getDefaultValue: () => null
+            ).FromAmong("pl", "en");
+
             var command = new Command(
                 "replace",
                 $"Packs a {ReplacementFormat.Description} into a {GameFormat.Description}"
@@ -231,7 +237,8 @@ namespace HarmonyTools.Drivers
                 BatchOption,
                 BatchCwdOption,
                 generateDebugImageOption,
-                deleteOriginalOption
+                deleteOriginalOption,
+                languageCharsetOption
             };
 
             command.SetHandler(
@@ -240,7 +247,8 @@ namespace HarmonyTools.Drivers
                     DirectoryInfo batchInput,
                     bool batchCwd,
                     bool generateDebugImage,
-                    bool deleteOriginal
+                    bool deleteOriginal,
+                    string? languageCharset
                 ) =>
                 {
                     if (batchCwd)
@@ -253,13 +261,14 @@ namespace HarmonyTools.Drivers
                         BatchTaskHandler(
                             batchInput,
                             ReplacementFormat,
-                            (input, deleteOriginal) => ReplaceHandler(input, generateDebugImage, deleteOriginal),
+                            (input, deleteOriginal) =>
+                                ReplaceHandler(input, generateDebugImage, deleteOriginal, languageCharset),
                             deleteOriginal
                         );
                     }
                     else if (fileInput != null)
                     {
-                        ReplaceHandler(fileInput, generateDebugImage, deleteOriginal);
+                        ReplaceHandler(fileInput, generateDebugImage, deleteOriginal, languageCharset);
                     }
                     else
                     {
@@ -270,7 +279,8 @@ namespace HarmonyTools.Drivers
                 BatchOption,
                 BatchCwdOption,
                 generateDebugImageOption,
-                deleteOriginalOption
+                deleteOriginalOption,
+                languageCharsetOption
             );
 
             return command;
@@ -295,10 +305,15 @@ namespace HarmonyTools.Drivers
             Pack(input, outputPath, generateDebugImage, deleteOriginal);
         }
 
-        private void ReplaceHandler(FileSystemInfo input, bool generateDebugImage, bool deleteOriginal)
+        private void ReplaceHandler(
+            FileSystemInfo input,
+            bool generateDebugImage,
+            bool deleteOriginal,
+            string? languageCharset
+        )
         {
             var outputPath = Utils.GetOutputPath(input, ReplacementFormat, GameFormat);
-            Replace(input, outputPath, generateDebugImage, deleteOriginal);
+            Replace(input, outputPath, generateDebugImage, deleteOriginal, languageCharset);
         }
 
         public void GetName(FileSystemInfo input)
@@ -461,7 +476,13 @@ namespace HarmonyTools.Drivers
          * See: https://github.com/P4K5/DanganV3FontsConverter
          * License: GNU GPL 3.0 <https://github.com/P4K5/DanganV3FontsConverter/blob/master/LICENSE.txt>
          */
-        public void Replace(FileSystemInfo input, string output, bool generateDebugImage, bool deleteOriginal)
+        public void Replace(
+            FileSystemInfo input,
+            string output,
+            bool generateDebugImage,
+            bool deleteOriginal,
+            string? languageCharset
+        )
         {
             var stxPath = new FileInfo(Path.ChangeExtension(input.FullName, "stx"));
             var oldSrdFile = SrdDriver.LoadSrdFile(stxPath, true, true);
@@ -489,7 +510,20 @@ namespace HarmonyTools.Drivers
 
             var charsetFilePath = Path.Combine(Path.GetDirectoryName(input.FullName)!, "charset.txt");
 
-            var fontFileGlyphProvider = new FontFileGlyphProvider(input, new FileInfo(charsetFilePath), deleteOriginal);
+            FontFileGlyphProvider fontFileGlyphProvider;
+
+            if (languageCharset != null)
+            {
+                fontFileGlyphProvider = new FontFileGlyphProvider(
+                    input,
+                    GetLanguageCharset(languageCharset),
+                    deleteOriginal
+                );
+            }
+            else
+            {
+                fontFileGlyphProvider = new FontFileGlyphProvider(input, new FileInfo(charsetFilePath), deleteOriginal);
+            }
 
             Pack(fontFileGlyphProvider, fontInfo, output, generateDebugImage);
         }
@@ -741,5 +775,15 @@ namespace HarmonyTools.Drivers
 
             return (null, null);
         }
+
+        // csharpier-ignore-start
+        private string GetLanguageCharset(string language) => 
+            language switch
+            {
+                "en" => "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,!?-+/|<>\\~():;%$%@&`'^*#=[]\"",
+                "pl" => "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,!?-+/|<>\\~():;%$%@&`'^*#=[]\"ĄĆĘŁŃÓŚŻŹąćęłńóśźż",
+                _    => "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,!?-+/|<>\\~():;%$%@&`'^*#=[]\"",
+            };
+        // csharpier-ignore-end
     }
 }
