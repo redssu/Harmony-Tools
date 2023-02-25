@@ -59,7 +59,9 @@ namespace HarmonyTools.Drivers
                 $"Extracts a {GameFormat.Description} to {KnownFormat.Description}"
             )
             {
-                inputOption
+                inputOption,
+                BatchOption,
+                BatchCwdOption
             };
 
             extractCommand.SetHandler(
@@ -84,8 +86,8 @@ namespace HarmonyTools.Drivers
                     }
                 },
                 inputOption,
-                Program.BatchOption,
-                Program.BatchCwdOption
+                BatchOption,
+                BatchCwdOption
             );
 
             command.AddCommand(extractCommand);

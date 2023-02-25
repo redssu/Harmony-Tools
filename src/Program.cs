@@ -24,16 +24,7 @@ namespace HarmonyTools
             new CpkDriver()
         };
 
-        public static readonly Option<DirectoryInfo> BatchOption = new Option<DirectoryInfo>(
-            aliases: new[] { "-b", "--batch" },
-            description: "Runs specified driver for each file in the specified directory."
-        ).ExistingOnly();
-
-        public static readonly Option<bool> BatchCwdOption = new Option<bool>(
-            aliases: new[] { "-c", "--batch-cwd" },
-            description: "Runs specified driver for each file in the current working directory.",
-            getDefaultValue: () => false
-        );
+        
 
         static int Main(string[] args)
         {
@@ -60,9 +51,6 @@ namespace HarmonyTools
             var rootCommand = new RootCommand(
                 description: "A set of tools for working with Danganronpa V3 game files."
             );
-
-            rootCommand.AddGlobalOption(BatchOption);
-            rootCommand.AddGlobalOption(BatchCwdOption);
 
             rootCommand.SetHandler(() => rootCommand.Invoke("-h"));
 

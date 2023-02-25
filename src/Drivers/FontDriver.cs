@@ -107,6 +107,8 @@ namespace HarmonyTools.Drivers
             var generateDebugImageOption = GetGenerateDebugImageOption();
 
             command.Add(inputOption);
+            command.Add(BatchOption);
+            command.Add(BatchCwdOption);
             command.Add(generateDebugImageOption);
 
             command.SetHandler(
@@ -131,8 +133,8 @@ namespace HarmonyTools.Drivers
                     }
                 },
                 inputOption,
-                Program.BatchOption,
-                Program.BatchCwdOption,
+                BatchOption,
+                BatchCwdOption,
                 generateDebugImageOption
             );
 
@@ -150,6 +152,8 @@ namespace HarmonyTools.Drivers
             var generateDebugImageOption = GetGenerateDebugImageOption();
 
             command.Add(inputOption);
+            command.Add(BatchOption);
+            command.Add(BatchCwdOption);
             command.Add(generateDebugImageOption);
 
             command.SetHandler(
@@ -174,8 +178,8 @@ namespace HarmonyTools.Drivers
                     }
                 },
                 inputOption,
-                Program.BatchOption,
-                Program.BatchCwdOption,
+                BatchOption,
+                BatchCwdOption,
                 generateDebugImageOption
             );
 
@@ -193,6 +197,8 @@ namespace HarmonyTools.Drivers
             var generateDebugImageOption = GetGenerateDebugImageOption();
 
             command.Add(inputOption);
+            command.Add(BatchOption);
+            command.Add(BatchCwdOption);
             command.Add(generateDebugImageOption);
 
             command.SetHandler(
@@ -221,8 +227,8 @@ namespace HarmonyTools.Drivers
                     }
                 },
                 inputOption,
-                Program.BatchOption,
-                Program.BatchCwdOption,
+                BatchOption,
+                BatchCwdOption,
                 generateDebugImageOption
             );
 

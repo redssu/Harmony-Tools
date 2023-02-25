@@ -109,7 +109,9 @@ namespace HarmonyTools.Drivers
             )
             {
                 inputOption,
-                friendlyNamesOption,
+                BatchOption,
+                BatchCwdOption,
+                friendlyNamesOption
             };
 
             command.SetHandler(
@@ -134,8 +136,8 @@ namespace HarmonyTools.Drivers
                     }
                 },
                 inputOption,
-                Program.BatchOption,
-                Program.BatchCwdOption,
+                BatchOption,
+                BatchCwdOption,
                 friendlyNamesOption
             );
 

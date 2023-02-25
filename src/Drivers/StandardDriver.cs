@@ -44,6 +44,9 @@ namespace HarmonyTools.Drivers
             var inputOption = GetInputOption(KnownFormat);
 
             command.Add(inputOption);
+            command.Add(BatchOption);
+            command.Add(BatchCwdOption);
+
             command.SetHandler(
                 (FileSystemInfo fileInput, DirectoryInfo batchInput, bool batchCwd) =>
                 {
@@ -66,8 +69,8 @@ namespace HarmonyTools.Drivers
                     }
                 },
                 inputOption,
-                Program.BatchOption,
-                Program.BatchCwdOption
+                BatchOption,
+                BatchCwdOption
             );
 
             return command;
@@ -82,6 +85,8 @@ namespace HarmonyTools.Drivers
 
             var inputOption = GetInputOption(GameFormat);
             command.Add(inputOption);
+            command.Add(BatchOption);
+            command.Add(BatchCwdOption);
 
             command.SetHandler(
                 (FileSystemInfo fileInput, DirectoryInfo batchInput, bool batchCwd) =>
@@ -105,8 +110,8 @@ namespace HarmonyTools.Drivers
                     }
                 },
                 inputOption,
-                Program.BatchOption,
-                Program.BatchCwdOption
+                BatchOption,
+                BatchCwdOption
             );
 
             return command;

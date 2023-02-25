@@ -15,12 +15,23 @@ namespace HarmonyTools.Drivers
                 description: $"The path of the {inputFormat.Description}"
             ).ExistingOnly();
 
-        // protected static Option<bool> GetDeleteOriginalOption(FSObjectFormat inputFormat) =>
-        //     new Option<bool>(
-        //         aliases: new[] { "-d", "--delete-original" },
-        //         description: $"Whether to delete the original {inputFormat.Description} after operation",
-        //         getDefaultValue: () => false
-        //     );
+        public static readonly Option<DirectoryInfo> BatchOption = new Option<DirectoryInfo>(
+            aliases: new[] { "-b", "--batch" },
+            description: "Runs specified driver for each file in the specified directory."
+        ).ExistingOnly();
+
+        public static readonly Option<bool> BatchCwdOption = new Option<bool>(
+            aliases: new[] { "-c", "--batch-cwd" },
+            description: "Runs specified driver for each file in the current working directory.",
+            getDefaultValue: () => false
+        );
+
+        public static Option<bool> GetDeleteOriginalOption(FSObjectFormat inputFormat) =>
+            new Option<bool>(
+                aliases: new[] { "-d", "--delete-original" },
+                description: $"Whether to delete the original {inputFormat.Description} after operation",
+                getDefaultValue: () => false
+            );
 
         protected void BatchTaskHandler(DirectoryInfo input, FSObjectFormat inputFormat, BatchCallback handler)
         {
