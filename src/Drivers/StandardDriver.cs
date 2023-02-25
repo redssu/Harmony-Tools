@@ -58,11 +58,11 @@ namespace HarmonyTools.Drivers
 
                     if (batchInput != null)
                     {
-                        BatchTaskHandler(batchInput, KnownFormat, ExtractHandler, deleteOriginal);
+                        BatchTaskHandler(batchInput, KnownFormat, PackHandler, deleteOriginal);
                     }
                     else if (fileInput != null)
                     {
-                        ExtractHandler(fileInput, deleteOriginal);
+                        PackHandler(fileInput, deleteOriginal);
                     }
                     else
                     {
@@ -125,7 +125,7 @@ namespace HarmonyTools.Drivers
 
         private void PackHandler(FileSystemInfo input, bool deleteOriginal)
         {
-            var outputPath = Utils.GetOutputPath(input, KnownFormat.Extension, GameFormat.Extension);
+            var outputPath = Utils.GetOutputPath(input, KnownFormat, GameFormat);
 
             if (GameFormat.IsDirectory && !Directory.Exists(outputPath))
             {
@@ -137,7 +137,7 @@ namespace HarmonyTools.Drivers
 
         private void ExtractHandler(FileSystemInfo input, bool deleteOriginal)
         {
-            var outputPath = Utils.GetOutputPath(input, GameFormat.Extension, KnownFormat.Extension);
+            var outputPath = Utils.GetOutputPath(input, GameFormat, KnownFormat);
 
             if (KnownFormat.IsDirectory && !Directory.Exists(outputPath))
             {
