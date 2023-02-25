@@ -288,7 +288,7 @@ namespace HarmonyTools.Drivers
 
         private Option<bool> GetGenerateDebugImageOption() =>
             new Option<bool>(
-                aliases: new[] { "-d", "--generate-debug-image" },
+                aliases: new[] { "-i", "--generate-debug-image" },
                 description: "Generate a debug image",
                 getDefaultValue: () => false
             );
