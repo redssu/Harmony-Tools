@@ -186,7 +186,7 @@ namespace HarmonyTools.Drivers.Font
                         {
                             Index = glyphIndex,
                             Glyph = glyph,
-                            Kerning = new sbyte[3] { leftPadding, (sbyte)(glyphWidth - rightPadding), topPadding }
+                            Kerning = new sbyte[3] { leftPadding, rightPadding, topPadding }
                         },
                         glyphImage
                     );
