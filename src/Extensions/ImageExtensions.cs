@@ -28,6 +28,10 @@ namespace HarmonyTools.Extensions
                     image.SaveAsGif(stream);
                     break;
 
+                case "tga":
+                    image.SaveAsPng(stream);
+                    break;
+
                 default:
                     throw new ArgumentException($"Unknown extension '{extension}'");
             }
