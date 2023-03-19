@@ -55,7 +55,15 @@ namespace HarmonyTools
 
         private static Parser BuildCommandLine(RootCommand root) =>
             new CommandLineBuilder(root)
-                .UseDefaults()
+                .UseHelp()
+                .UseEnvironmentVariableDirective()
+                .UseParseDirective()
+                .UseSuggestDirective()
+                .RegisterWithDotnetSuggest()
+                .UseTypoCorrections()
+                .UseParseErrorReporting()
+                .UseExceptionHandler()
+                .CancelOnProcessTermination()
                 .UseExceptionHandler(
                     (exception, context) =>
                     {

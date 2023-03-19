@@ -8,9 +8,11 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 using SixLabors.ImageSharp.Drawing.Processing;
+using System.Runtime.Versioning;
 
 namespace HarmonyTools.Drivers.Font
 {
+    [SupportedOSPlatform("windows")]
     public class FontFileGlyphProvider : IGlyphProvider
     {
         protected readonly FileSystemInfo fontFile;
@@ -76,6 +78,7 @@ namespace HarmonyTools.Drivers.Font
             var fontFamily = fontCollection.Add(fontFile.FullName);
             var font = fontFamily.CreateFont(72);
             var textOptions = new TextOptions(font);
+            var kerningProvider = new SystemKerningProvider(fontFile);
 
             uint glyphIndex = 1;
 
@@ -181,12 +184,14 @@ namespace HarmonyTools.Drivers.Font
                             )
                     );
 
+                    var (leftKerning, rightKerning, verticalKerning) = kerningProvider.GetKerning(glyph);
+
                     yield return (
                         new GlyphInfo()
                         {
                             Index = glyphIndex,
                             Glyph = glyph,
-                            Kerning = new sbyte[3] { leftPadding, rightPadding, topPadding }
+                            Kerning = new sbyte[3] { leftKerning, rightKerning, verticalKerning }
                         },
                         glyphImage
                     );

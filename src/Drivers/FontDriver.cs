@@ -14,6 +14,7 @@ using Scarlet.Drawing;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
+using System.Runtime.Versioning;
 
 namespace HarmonyTools.Drivers
 {
@@ -84,7 +85,11 @@ namespace HarmonyTools.Drivers
             command.Add(GetNameCommand());
             command.Add(GetPackCommand());
             command.Add(GetExtractCommand());
-            command.Add(GetReplaceCommand());
+
+            if (OperatingSystem.IsWindows())
+            {
+                command.Add(GetReplaceCommand());
+            }
 
             return command;
         }
@@ -216,6 +221,7 @@ namespace HarmonyTools.Drivers
             return command;
         }
 
+        [SupportedOSPlatform("windows")]
         private Command GetReplaceCommand()
         {
             var inputOption = GetInputOption(ReplacementFormat);
@@ -305,6 +311,7 @@ namespace HarmonyTools.Drivers
             Pack(input, outputPath, generateDebugImage, deleteOriginal);
         }
 
+        [SupportedOSPlatform("windows")]
         private void ReplaceHandler(
             FileSystemInfo input,
             bool generateDebugImage,
@@ -476,6 +483,7 @@ namespace HarmonyTools.Drivers
          * See: https://github.com/P4K5/DanganV3FontsConverter
          * License: GNU GPL 3.0 <https://github.com/P4K5/DanganV3FontsConverter/blob/master/LICENSE.txt>
          */
+        [SupportedOSPlatform("windows")]
         public void Replace(
             FileSystemInfo input,
             string output,
