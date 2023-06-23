@@ -113,82 +113,130 @@ namespace HarmonyTools.Drivers
             var datFile = new DatFile();
             var rowData = new List<List<String>>();
 
+            var lineCounter = 0;
+
             using (var reader = new StreamReader(input.FullName, Encoding.Unicode))
             {
                 while (reader != null && !reader.EndOfStream)
                 {
-                    var line = reader.ReadLine();
-                    var row = new List<string>();
-                    var buffer = string.Empty;
-                    var isInQuotesPair = false;
+                    var columns = new List<string>();
 
-                    for (int charIndex = 0; charIndex < line!.Length; charIndex++)
+                    var columnBuffer = string.Empty;
+                    var isEnclosedInQuotes = false;
+
+                    var line = reader.ReadLine();
+
+                    if (line == null)
+                    {
+                        break;
+                    }
+
+                    line = line.TrimEnd('\n');
+                    lineCounter++;
+
+                    for (int charIndex = 0; charIndex < line.Length; charIndex++)
                     {
                         var currentChar = line[charIndex];
 
-                        if (currentChar == '"' && (charIndex == 0 || line[charIndex - 1] == ','))
+                        if (currentChar == '"')
                         {
-                            isInQuotesPair = true;
+                            if (charIndex < line.Length - 2 && line[charIndex + 1] == '"')
+                            {
+                                columnBuffer += '"';
+                                charIndex += 1;
+
+                                if (isEnclosedInQuotes && charIndex == line.Length - 1)
+                                {
+                                    throw new Exception(
+                                        $"Could not parse CSV file \"{input.FullName}\": Found an unclosed column enclosure at line {lineCounter}."
+                                    );
+                                }
+
+                                continue;
+                            }
+
+                            if (isEnclosedInQuotes && charIndex == line.Length - 1)
+                            {
+                                columns.Add(columnBuffer);
+                                break;
+                            }
+
+                            if (isEnclosedInQuotes && line[charIndex + 1] == ',')
+                            {
+                                columns.Add(columnBuffer);
+                                charIndex += 1;
+
+                                columnBuffer = string.Empty;
+                                isEnclosedInQuotes = false;
+
+                                continue;
+                            }
+
+                            if (!isEnclosedInQuotes && columnBuffer.Length > 0)
+                            {
+                                throw new Exception(
+                                    $"Could not parse CSV file \"{input.FullName}\": Found a double quote character that is not a part of a column enclosure and is not escaped at line {lineCounter}."
+                                );
+                            }
+
+                            isEnclosedInQuotes = true;
                             continue;
                         }
-                        else if (
-                            currentChar == '"'
-                            && isInQuotesPair
-                            && (
-                                charIndex == line.Length - 1
-                                || (charIndex < line.Length - 1 && line[charIndex + 1] == ',')
-                            )
-                        )
-                        {
-                            buffer = buffer.Substring(1);
-                            isInQuotesPair = false;
-                            continue;
-                        }
-                        else if (
-                            currentChar == '"'
-                            && charIndex < line.Length - 2
-                            && line[charIndex + 1] == '"'
-                            && isInQuotesPair
-                        )
-                        {
-                            buffer += '"';
-                            charIndex++;
-                            continue;
-                        }
-                        else if (
+
+                        if (
                             currentChar == '\\'
                             && charIndex < line.Length - 1
                             && (line[charIndex + 1] == 'n' || line[charIndex + 1] == 'r')
                         )
                         {
-                            var nextChar = line[charIndex++];
+                            columnBuffer += line[charIndex + 1] switch
+                            {
+                                'n' => '\n',
+                                'r' => '\r',
+                                _ => '\0'
+                            };
 
-                            if (nextChar == 'n')
-                            {
-                                buffer += '\n';
-                                charIndex++;
-                                continue;
-                            }
-                            else if (nextChar == 'r')
-                            {
-                                buffer += '\r';
-                                charIndex++;
-                                continue;
-                            }
-                        }
-                        else if (line[charIndex] == ',' && !isInQuotesPair)
-                        {
-                            row.Add(buffer);
-                            buffer = string.Empty;
+                            charIndex += 1;
                             continue;
                         }
-                        else
+
+                        if (currentChar == ',' && !isEnclosedInQuotes)
                         {
-                            buffer += currentChar;
+                            columns.Add(columnBuffer);
+                            charIndex += 1;
+
+                            columnBuffer = string.Empty;
+                            isEnclosedInQuotes = false;
+
+                            continue;
                         }
+
+                        if (charIndex == line.Length - 1)
+                        {
+                            if (isEnclosedInQuotes)
+                            {
+                                throw new Exception(
+                                    $"Could not parse CSV file \"{input.FullName}\": Found an unclosed column enclosure at line {lineCounter}."
+                                );
+                            }
+
+                            columnBuffer += currentChar;
+
+                            columns.Add(columnBuffer);
+                            break;
+                        }
+
+                        columnBuffer += currentChar;
                     }
 
-                    rowData.Add(row);
+                    if (rowData.Count > 0 && rowData[0].Count != columns.Count)
+                    {
+                        throw new Exception(
+                            $"Could not parse CSV file \"{input.FullName}\": Found a row with a different number of columns at line {lineCounter}."
+                        );
+                    }
+
+                    rowData.Add(columns);
                 }
             }
 
@@ -205,7 +253,7 @@ namespace HarmonyTools.Drivers
                 var headerName = headerParts.First();
                 var headerType = headerParts.Last().TrimEnd(')');
 
-                columnDefinitions.Add((headerName, headerType, (ushort)rowData.Count));
+                columnDefinitions.Add((headerName, headerType, 1));
             }
 
             foreach (var row in rowData)
