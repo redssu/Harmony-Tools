@@ -56,6 +56,7 @@ namespace HarmonyTools
         private static Parser BuildCommandLine(RootCommand root) =>
             new CommandLineBuilder(root)
                 .UseHelp()
+                .UseVersionOption()
                 .UseEnvironmentVariableDirective()
                 .UseParseDirective()
                 .UseSuggestDirective()
