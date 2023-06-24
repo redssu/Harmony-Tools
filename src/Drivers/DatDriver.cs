@@ -140,6 +140,12 @@ namespace HarmonyTools.Drivers
 
                         if (currentChar == '"')
                         {
+                            if (line[charIndex - 1] == ',' || charIndex == 0)
+                            {
+                                isEnclosedInQuotes = true;
+                                continue;
+                            }
+
                             if (charIndex < line.Length - 2 && line[charIndex + 1] == '"')
                             {
                                 columnBuffer += '"';
@@ -169,6 +175,12 @@ namespace HarmonyTools.Drivers
                                 columnBuffer = string.Empty;
                                 isEnclosedInQuotes = false;
 
+                                if (charIndex == line.Length - 1)
+                                {
+                                    columns.Add(string.Empty);
+                                    break;
+                                }
+
                                 continue;
                             }
 
@@ -179,7 +191,6 @@ namespace HarmonyTools.Drivers
                                 );
                             }
 
-                            isEnclosedInQuotes = true;
                             continue;
                         }
 
@@ -203,10 +214,16 @@ namespace HarmonyTools.Drivers
                         if (currentChar == ',' && !isEnclosedInQuotes)
                         {
                             columns.Add(columnBuffer);
-                            charIndex += 1;
 
                             columnBuffer = string.Empty;
                             isEnclosedInQuotes = false;
+
+                            // if the last character is a comma, add an empty column
+                            if (charIndex == line.Length - 1)
+                            {
+                                columns.Add(string.Empty);
+                                break;
+                            }
 
                             continue;
                         }
@@ -221,8 +238,8 @@ namespace HarmonyTools.Drivers
                             }
 
                             columnBuffer += currentChar;
-
                             columns.Add(columnBuffer);
+
                             break;
                         }
 
