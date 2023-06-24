@@ -140,7 +140,7 @@ namespace HarmonyTools.Drivers
 
                         if (currentChar == '"')
                         {
-                            if (line[charIndex - 1] == ',' || charIndex == 0)
+                            if (charIndex == 0 || line[charIndex - 1] == ',')
                             {
                                 isEnclosedInQuotes = true;
                                 continue;
@@ -261,6 +261,16 @@ namespace HarmonyTools.Drivers
 
             rowData.RemoveAt(0);
             datFile.Data.AddRange(rowData);
+
+            foreach (var row in rowData)
+            {
+                foreach (var column in row)
+                {
+                    Console.Write($"\"{column}\",");
+                }
+
+                Console.Write('\n');
+            }
 
             var columnDefinitions = new List<(string Name, string Type, ushort Count)>();
 
