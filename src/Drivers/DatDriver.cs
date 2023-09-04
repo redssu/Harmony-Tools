@@ -262,16 +262,6 @@ namespace HarmonyTools.Drivers
             rowData.RemoveAt(0);
             datFile.Data.AddRange(rowData);
 
-            foreach (var row in rowData)
-            {
-                foreach (var column in row)
-                {
-                    Console.Write($"\"{column}\",");
-                }
-
-                Console.Write('\n');
-            }
-
             var columnDefinitions = new List<(string Name, string Type, ushort Count)>();
 
             foreach (var header in headers)
