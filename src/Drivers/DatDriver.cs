@@ -140,7 +140,7 @@ namespace HarmonyTools.Drivers
 
                         if (currentChar == '"')
                         {
-                            if (charIndex == 0 || line[charIndex - 1] == ',')
+                            if (charIndex == 0 || (line[charIndex - 1] == ',' && !isEnclosedInQuotes))
                             {
                                 isEnclosedInQuotes = true;
                                 continue;
