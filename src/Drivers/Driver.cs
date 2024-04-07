@@ -50,6 +50,9 @@ namespace HarmonyTools.Drivers
                     directory =>
                     {
                         var directoryInfo = new DirectoryInfo(directory);
+
+                        Logger.Info($"Working on directory: \"{directoryInfo.FullName}\"...");
+
                         handler(directoryInfo, deleteOriginal);
                     }
                 );
@@ -63,6 +66,9 @@ namespace HarmonyTools.Drivers
                     file =>
                     {
                         var fileInfo = new FileInfo(file);
+
+                        Logger.Info($"Working on file: \"{fileInfo.FullName}\"...");
+
                         handler(fileInfo, deleteOriginal);
                     }
                 );
