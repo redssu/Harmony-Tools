@@ -77,10 +77,10 @@ namespace HarmonyTools.Drivers
                 {
                     writer.WriteLine("{");
 
-                    foreach (var kvp in table.Strings)
+                    foreach (var (stringId, element) in table.Elements)
                     {
-                        var value = kvp.Value.Replace("\n", @"\n").Replace("\r", @"\r");
-                        writer.WriteLine($"[{kvp.Key}] {value}");
+                        var value = element.Text.Replace("\n", @"\n").Replace("\r", @"\r");
+                        writer.WriteLine($"[{element.Id}] {value}");
                     }
 
                     writer.WriteLine("}");
@@ -105,7 +105,7 @@ namespace HarmonyTools.Drivers
                 {
                     if (reader.ReadLine()!.StartsWith("{"))
                     {
-                        var table = new Dictionary<uint, string>();
+                        var table = new Dictionary<uint, StringTableElement>();
 
                         while (true)
                         {
@@ -146,7 +146,10 @@ namespace HarmonyTools.Drivers
                                 );
                             }
 
-                            table.Add(key, value.Replace(@"\n", "\n").Replace(@"\r", "\r"));
+                            table.Add(
+                                key,
+                                new StringTableElement(key, null, value.Replace(@"\n", "\n").Replace(@"\r", "\r"))
+                            );
                         }
 
                         table = table.OrderBy(item => item.Key).ToDictionary(item => item.Key, item => item.Value);

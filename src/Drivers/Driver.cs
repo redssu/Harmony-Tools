@@ -2,6 +2,7 @@ using System.IO;
 using System.CommandLine;
 using System.Threading.Tasks;
 using HarmonyTools.Formats;
+using System;
 
 namespace HarmonyTools.Drivers
 {

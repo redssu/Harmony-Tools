@@ -38,8 +38,6 @@ namespace HarmonyTools
                 description: "A set of tools for working with Danganronpa V3 game files."
             );
 
-            rootCommand.SetHandler(() => rootCommand.Invoke("-h"));
-
             foreach (var driver in drivers)
             {
                 rootCommand.AddCommand(driver.GetCommand());

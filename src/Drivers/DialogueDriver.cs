@@ -196,13 +196,13 @@ namespace HarmonyTools.Drivers
 
             var dialogueEntries = new List<DialogueEntry>();
 
-            foreach (var kvp in stxFile.StringTables.First().Strings)
+            foreach (var (stringId, element) in stxFile.StringTables.First().Elements)
             {
-                var dialogueEntry = new DialogueEntry { Id = kvp.Key, Text = kvp.Value };
+                var dialogueEntry = new DialogueEntry { Id = element.Id, Text = element.Text };
 
                 // Find the LOC command that corresponds to the string thats currently being processed.
                 // LOC is a command that displays a dialogue line.
-                int locCommandIndex = GetLocCommandIndexInCommands(usefulCommands, kvp.Key);
+                int locCommandIndex = GetLocCommandIndexInCommands(usefulCommands, element.Id);
 
                 // If it's first command there is not even a chance to find the character name.
                 if (locCommandIndex == 0)
@@ -331,15 +331,22 @@ namespace HarmonyTools.Drivers
             }
 
             var stxFile = new StxFile();
-            var stringTable = new Dictionary<uint, string>();
+            var elements = new Dictionary<uint, StringTableElement>();
 
             foreach (var dialogueEntry in dialogueEntries)
             {
-                stringTable.Add(dialogueEntry.Id, dialogueEntry.Text.Replace(@"\n", "\n").Replace(@"\r", "\r"));
+                elements.Add(
+                    dialogueEntry.Id,
+                    new StringTableElement(
+                        dialogueEntry.Id,
+                        null,
+                        dialogueEntry.Text.Replace(@"\n", "\n").Replace(@"\r", "\r")
+                    )
+                );
             }
 
-            stringTable = stringTable.OrderBy(x => x.Key).ToDictionary(x => x.Key, x => x.Value);
-            stxFile.StringTables.Add(new StringTable(stringTable, 8));
+            elements = elements.OrderBy(x => x.Key).ToDictionary(x => x.Key, x => x.Value);
+            stxFile.StringTables.Add(new StringTable(elements, 8));
             stxFile.Save(output);
 
             Logger.Success($"STX File has been saved successfully to \"{output}\".");

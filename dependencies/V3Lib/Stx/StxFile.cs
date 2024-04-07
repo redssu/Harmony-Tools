@@ -7,13 +7,27 @@ namespace V3Lib.Stx
 {
     public class StringTable
     {
-        public Dictionary<uint, string> Strings;
+        public Dictionary<uint, StringTableElement> Elements;
         public uint Unknown;
 
-        public StringTable(Dictionary<uint, string> strings, uint unknown)
+        public StringTable(Dictionary<uint, StringTableElement> elements, uint unknown)
         {
-            Strings = strings;
+            Elements = elements;
             Unknown = unknown;
+        }
+    }
+
+    public class StringTableElement
+    {
+        public uint Id;
+        public uint? Offset;
+        public string Text;
+
+        public StringTableElement(uint id, uint? offset, string text = "")
+        {
+            Id = id;
+            Offset = offset;
+            Text = text;
         }
     }
 
@@ -29,9 +43,7 @@ namespace V3Lib.Stx
             string magic = Encoding.ASCII.GetString(reader.ReadBytes(4));
             if (magic != "STXT")
             {
-                Console.Error.WriteLine(
-                    $"ERROR: Invalid magic value, expected \"STXT\" but got \"{magic}\"."
-                );
+                Console.Error.WriteLine($"ERROR: Invalid magic value, expected \"STXT\" but got \"{magic}\".");
                 return;
             }
 
@@ -39,9 +51,7 @@ namespace V3Lib.Stx
             string lang = Encoding.ASCII.GetString(reader.ReadBytes(4));
             if (lang != "JPLL")
             {
-                Console.Error.WriteLine(
-                    $"ERROR: Invalid language string, expected \"JPLL\" but got \"{lang}\"."
-                );
+                Console.Error.WriteLine($"ERROR: Invalid language string, expected \"JPLL\" but got \"{lang}\".");
                 return;
             }
 
@@ -71,19 +81,38 @@ namespace V3Lib.Stx
             reader.BaseStream.Seek(tableOffset, SeekOrigin.Begin);
             foreach (var (Unknown, StringCount) in tableInfo)
             {
-                Dictionary<uint, string> strings = new Dictionary<uint, string>();
+                Dictionary<uint, StringTableElement> stringTableElements = new Dictionary<uint, StringTableElement>();
 
                 for (int s = 0; s < StringCount; ++s)
                 {
                     uint stringId = reader.ReadUInt32();
                     uint stringOffset = reader.ReadUInt32();
 
+                    if (stringTableElements.ContainsKey(stringId))
+                    {
+                        if (stringTableElements[stringId].Offset != stringOffset)
+                        {
+                            throw new InvalidDataException(
+                                $"String \"{stringId}\" is redeclared with different offsets! (prev: \"{stringTableElements[stringId].Offset}\", curr: \"{stringOffset}\")"
+                            );
+                        }
+
+                        continue;
+                    }
+
                     long returnPos = reader.BaseStream.Position;
 
                     reader.BaseStream.Seek(stringOffset, SeekOrigin.Begin);
 
                     // C# does not include a way to read null-terminated strings, so we'll have to do it manually.
-                    strings.Add(stringId, Utils.ReadNullTerminatedString(reader, Encoding.Unicode));
+                    stringTableElements.Add(
+                        stringId,
+                        new StringTableElement(
+                            stringId,
+                            stringOffset,
+                            Utils.ReadNullTerminatedString(reader, Encoding.Unicode)
+                        )
+                    );
 
                     // if (stringId != (strings.Count - 1)) {
                     //     throw new InvalidDataException($"String #{s} has a reported ID of {stringId}, this list is not sorted correctly!");
@@ -92,7 +121,7 @@ namespace V3Lib.Stx
                     reader.BaseStream.Seek(returnPos, SeekOrigin.Begin);
                 }
 
-                StringTables.Add(new StringTable(strings, Unknown));
+                StringTables.Add(new StringTable(stringTableElements, Unknown));
             }
 
             reader.Close();
@@ -111,34 +140,35 @@ namespace V3Lib.Stx
             foreach (var table in StringTables)
             {
                 writer.Write(table.Unknown);
-                writer.Write(table.Strings.Count);
+                writer.Write(table.Elements.Count);
                 writer.Write((ulong)0); // Pad to nearest 16-byte boundary
             }
 
             // Write tableOffset
-            long lastPos = writer.BaseStream.Position;
+            long lastPosition = writer.BaseStream.Position;
             writer.BaseStream.Seek(0x0C, SeekOrigin.Begin);
-            writer.Write((uint)lastPos);
-            writer.BaseStream.Seek(lastPos, SeekOrigin.Begin);
+            writer.Write((uint)lastPosition);
+            writer.BaseStream.Seek(lastPosition, SeekOrigin.Begin);
 
             // Write temporary padding for string IDs/offset
             foreach (var table in StringTables)
             {
-                writer.Write(new byte[(8 * table.Strings.Count)]);
+                writer.Write(new byte[(8 * table.Elements.Count)]);
             }
 
             // Write string data & corresponding ID/offset pair
-            long infoPairPos = lastPos;
+            long infoPairPosition = lastPosition;
             foreach (var table in StringTables)
             {
                 List<(int, string)> writtenStrings = new();
-                foreach (KeyValuePair<uint, string> kvp in table.Strings)
+
+                foreach (var (stringId, element) in table.Elements)
                 {
                     // De-duplicate strings by re-using offsets
                     int foundOffset = -1;
                     foreach (var (offset, text) in writtenStrings)
                     {
-                        if (text == kvp.Value)
+                        if (text == element.Text)
                         {
                             foundOffset = offset;
                             break;
@@ -146,30 +176,30 @@ namespace V3Lib.Stx
                     }
 
                     // Write ID/offset pair
-                    int latestPos = (int)writer.BaseStream.Position;
+                    int latestPosition = (int)writer.BaseStream.Position;
 
-                    int strPos;
+                    int stringPosition;
                     if (foundOffset >= 0)
                     {
-                        strPos = foundOffset;
+                        stringPosition = foundOffset;
                     }
                     else
                     {
-                        strPos = latestPos;
+                        stringPosition = latestPosition;
                     }
 
-                    writer.BaseStream.Seek(infoPairPos, SeekOrigin.Begin);
-                    writer.Write(kvp.Key);
-                    writer.Write((uint)strPos);
-                    writer.BaseStream.Seek(latestPos, SeekOrigin.Begin);
+                    writer.BaseStream.Seek(infoPairPosition, SeekOrigin.Begin);
+                    writer.Write(element.Id);
+                    writer.Write((uint)stringPosition);
+                    writer.BaseStream.Seek(latestPosition, SeekOrigin.Begin);
 
                     // Increment infoPairPos 8 bytes to next entry position
-                    infoPairPos += 8;
+                    infoPairPosition += 8;
 
                     // Write string data if there are no existing duplicates
                     if (foundOffset < 0)
                     {
-                        byte[] strData = Encoding.Unicode.GetBytes(kvp.Value);
+                        byte[] strData = Encoding.Unicode.GetBytes(element.Text);
                         writer.Write(strData);
                         writer.Write((ushort)0);
                     }
