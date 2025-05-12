@@ -15,6 +15,7 @@ namespace HarmonyTools
         {
             new DialogueDriver(),
             new StxDriver(),
+            new RsctDriver(),
             new SpcDriver(),
             new SrdDriver(),
             new FontDriver(),

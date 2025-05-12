@@ -79,6 +79,7 @@ namespace HarmonyTools.Drivers
             {
                 new DialogueDriver(),
                 new StxDriver(),
+                new RsctDriver(),
                 new SpcDriver(),
                 new SrdDriver(),
                 new DatDriver(),
