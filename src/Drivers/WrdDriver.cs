@@ -161,7 +161,7 @@ namespace HarmonyTools.Drivers
 
         private Option<bool> GetFriendlyNamesOption() =>
             new Option<bool>(
-                aliases: new[] { "--friendly-names", "-f" },
+                aliases: new[] { "--friendly-names", "-n" },
                 description: "Switches the conversion of operation codes to more human-friendly names.",
                 getDefaultValue: () => true
             );

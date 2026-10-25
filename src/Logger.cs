@@ -37,5 +37,15 @@ namespace HarmonyTools
             Console.WriteLine($"[+] Success: {message}");
             Console.ResetColor();
         }
+
+        public static void Debug() => Debug(string.Empty);
+
+        public static void Debug(string message)
+        {
+            if (Config.Instance.Debug)
+            {
+                Info($"[DEBUG] {message}");
+            }
+        }
     }
 }
