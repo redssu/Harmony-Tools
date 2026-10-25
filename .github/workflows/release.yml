@@ -1,0 +1,65 @@
+name: 🚀 Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - name: ⬇️ Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: 🔍 Resolve version from tag
+        id: version
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+
+      - name: 🏗️ Build self-contained executable
+        shell: bash
+        run: |
+          dotnet publish src/HarmonyTools.csproj \
+            -c Release \
+            -r win-x64 \
+            --self-contained true \
+            -p:PublishSingleFile=true \
+            -p:Version="${{ steps.version.outputs.version }}" \
+            -p:DebugType=None \
+            -o publish
+
+      - name: 🛠️ Assemble release archive contents
+        shell: bash
+        run: |
+          STAGE="staging/Harmony-Tools"
+          mkdir -p "$STAGE"
+
+          cp publish/HarmonyTools.exe "$STAGE/"
+          cp -r publish/Icons "$STAGE/"
+
+          cp README.md LICENSE.md "$STAGE/"
+
+          cp -r assets/build_archive_template/. "$STAGE/"
+
+      - name: 📦 Create release archive
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "staging/Harmony-Tools" -DestinationPath "Harmony-Tools-${{ steps.version.outputs.tag }}.zip"
+
+      - name: 🚀 Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Harmony-Tools ${{ steps.version.outputs.tag }}"
+          files: Harmony-Tools-${{ steps.version.outputs.tag }}.zip

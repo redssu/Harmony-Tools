@@ -5,6 +5,7 @@
         <PublishSingleFile>true</PublishSingleFile>
         <SelfContained>true</SelfContained>
         <PublishReadyToRun>true</PublishReadyToRun>
+        <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
         <Version>2.1.0</Version>
     </PropertyGroup>
 
@@ -34,6 +35,7 @@
         <ContentWithTargetPath Include="Icons\**">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
             <TargetPath>Icons\%(RecursiveDir)\%(Filename)%(Extension)</TargetPath>
+            <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
         </ContentWithTargetPath>
     </ItemGroup>
 
