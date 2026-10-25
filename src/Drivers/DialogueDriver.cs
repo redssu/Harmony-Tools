@@ -170,14 +170,175 @@ namespace HarmonyTools.Drivers
 
         public override void Extract(FileSystemInfo input, string output, bool deleteOriginal)
         {
-            // To create a dialogue file, we need to load both STX and WRD files.
+            var resolvedWrdPath = ResolveWrdPath(input);
+
+            if (resolvedWrdPath == null)
+            {
+                throw new ExtractionException(
+                    "Could not find a WRD file for this STX file, neither next to it nor in the EN/JP "
+                        + "source directories configured in config.json. Set \"Debug\": true in config.json "
+                        + "to see every path that was tried."
+                );
+            }
+
+            var wrdPath = resolvedWrdPath.Value;
+            var dialogueEntries = BuildDialogueEntries(input, wrdPath.Path);
+
+            foreach (var language in GetComparisonLanguages())
+            {
+                AttachOriginalText(input, dialogueEntries, language);
+            }
+
+            var jsonOptions = new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+                MaxDepth = 3
+            };
+
+            var json = JsonSerializer.Serialize<object>(dialogueEntries, jsonOptions);
+
+            File.WriteAllText(output, json);
+
+            Logger.Success($"JSON file with dialogue lines has been successfully saved to \"{output}\".");
+
+            if (deleteOriginal)
+            {
+                Utils.DeleteOriginal(GameFormat, input);
+
+                // Only the local WRD file belongs to this extraction; a WRD pulled from the EN/JP
+                // source dirs is someone else's original file and must never be deleted.
+                if (wrdPath.IsLocal)
+                {
+                    Utils.DeleteOriginal(FSObjectType.File, wrdPath.Path);
+                }
+            }
+        }
+
+        private static string GetWrdPathForStx(FileSystemInfo input) =>
             // The WRD file contains character names and the STX file contains the actual dialogue lines.
             // It's pretty simple to tell which WRD file belongs to which STX file, since they have the same name.
-            string wrdPath =
-                input.Extension.ToUpper() == ".STX"
-                    ? Path.ChangeExtension(input.FullName, "wrd")
-                    : input.FullName + ".wrd";
+            input.Extension.ToUpper() == ".STX"
+                ? Path.ChangeExtension(input.FullName, "wrd")
+                : input.FullName + ".wrd";
 
+        private readonly record struct ResolvedWrdPath(string Path, bool IsLocal);
+
+        private delegate DialogueEntry SetOriginalText(DialogueEntry entry, string text);
+
+        // A reference game dump (EN/JP) that WRD/STX lookups can fall back to or compare against.
+        // SourceDir comes from config.json (SourceEn / SourceJp); SetOriginalText writes the matched
+        // text into the right Source_* field of a DialogueEntry.
+        private readonly record struct ComparisonLanguage(string Name, string SourceDir, SetOriginalText SetOriginalText);
+
+        private static IEnumerable<ComparisonLanguage> GetComparisonLanguages()
+        {
+            yield return new ComparisonLanguage(
+                "EN",
+                Config.Instance.ResolvedSourceEn,
+                (entry, text) =>
+                {
+                    entry.Source_En = text;
+                    return entry;
+                }
+            );
+
+            yield return new ComparisonLanguage(
+                "JP",
+                Config.Instance.ResolvedSourceJp,
+                (entry, text) =>
+                {
+                    entry.Source_Jp = text;
+                    return entry;
+                }
+            );
+        }
+
+        // Finds the WRD file belonging to this STX file.
+        //
+        // Tries, in order:
+        // 1. next to the STX file,
+        // 2. the same relative path (from the cwd) inside each configured comparison language's source dir.
+        private ResolvedWrdPath? ResolveWrdPath(FileSystemInfo input)
+        {
+            var localPath = GetWrdPathForStx(input);
+
+            if (File.Exists(localPath))
+            {
+                Logger.Debug($"Using local WRD file: \"{localPath}\".");
+                return new ResolvedWrdPath(localPath, IsLocal: true);
+            }
+
+            Logger.Debug($"Local WRD file not found (expected path: \"{localPath}\"), trying EN/JP source dirs.");
+
+            var relativePath = Path.GetRelativePath(Directory.GetCurrentDirectory(), input.FullName);
+
+            foreach (var language in GetComparisonLanguages())
+            {
+                var candidateStxPath = Path.Combine(language.SourceDir, relativePath);
+                var candidateWrdPath = GetWrdPathForStx(new FileInfo(candidateStxPath));
+
+                if (File.Exists(candidateWrdPath))
+                {
+                    Logger.Debug($"Using {language.Name} source WRD file: \"{candidateWrdPath}\".");
+                    return new ResolvedWrdPath(candidateWrdPath, IsLocal: false);
+                }
+
+                Logger.Debug($"{language.Name} source WRD file not found. (expected path: \"{candidateWrdPath}\").");
+            }
+
+            return null;
+        }
+
+        // Attaches the original text of each line from a reference game dump, configured via config.json.
+        private void AttachOriginalText(
+            FileSystemInfo input,
+            List<DialogueEntry> dialogueEntries,
+            ComparisonLanguage language
+        )
+        {
+            if (!Directory.Exists(language.SourceDir))
+            {
+                Logger.Debug($"{language.Name} source dir not found. (expected path: \"{language.SourceDir}\").");
+                return;
+            }
+
+            var relativePath = Path.GetRelativePath(Directory.GetCurrentDirectory(), input.FullName);
+            var originalStxPath = Path.Combine(language.SourceDir, relativePath);
+
+            if (!File.Exists(originalStxPath))
+            {
+                Logger.Debug(
+                    $"Could not find the original {language.Name} STX file for comparison. (expected path: \"{originalStxPath}\")."
+                );
+                return;
+            }
+
+            Logger.Debug($"Using original {language.Name} STX file for comparison: \"{originalStxPath}\".");
+
+            // The original text is only being read for comparison (no Speaker/Choice is needed), so unlike
+            // BuildDialogueEntries this doesn't require a WRD file at all.
+            var originalStxFile = new StxFile();
+            originalStxFile.Load(originalStxPath);
+
+            var originalTextById = originalStxFile.StringTables.First()
+                .Elements.ToDictionary(pair => pair.Value.Id, pair => pair.Value.Text);
+
+            for (int index = 0; index < dialogueEntries.Count; index++)
+            {
+                if (!originalTextById.TryGetValue(dialogueEntries[index].Id, out var originalText))
+                {
+                    continue;
+                }
+
+                dialogueEntries[index] = language.SetOriginalText(dialogueEntries[index], originalText);
+            }
+        }
+
+        private List<DialogueEntry> BuildDialogueEntries(FileSystemInfo input, string wrdPath)
+        {
+            // To create a dialogue file, we need to load both STX and WRD files.
             if (!File.Exists(wrdPath))
             {
                 throw new ExtractionException($"Required WRD file not found. (expected path: \"{wrdPath}\").");
@@ -285,25 +446,7 @@ namespace HarmonyTools.Drivers
                 dialogueEntries.Add(dialogueEntry);
             }
 
-            var jsonOptions = new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-                MaxDepth = 3
-            };
-
-            var json = JsonSerializer.Serialize<object>(dialogueEntries, jsonOptions);
-
-            File.WriteAllText(output, json);
-
-            Logger.Success($"JSON file with dialogue lines has been successfully saved to \"{output}\".");
-
-            if (deleteOriginal)
-            {
-                Utils.DeleteOriginal(GameFormat, input);
-                Utils.DeleteOriginal(FSObjectType.File, wrdPath);
-            }
+            return dialogueEntries;
         }
 
         public override void Pack(FileSystemInfo input, string output, bool deleteOriginal)
