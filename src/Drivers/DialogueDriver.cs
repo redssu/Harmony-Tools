@@ -175,7 +175,7 @@ namespace HarmonyTools.Drivers
             if (resolvedWrdPath == null)
             {
                 throw new ExtractionException(
-                    "Could not find a WRD file for this STX file, neither next to it nor in the EN/JP "
+                    "Could not find a WRD file for this STX file, neither next to it nor in the US/JP "
                         + "source directories configured in config.json. Set \"Debug\": true in config.json "
                         + "to see every path that was tried."
                 );
@@ -207,7 +207,7 @@ namespace HarmonyTools.Drivers
             {
                 Utils.DeleteOriginal(GameFormat, input);
 
-                // Only the local WRD file belongs to this extraction; a WRD pulled from the EN/JP
+                // Only the local WRD file belongs to this extraction; a WRD pulled from the US/JP
                 // source dirs is someone else's original file and must never be deleted.
                 if (wrdPath.IsLocal)
                 {
@@ -227,19 +227,17 @@ namespace HarmonyTools.Drivers
 
         private delegate DialogueEntry SetOriginalText(DialogueEntry entry, string text);
 
-        // A reference game dump (EN/JP) that WRD/STX lookups can fall back to or compare against.
-        // SourceDir comes from config.json (SourceEn / SourceJp); SetOriginalText writes the matched
-        // text into the right Source_* field of a DialogueEntry.
+        // A reference game dump (US/JP) that WRD/STX lookups can fall back to or compare against.
         private readonly record struct ComparisonLanguage(string Name, string SourceDir, SetOriginalText SetOriginalText);
 
         private static IEnumerable<ComparisonLanguage> GetComparisonLanguages()
         {
             yield return new ComparisonLanguage(
-                "EN",
-                Config.Instance.ResolvedSourceEn,
+                "US",
+                Config.Instance.ResolvedSourceUs,
                 (entry, text) =>
                 {
-                    entry.Source_En = text;
+                    entry.Source_Us = text;
                     return entry;
                 }
             );
@@ -259,7 +257,8 @@ namespace HarmonyTools.Drivers
         //
         // Tries, in order:
         // 1. next to the STX file,
-        // 2. the same relative path (from the cwd) inside each configured comparison language's source dir.
+        // 2. the same path (relative to the "wrd_script" directory) inside each configured comparison
+        //    language's source dir.
         private ResolvedWrdPath? ResolveWrdPath(FileSystemInfo input)
         {
             var localPath = GetWrdPathForStx(input);
@@ -270,22 +269,18 @@ namespace HarmonyTools.Drivers
                 return new ResolvedWrdPath(localPath, IsLocal: true);
             }
 
-            Logger.Debug($"Local WRD file not found (expected path: \"{localPath}\"), trying EN/JP source dirs.");
+            Logger.Debug($"Local WRD file not found (expected path: \"{localPath}\"), trying US/JP source dirs.");
 
-            var relativePath = Path.GetRelativePath(Directory.GetCurrentDirectory(), input.FullName);
+            var relativePath = OriginalFileRetriever.GetRelativeGamePath(input);
 
             foreach (var language in GetComparisonLanguages())
             {
-                var candidateStxPath = Path.Combine(language.SourceDir, relativePath);
-                var candidateWrdPath = GetWrdPathForStx(new FileInfo(candidateStxPath));
+                var candidateWrdPath = OriginalFileRetriever.FindWrdFile(language.SourceDir, relativePath, language.Name);
 
-                if (File.Exists(candidateWrdPath))
+                if (candidateWrdPath != null)
                 {
-                    Logger.Debug($"Using {language.Name} source WRD file: \"{candidateWrdPath}\".");
                     return new ResolvedWrdPath(candidateWrdPath, IsLocal: false);
                 }
-
-                Logger.Debug($"{language.Name} source WRD file not found. (expected path: \"{candidateWrdPath}\").");
             }
 
             return null;
@@ -298,24 +293,13 @@ namespace HarmonyTools.Drivers
             ComparisonLanguage language
         )
         {
-            if (!Directory.Exists(language.SourceDir))
+            var relativePath = OriginalFileRetriever.GetRelativeGamePath(input);
+            var originalStxPath = OriginalFileRetriever.FindStxFile(language.SourceDir, relativePath, language.Name);
+
+            if (originalStxPath == null)
             {
-                Logger.Debug($"{language.Name} source dir not found. (expected path: \"{language.SourceDir}\").");
                 return;
             }
-
-            var relativePath = Path.GetRelativePath(Directory.GetCurrentDirectory(), input.FullName);
-            var originalStxPath = Path.Combine(language.SourceDir, relativePath);
-
-            if (!File.Exists(originalStxPath))
-            {
-                Logger.Debug(
-                    $"Could not find the original {language.Name} STX file for comparison. (expected path: \"{originalStxPath}\")."
-                );
-                return;
-            }
-
-            Logger.Debug($"Using original {language.Name} STX file for comparison: \"{originalStxPath}\".");
 
             // The original text is only being read for comparison (no Speaker/Choice is needed), so unlike
             // BuildDialogueEntries this doesn't require a WRD file at all.

@@ -6,7 +6,7 @@ namespace HarmonyTools
 {
     public sealed class Config
     {
-        public string SourceEn { get; set; } = "game_files/en";
+        public string SourceUs { get; set; } = "game_files/us";
         public string SourceJp { get; set; } = "game_files/jp";
         public bool Debug { get; set; } = false;
 
@@ -15,7 +15,7 @@ namespace HarmonyTools
         private static Config? instance;
         public static Config Instance => instance ??= Load();
 
-        public string ResolvedSourceEn => ResolvePath(SourceEn);
+        public string ResolvedSourceUs => ResolvePath(SourceUs);
         public string ResolvedSourceJp => ResolvePath(SourceJp);
 
         private static string ResolvePath(string path) =>

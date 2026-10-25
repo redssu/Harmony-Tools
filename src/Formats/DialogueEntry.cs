@@ -6,7 +6,7 @@ namespace HarmonyTools.Formats
         public string? Choice { get; set; }
         public string? Speaker { get; set; }
         public string Text { get; set; }
-        public string? Source_En { get; set; }
+        public string? Source_Us { get; set; }
         public string? Source_Jp { get; set; }
     }
 }
